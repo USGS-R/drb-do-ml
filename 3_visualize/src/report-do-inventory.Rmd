@@ -1,0 +1,186 @@
+---
+title: "DRB dissolved oxygen data availability"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+## Records summary  
+  
+
+### A Quick Look
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+
+# Load WQP DO data:
+DO_wqp_path <- tar_read(p2_filtered_wqp_csv)
+DO_wqp_data <- read_csv(DO_wqp_path,
+                     col_types = cols(ResultDetectionConditionText = col_character()))
+
+# Load NWIS daily DO sites:
+DO_sites_nwis <- tar_read(p1_DO_sites_nwis)
+DO_sites_nwis <- DO_sites_nwis %>% 
+  filter(data_type_cd =="uv"|(data_type_cd=="dv" & stat_cd=="00003"))
+
+# Load daily DO data:
+daily_DO_path <- tar_read(p1_daily_DO_csv)
+daily_DO_data <- read_csv(daily_DO_path,show_col_types = FALSE)
+
+# Add a flag to daily DO data to denote pre-2007 DO observations:
+daily_DO_data <- daily_DO_data %>%
+  rowwise() %>%
+  mutate(proj_flag = if(Date < "2007-10-01") "DO measured prior to 2007-10-01" else "NA")
+
+# Summarize daily DO days for each site:
+daily_days <- daily_DO_data %>% group_by(site_no) %>% summarize(n_days = n())
+
+# Load continuous DO data:
+cont_DO_path <- tar_read(p2_cont_DO_csv)
+cont_DO_data <- read_csv(cont_DO_path,show_col_types = FALSE)
+cont_DO_data <- cont_DO_data %>%
+  mutate(Date = lubridate::date(dateTime))
+
+# Summarize continuous DO days for each site:
+cont_days <- cont_DO_data %>% 
+  group_by(site_no) %>% 
+  summarize(n_days=length(unique(Date)))
+
+nwis_days <- rbind(daily_days,cont_days)
+
+# List out number of continuous sites by day, month, year:
+inventory_cont <- cont_DO_data %>%
+  mutate(Month = lubridate::month(dateTime),
+         doy = lubridate::yday(dateTime),
+         Year = lubridate::year(dateTime),
+         doy_year = paste(doy,Year,sep="-")) %>%
+  group_by(doy_year,doy,Year) %>%
+  summarize(n_obs_cont = n(),
+    n_sites_cont = length(unique(site_no)),.groups="keep")
+
+# List out number of daily sites by day, month, year:
+inventory_daily <- daily_DO_data %>%
+  mutate(Month = lubridate::month(Date),
+         doy = lubridate::yday(Date),
+         Year = lubridate::year(Date),
+         doy_year = paste(doy,Year,sep="-")) %>%
+  group_by(doy_year,doy,Year) %>% 
+  summarize(n_obs_daily = n(),
+            n_sites_daily = length(unique(site_no)),.groups="keep") 
+
+# Summarize sites and convert to spatial:
+all_nwis_sites <- DO_sites_nwis %>%
+  select(site_no,station_nm,site_tp_cd,dec_lat_va,dec_long_va,dec_coord_datum_cd,parm_cd,stat_cd) %>%
+  group_by(site_no) %>%
+  slice(1)
+
+cont_sites <- DO_sites_nwis %>%
+  filter(data_type_cd == "uv") %>%
+  group_by(site_no) %>% 
+  slice(1) %>%
+  mutate(site_type = "continuous") %>%
+  select(site_no,site_type) %>%
+  left_join(.,all_nwis_sites,by="site_no") %>%
+  left_join(.,nwis_days,by="site_no") %>%
+  sf::st_as_sf(.,coords=c("dec_long_va","dec_lat_va"),crs=4269) %>%
+  sf::st_transform(4326) 
+
+daily_sites <- daily_DO_data %>%
+  group_by(site_no) %>% 
+  slice(1) %>%
+  mutate(site_type = "daily values only") %>%
+  select(site_no,site_type) %>%
+  left_join(.,all_nwis_sites,by="site_no") %>%
+  left_join(.,nwis_days,by="site_no") %>%
+  sf::st_as_sf(.,coords=c("dec_long_va","dec_lat_va"),crs=4269) %>%
+  sf::st_transform(4326) 
+
+
+DO_sites_wqp <- sf::st_as_sf(DO_wqp_data,coords = c("LongitudeMeasure","LatitudeMeasure"),crs=4269) %>% 
+  sf::st_transform(4326) %>%
+  group_by(MonitoringLocationIdentifier) %>% 
+  summarize(n=n())
+
+
+```
+
+Dissolved oxygen data was pulled from NWIS (for continuous and daily data) as well as the Water Quality Portal, which focuses on discrete (snapshot) samples. Specifically, for the WQP, we used the harmonized multiscale surface water quality dataset for the Delaware River Basin ([Shoda et al. 2019](https://doi.org/10.5066/P9PX8LZO)). We're focused on dissolved oxygen reported in units of mg/L.  
+
+For NWIS, there were `r length(unique(DO_sites_nwis$site_no))` continuous DO sites within the DRB. Some of those report the instantaneous values, but for older data only daily values were available. Here's a breakdown of the sites/samples:
+
+
+
+| Site type                          | Number of unique sites                               | Number of samples (WQP) or observation-days (NWIS)   |
+| ---------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
+| WQP                                | `r length(DO_sites_wqp$MonitoringLocationIdentifier)`| `r length(DO_wqp_data$MonitoringLocationIdentifier)` |
+| NWIS-instantaneous                 | `r length(unique(cont_DO_data$site_no))`             | `r sum(cont_days$n_days)`                            |
+| NWIS-daily only                    | `r length(unique(daily_DO_data$site_no))`            | `r sum(daily_days$n_days)`                           |
+
+
+
+<br>  
+
+
+Combining the harmonized WQP dataset with data from NWIS (which includes data from NGWOS high-frequency stations), here is a map of site locations with dissolved oxygen data:  
+
+```{r,echo=FALSE}
+
+# Plot sites:
+
+leaflet() %>%
+  addProviderTiles("CartoDB.DarkMatter", group = "CartoDB") %>%
+  addCircleMarkers(data=DO_sites_wqp,radius = ~sqrt(n/40),color ="orange",
+    stroke = FALSE, fillOpacity = 0.5,popup=paste("Site:", DO_sites_wqp$MonitoringLocationIdentifier,"<br>",
+                                                  "n_records:", DO_sites_wqp$n)) %>%
+  addCircleMarkers(data=cont_sites,radius = ~sqrt(n_days/40),color ="green",
+    stroke = FALSE, fillOpacity = 0.5,popup=paste("Site:", cont_sites$site_no,"<br>",
+                                                  "n_days:",cont_sites$n_days)) %>%
+  addCircleMarkers(data=daily_sites,radius = ~sqrt(n_days/40),color ="blue",
+    stroke = FALSE, fillOpacity = 0.5,popup=paste("Site:", daily_sites$site_no,"<br>",
+                                                  "n_days:",daily_sites$n_days)) %>%
+  addLegend("bottomright", colors = c("orange","green","blue"), labels = c("WQP snapshot samples","Continuous NWIS sensors","NWIS daily values only")) 
+
+
+```
+
+<br>  
+
+For the WQP data, the number of DO records - as well as the number of different sites represented - picks up after ~2000.   
+
+```{r,echo=FALSE}
+
+DO_wqp_data %>% 
+  group_by(ActivityStartDate) %>% 
+  summarize(n_sites = length(unique(MonitoringLocationIdentifier))) %>% 
+  mutate(Year = lubridate::year(ActivityStartDate),doy = lubridate::yday(ActivityStartDate)) %>% 
+  ggplot() +
+  geom_tile(aes(x=doy,y=Year,fill=n_sites)) + 
+  scale_fill_gradient(low = "#eff3ff", high = "#08519c",trans="log",breaks= c(1,5,50)) + 
+  theme_bw() + coord_cartesian(ylim=c(1950,2025))+
+  theme(axis.line = element_line(color='black'),
+    plot.background = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank())
+
+```
+
+<br>
+
+There is some seasonal bias to the NWIS continuous data, since some stations appear to pull their sensors over the winter:  
+
+```{r,echo=FALSE}
+
+inventory_cont %>% filter(Year != "2007") %>%
+  ggplot() +
+  geom_tile(aes(x=doy,y=Year,fill=n_sites_cont)) + 
+  scale_fill_viridis_c()+
+  theme_bw() + 
+  theme(axis.line = element_line(color='black'),
+    plot.background = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank())
+
+
+```
+
+
+<br>  
+
