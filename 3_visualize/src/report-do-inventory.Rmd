@@ -1,7 +1,9 @@
 ---
 title: "DRB dissolved oxygen data availability"
 date: "`r format(Sys.time(), '%d %B %Y')`"
-output: rmarkdown::github_document
+output: 
+  html_document:
+    keep_md: true
 ---
 
 ## Records summary  
