@@ -11,8 +11,9 @@
 #Targets directry
 _targets
 
-# All model output
-*/out/*
+# Output
+1_fetch/out/*
+2_process/out/*
 
 # Misc project docs
 docs/
