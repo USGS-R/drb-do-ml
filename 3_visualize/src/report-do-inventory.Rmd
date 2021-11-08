@@ -1,7 +1,7 @@
 ---
 title: "DRB dissolved oxygen data availability"
 date: "`r format(Sys.time(), '%d %B %Y')`"
-output: html_document
+output: rmarkdown::github_document
 ---
 
 ## Records summary  
@@ -22,8 +22,7 @@ DO_sites_nwis <- DO_sites_nwis %>%
   filter(data_type_cd =="uv"|(data_type_cd=="dv" & stat_cd=="00003"))
 
 # Load daily DO data:
-daily_DO_path <- tar_read(p1_daily_DO_csv)
-daily_DO_data <- read_csv(daily_DO_path,show_col_types = FALSE)
+daily_DO_data <- tar_read(p1_daily_DO_data)
 
 # Add a flag to daily DO data to denote pre-2007 DO observations:
 daily_DO_data <- daily_DO_data %>%
