@@ -1,7 +1,7 @@
 library(targets)
 
 options(tidyverse.quiet = TRUE)
-tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval","knitr","leaflet","sf")) 
+tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval","knitr","leaflet","sf","sbtools")) 
 
 source("1_fetch.R")
 source("2_process.R")
@@ -38,9 +38,11 @@ DO_pcodes <- c("00300") # other oxygen pcodes not of primary interest: c("00301"
 drb_huc8s <- c("02040101","02040102","02040104","02040103","02040106","02040105",
                "02040203","02040201","02040202","02040205","02040206","02040207")
 
-# Define USGS site types for which to download dissolved oxygen data (for now, we are interested in "Stream" and "Stream:Canal" sites)
+# Define USGS site types for which to download NWIS data (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
 site_tp_select <- c("ST","ST-CA") 
 
+# Define USGS stat codes for continuous sites that only report daily statistics (https://help.waterdata.usgs.gov/stat_code) 
+stat_cd_select <- c("00001","00002","00003")
 
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list,p3_targets_list)
