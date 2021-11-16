@@ -1,11 +1,12 @@
 source("1_fetch/src/find_nwis_sites.R")
 source("1_fetch/src/download_DO_data.R")
+source("1_fetch/src/fetch_harmonized_wqp_data.R")
 
 p1_targets_list <- list(
   # Load harmonized WQP data product
   tar_target(
     p1_wqp_data,
-    readRDS(file = "1_fetch/in/DRB.WQdata.rds")),
+    fetch_harmonized_wqp_data("1_fetch/out")),
   tar_target(
     p1_DO_sites_nwis,
     get_drb_sites(drb_huc8s,DO_pcodes,site_tp_select)),
