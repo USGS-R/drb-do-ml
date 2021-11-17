@@ -1,6 +1,7 @@
 source("1_fetch/src/fetch_harmonized_wqp_data.R")
 source("1_fetch/src/get_nwis_sites.R")
 source("1_fetch/src/get_daily_nwis_data.R")
+source("1_fetch/src/get_inst_nwis_data.R")
 
 p1_targets_list <- list(
   
@@ -12,7 +13,7 @@ p1_targets_list <- list(
   # Identify NWIS sites with continuous DO data ("dv" or "uv")
   tar_target(
     p1_nwis_sites,
-    get_drb_sites(drb_huc8s,DO_pcodes,site_tp_select,stat_cd_select)),
+    get_drb_sites(drb_huc8s,pcode_select,site_tp_select,stat_cd_select)),
   
   # Subset daily NWIS sites
   tar_target(
@@ -22,8 +23,19 @@ p1_targets_list <- list(
   # Download NWIS daily data
   tar_target(
     p1_daily_data,
-      get_daily_nwis_data(p1_nwis_sites_daily,DO_pcodes,stat_cd_select),
-      pattern = map(p1_nwis_sites_daily))
+      get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select),
+      pattern = map(p1_nwis_sites_daily)),
+  
+  # Subset NWIS sites with sub-daily data
+  tar_target(
+    p1_nwis_sites_inst,
+    filter(p1_nwis_sites,data_type_cd=="uv")),
+  
+  # Download NWIS instantaneous data
+  tar_target(
+    p1_inst_data,
+    get_inst_nwis_data(p1_nwis_sites_inst,pcode_select),
+    pattern = map(p1_nwis_sites_inst))
   
 )
 
