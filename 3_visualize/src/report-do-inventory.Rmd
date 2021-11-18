@@ -1,5 +1,5 @@
 ---
-title: "DRB dissolved oxygen data availability"
+title: "Dissolved oxygen data availability for the lower DRB"
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output: html_document
 ---
@@ -63,7 +63,7 @@ inventory_daily <- daily_DO_data %>%
 
 Dissolved oxygen data was pulled from NWIS (for continuous and daily data) as well as the Water Quality Portal, which focuses on discrete (snapshot) samples. Specifically, for the WQP, we used the harmonized multiscale surface water quality dataset for the Delaware River Basin ([Shoda et al. 2019](https://doi.org/10.5066/P9PX8LZO)). We're focused on dissolved oxygen reported in units of mg/L.  
 
-For NWIS, there were `r length(site_list$site_id[grepl("NWIS",site_list$data_src_combined)])` continuous DO sites within the DRB. Some of those report the instantaneous values, but for older data only daily values were available. Here's a breakdown of the sites/samples:
+For NWIS, there were `r length(site_list$site_id[grepl("NWIS",site_list$data_src_combined)])` continuous DO sites within the lower DRB. Some of those report the instantaneous values, but for older data only daily values were available. Here's a breakdown of the sites/samples:
 
 
 
