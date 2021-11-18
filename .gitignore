@@ -14,6 +14,8 @@ _targets
 # Output
 1_fetch/out/*
 2_process/out/*
+3_visualize/out*
+3_visualize/src/*.html
 
 # Misc project docs
 docs/
