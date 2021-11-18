@@ -1,8 +1,8 @@
 get_inst_nwis_data <- function(site_info,parameter) {
   #' 
-  #' @description Function to download NWIS daily data
+  #' @description Function to download NWIS instantaneous data
   #'
-  #' @param site_info a data frame containing site info for NWIS daily site. site_info must include the variable "site_no"
+  #' @param site_info a data frame containing site info for NWIS instantaneous site. site_info must include the variable "site_no"
   #' @param parameter a character vector containing the USGS parameter codes of interest
   #'
   #' @value A data frame containing instantaneous values and data quality codes for the parameter of interest
