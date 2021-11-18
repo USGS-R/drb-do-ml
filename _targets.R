@@ -35,8 +35,8 @@ omit_wqp_events <- c("Spill","Volcanic action")
 pcode_select <- c("00300") 
 
 # Define minor HUCs (hydrologic unit codes) that make up the DRB
-drb_huc8s <- c("02040101","02040102","02040104","02040103","02040106","02040105",
-               "02040203","02040201","02040202","02040205","02040206","02040207")
+# Lower Delaware: 020402 accounting code (for now, exclude Delaware Bay, huc "02040204")
+drb_huc8s <- c("02040201","02040202","02040203","02040205","02040206","02040207")
 
 # Define USGS site types for which to download NWIS data (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
 site_tp_select <- c("ST","ST-CA") 
