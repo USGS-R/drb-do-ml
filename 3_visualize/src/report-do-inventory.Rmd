@@ -14,7 +14,7 @@ output: html_document
 options(scipen=999)
 
 # Load WQP DO data:
-DO_wqp_data <- tar_read(p2_filtered_wqp_data)
+DO_wqp_data <- tar_read(p2_filtered_wqp_data_subset)
 
 # Load full site list:
 site_list_path <- tar_read(p2_site_list_csv)
@@ -23,11 +23,11 @@ site_list <- read_csv(site_list_path,show_col_types = FALSE)
 # Summarize DO observation-days:
 daily_days <- site_list %>% 
   filter(grepl("daily",data_src_combined)) %>%
-  summarize(n_days = sum(n_obsdays_nwis))
+  summarize(n_days = sum(count_days_nwis))
 
 inst_days <- site_list %>%
   filter(grepl("inst",data_src_combined)) %>%
-  summarize(n_days = sum(n_obsdays_nwis))
+  summarize(n_days = sum(count_days_nwis))
 
 # Load daily DO data:
 daily_DO_data <- tar_read(p1_daily_data)
@@ -66,13 +66,22 @@ Dissolved oxygen data was pulled from NWIS (for continuous and daily data) as we
 For NWIS, there were `r length(site_list$site_id[grepl("NWIS",site_list$data_src_combined)])` continuous DO sites within the lower DRB. Some of those report the instantaneous values, but for older data only daily values were available. Here's a breakdown of the sites/samples:
 
 
+```{r r-table, echo=FALSE}
 
-| Site type                          | Number of unique sites                                                                  | Number of observation-days                           |
-| ---------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| WQP                                | `r length(site_list$site_id[which(site_list$data_src_combined=="Harmonized_WQP_data")])`| `r sum(site_list$n_obsdays_discrete[which(site_list$data_src_combined=="Harmonized_WQP_data")])` |
-| NWIS-instantaneous                 | `r length(site_list$site_id[grepl("inst",site_list$data_src_combined)])`               | `r sum(site_list$n_obsdays_nwis[grepl("inst",site_list$data_src_combined)])`                    |
-| NWIS-daily only                    | `r length(site_list$site_id[grepl("daily",site_list$data_src_combined)])`                | `r sum(site_list$n_obsdays_nwis[grepl("daily",site_list$data_src_combined)])`                           |
+# Print DO records overview table
+site_list %>% 
+  mutate(data_src_simple = as.factor(case_when(data_src_combined == "NWIS_daily/Harmonized_WQP_data" ~ "NWIS-daily",
+                           data_src_combined == "NWIS_instantaneous/Harmonized_WQP_data" ~ "NWIS-instantaneous",
+                           data_src_combined == "Harmonized_WQP_data" ~ "WQP",
+                           data_src_combined == "NWIS_instantaneous" ~ "NWIS-instantaneous",
+                           data_src_combined == "NWIS_daily" ~ "NWIS-daily"))) %>%
+  group_by(data_src_simple) %>% 
+  summarise(count_unique_sites = length(unique(site_id)),
+            count_observation_days = if_else(first(data_src_simple == "WQP"),sum(count_days_discrete),sum(count_days_nwis))) %>%
+  arrange(desc(count_unique_sites)) %>%
+  kable()
 
+```
 
 
 <br>  
@@ -82,25 +91,42 @@ Combining the harmonized WQP dataset with data from NWIS (which includes data fr
 
 ```{r,echo=FALSE}
 
-# Create spatial object:
-site_list_sp <- sf::st_as_sf(site_list,coords=c("lon","lat"),crs=4269) %>%
+# Handle different coordinate reference systems across sites:
+site_list_split <- split(site_list,f=site_list$datum)
+site_list_sp_ls <- lapply(site_list_split,function(x){
+  
+  # assume unknown crs (datum = "UNKWN") are equal to WGS84:
+  datum_assign <- case_when(x$datum[1] == "NAD83" ~ 4269,
+                            x$datum[1] == "WGS84" ~ 4326,
+                            x$datum[1] == "NAD27" ~ 4267,
+                            x$datum[1] == "UNKWN" ~ 4326)
+  
+  # convert data frame to spatial object:
+  site_list_sp <- sf::st_as_sf(x,coords=c("lon","lat"),crs=datum_assign) %>%
   sf::st_transform(4326) %>%
   mutate(group = as.factor(case_when(data_src_combined == "NWIS_daily/Harmonized_WQP_data" ~ "daily",
                            data_src_combined == "NWIS_instantaneous/Harmonized_WQP_data" ~ "instantaneous",
                            data_src_combined == "Harmonized_WQP_data" ~ "discrete",
                            data_src_combined == "NWIS_instantaneous" ~ "instantaneous",
                            data_src_combined == "NWIS_daily" ~ "daily")))
+  return(site_list_sp) 
+  
+})
+# Create spatial object:
+site_list_sp <- do.call(rbind,site_list_sp_ls)
 
 # Define color palette for circle markers:
-pal <- colorFactor(palette = c("blue","orange","green"),domain=site_list_sp$group)
+pal <- colorFactor(palette = c("orange","blue","green"),domain=site_list_sp$group)
   
 # Plot sites:
 leaflet() %>%
   addProviderTiles("CartoDB.DarkMatter", group = "CartoDB") %>%
-  addCircleMarkers(data=site_list_sp,radius = ~sqrt(n_obsdays_total/40),color = ~pal(group),
+  addCircleMarkers(data=site_list_sp,radius = ~sqrt(count_days_total/40),color = ~pal(group),
     stroke = FALSE, fillOpacity = 0.5,popup=paste("Site:", site_list_sp$site_id,"<br>",
-                                                  "n_observation-days:", site_list_sp$n_obsdays_total)) %>%
+                                                  "n_observation-days:", site_list_sp$count_days_total)) %>%
     addLegend("bottomright", colors = c("orange","green","blue"), labels = c("discrete","instantaneous","daily")) 
+
+
 
 ```
 
