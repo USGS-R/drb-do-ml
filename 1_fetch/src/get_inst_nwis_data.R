@@ -3,7 +3,7 @@ get_inst_nwis_data <- function(site_info,parameter) {
   #' @description Function to download NWIS instantaneous data
   #'
   #' @param site_info a data frame containing site info for NWIS instantaneous site. site_info must include the variable "site_no"
-  #' @param parameter a character vector containing the USGS parameter codes of interest
+  #' @param parameter a character vector containing the USGS parameter code of interest
   #'
   #' @value A data frame containing instantaneous values and data quality codes for the parameter of interest
   #' @examples 
@@ -11,9 +11,9 @@ get_inst_nwis_data <- function(site_info,parameter) {
   
   message(sprintf('Retrieving instantaneous data for %s', site_info$site_no))
 
-  # Download instantaneous data
+  # Download instantaneous data (use default time zone = "UTC" to avoid daylight savings issues)
   site_data <- dataRetrieval::readNWISuv(
-    siteNumbers = site_info$site_no,parameterCd=parameter,startDate = "",endDate = "",tz="America/New_York") %>%
+    siteNumbers = site_info$site_no,parameterCd=parameter,startDate = "",endDate = "",tz = "UTC") %>%
     dataRetrieval::renameNWISColumns(p00300="Value",p00095="Value") 
   
   # Munge column names for some sites with different or unusually-named value columns
@@ -21,6 +21,22 @@ get_inst_nwis_data <- function(site_info,parameter) {
     if(parameter == '00300') {
       site_data <- switch(
         site_info$site_no[1],
+        "01467200" = site_data %>%
+          mutate(Value_Inst_merged = coalesce(`ISM.Test.Bed...ISM.Test.Bed..barge.._Value_Inst`,`Value_Inst`),
+                 Value_Inst_cd_merged = coalesce(`ISM.Test.Bed...ISM.Test.Bed..barge.._Value_Inst_cd`,`Value_Inst_cd`)) %>%
+          select(agency_cd,site_no,dateTime,Value_Inst_merged,Value_Inst_cd_merged,tz_cd) %>%
+          rename("Value_Inst"="Value_Inst_merged","Value_Inst_cd"="Value_Inst_cd_merged"))
+    }
+    if(parameter == "00095") {
+      site_data <- switch(
+        site_info$site_no[1],
+        "01434498" = site_data %>%
+          select(agency_cd,site_no,dateTime,Value_Inst,Value_Inst_cd,tz_cd),
+        "01435000" = site_data %>%
+          mutate(Value_Inst_merged = Channel.WQ_Value_Inst,
+                 Value_Inst_cd_merged = Channel.WQ_Value_Inst_cd) %>%
+          select(agency_cd,site_no,dateTime,Value_Inst_merged,Value_Inst_cd_merged,tz_cd) %>%
+          rename("Value_Inst"="Value_Inst_merged","Value_Inst_cd"="Value_Inst_cd_merged"),
         "01467200" = site_data %>%
           mutate(Value_Inst_merged = coalesce(`ISM.Test.Bed...ISM.Test.Bed..barge.._Value_Inst`,`Value_Inst`),
                  Value_Inst_cd_merged = coalesce(`ISM.Test.Bed...ISM.Test.Bed..barge.._Value_Inst_cd`,`Value_Inst_cd`)) %>%
