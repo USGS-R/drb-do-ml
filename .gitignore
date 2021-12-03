@@ -8,6 +8,15 @@
 # User-specific files
 .Ruserdata
 
+#Targets directry
+_targets
+
+# Output
+*/out/*
+
+# Misc project docs
+docs/
+
 # Example code in package build process
 *-Ex.R
 
