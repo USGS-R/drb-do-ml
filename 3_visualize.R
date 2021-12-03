@@ -21,7 +21,11 @@ p3_targets_list <- list(
 
   tar_target(
     p3_do_summary_plots,
-    plot_do_overview(p1_daily_data_csv, p1_inst_data_csv, filesout=c("3_visualize/out/inst_daily_means.jpg", "3_visualize/out/daily_daily_means.jpg", "3_visualize/out/doy_means.jpg")),
+    plot_do_overview(p1_daily_data_csv, p1_inst_data_csv, filesout=c("3_visualize/out/inst_daily_means.jpg",
+                                                                     "3_visualize/out/daily_daily_means.jpg",
+                                                                     "3_visualize/out/doy_means.jpg",
+                                                                     "3_visualize/out/filtered_daily_means.jpg",
+                                                                     "3_visualize/out/filtered_inst_means.jpg")),
     format = "file"
   )
 )
