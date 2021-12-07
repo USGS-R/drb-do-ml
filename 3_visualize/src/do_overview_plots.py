@@ -122,13 +122,12 @@ axs = df_inst_means_filt.plot(
     grid=True,
     color="steelblue",
     layout=(6, 2),
-    alpha=0.6,
 )
 for i, site_id in enumerate(df_inst_means_filt.columns):
     ax = axs.flatten()[i]
     ax.legend(loc="upper left")
 
 fig = plt.gcf()
-fig.suptitle("daily minimum DO (mg/l) at daily sites", y=0.99)
+fig.suptitle("daily mean DO (mg/l) at daily sites", y=0.99)
 plt.tight_layout()
 plt.savefig("3_visualize/out/filtered_inst_means.jpg", dpi=300)
