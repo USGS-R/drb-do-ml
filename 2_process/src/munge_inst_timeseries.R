@@ -64,7 +64,7 @@ aggregate_data_to_daily <- function(inst_data, daily_data){
   #' @description Function to aggregate instantaneous NWIS data collected at sub-hourly (e.g. 15/5/30 min) intervals to hourly min/mean/maxs
   #'
   #' @param inst_data a data frame containing the downloaded time series for NWIS instantaneous site. 
-  #' inst_data must include the following columns: c("Value_Inst","Value_Inst_cd","dateTime","agency_cd","site_no","time_zone",and "Parameter")
+  #' inst_data must include the following columns: c("Value_Inst","dateTime","site_no")
   #' @param daily_data a data frame the downloaded daily time series of DO data. This is used so that if a site is already in 
   #'  the daily sites, we won't do the aggregating here
   #'
