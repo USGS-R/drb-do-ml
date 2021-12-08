@@ -25,6 +25,16 @@ p2_targets_list <- list(
     command = save_target_ind_files("2_process/log/wqp_data_ind.csv","p2_wqp_data_subset"),
     format = "file"),
   
+  # Aggregate instantaneous DO data to daily min/mean/maxs
+  tar_target(
+    p2_inst_data_daily,
+    aggregate_data_to_daily(p1_inst_data,p1_daily_data)),
+
+  # Combine 1) daily DO data and 2) instantaneous DO data that has been aggregated to daily 
+  tar_target(
+    p2_daily_combined,
+    bind_rows(p1_daily_data, p2_inst_data_daily)),
+  
   # Create a list of unique site locations containing DO data  
   tar_target(
     p2_site_list_csv,
