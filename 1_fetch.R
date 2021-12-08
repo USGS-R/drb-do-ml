@@ -2,6 +2,7 @@ source("1_fetch/src/fetch_harmonized_wqp_data.R")
 source("1_fetch/src/get_nwis_sites.R")
 source("1_fetch/src/get_daily_nwis_data.R")
 source("1_fetch/src/get_inst_nwis_data.R")
+source("1_fetch/src/write_data.R")
 
 p1_targets_list <- list(
   
@@ -38,7 +39,13 @@ p1_targets_list <- list(
     get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select),
     pattern = map(p1_nwis_sites_daily)),
   
-  # Subset NWIS sites with instantaneous (sub-daily) data
+  tar_target(
+    p1_daily_data_csv,
+    write_to_csv(p1_daily_data, outfile="1_fetch/out/daily_do_data.csv"),
+    format = "file"
+  ),
+  
+  # Subset NWIS sites with sub-daily data
   tar_target(
     p1_nwis_sites_inst,
     p1_nwis_sites %>%
@@ -49,7 +56,13 @@ p1_targets_list <- list(
   tar_target(
     p1_inst_data,
     get_inst_nwis_data(p1_nwis_sites_inst,pcode_select),
-    pattern = map(p1_nwis_sites_inst))
+    pattern = map(p1_nwis_sites_inst)),
+  
+  tar_target(
+    p1_inst_data_csv,
+    write_to_csv(p1_inst_data, outfile="1_fetch/out/inst_do_data.csv"),
+    format = "file"
+  )
   
 )
 
