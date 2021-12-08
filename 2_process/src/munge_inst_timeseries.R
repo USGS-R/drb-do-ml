@@ -59,3 +59,27 @@ aggregate_data_to_hourly <- function(inst_data,output_tz){
 
 }
 
+aggregate_data_to_daily <- function(inst_data, daily_data){
+  #' 
+  #' @description Function to aggregate instantaneous NWIS data collected at sub-hourly (e.g. 15/5/30 min) intervals to hourly min/mean/maxs
+  #'
+  #' @param inst_data a data frame containing the downloaded time series for NWIS instantaneous site. 
+  #' inst_data must include the following columns: c("Value_Inst","Value_Inst_cd","dateTime","agency_cd","site_no","time_zone",and "Parameter")
+  #' @param daily_data a data frame the downloaded daily time series of DO data. This is used so that if a site is already in 
+  #'  the daily sites, we won't do the aggregating here
+  #'
+  #' @value A data frame containing daily min, mean, and max values the parameter of interest
+
+  
+  only_inst_data = setdiff(inst_data$site_no, daily_data$site_no)
+  
+  daily_values <- inst_data %>%
+    filter(site_no %in% only_inst_data) %>%
+    mutate(Date = as.Date(dateTime, format="%Y-%m-%d")) %>%
+    group_by(Date, site_no) %>%
+    summarise(Value = mean(Value_Inst), Value_Min = min(Value_Inst), Value_Max = max(Value_Inst)) %>%
+    na.omit()
+
+  return(daily_values)
+}
+

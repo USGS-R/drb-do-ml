@@ -15,11 +15,21 @@ p2_targets_list <- list(
     p2_filtered_wqp_data_subset,
     subset_wqp_sites(p1_lowerdrb_boundary,p2_filtered_wqp_data)),
   
-  # Aggregate instantaneous SC data to hourly averages
+  # Aggregate instantaneous DO data to hourly averages
   tar_target(
     p2_inst_data_hourly,
     aggregate_data_to_hourly(p1_inst_data,output_tz = "UTC"),
     pattern = map(p1_inst_data)),
+  
+  # Aggregate instantaneous DO data to daily min/mean/maxs
+  tar_target(
+    p2_inst_data_daily,
+    aggregate_data_to_daily(p1_inst_data,p1_daily_data)),
+
+  # Combine 1) daily DO data and 2) instantaneous DO data that has been aggregated to daily 
+  tar_target(
+    p2_daily_combined,
+    bind_rows(p1_daily_data, p2_inst_data_daily)),
   
   # Create a list of unique site locations containing DO data  
   tar_target(
