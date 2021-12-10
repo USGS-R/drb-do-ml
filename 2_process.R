@@ -36,5 +36,10 @@ p2_targets_list <- list(
   tar_target(
     p2_site_list,
     create_site_list(p2_filtered_wqp_data_subset,p1_lowerdrb_boundary,p1_nwis_sites,p1_daily_data,p2_inst_data_hourly)),
+  
+  tar_target(
+    p2_sites_w_segs,
+    get_site_flowlines(p1_reaches_sf, p2_site_list)
+  )
 
 )
