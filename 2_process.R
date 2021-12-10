@@ -4,7 +4,7 @@ source("2_process/src/munge_inst_timeseries.R")
 source("2_process/src/create_site_list.R")
 source("2_process/src/summarize_site_list.R")
 source("2_process/src/save_target_ind_files.R")
-
+source("2_process/src/match_sites_to_reaches.R")
 
 p2_targets_list <- list(
   
@@ -28,9 +28,9 @@ p2_targets_list <- list(
   tar_target(
     p2_site_list_csv,
     create_site_list(p2_filtered_wqp_data_subset,p1_nwis_sites,p1_daily_data,p1_inst_data,
-                       hucs=drb_huc8s,crs_out="NAD83",fileout = "2_process/out/DRB_DO_sitelist.csv"),
-    format = "file"),
-  
+                       hucs=drb_huc8s,crs_out="NAD83")
+  ), 
+
   # Create and save log file containing data availability summary
   tar_target(
     p2_sitelist_summary_csv,

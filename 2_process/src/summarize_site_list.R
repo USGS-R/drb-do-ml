@@ -1,18 +1,15 @@
-summarize_site_list <- function(site_list_path,nwis_daily_data,nwis_inst_data,fileout){
+summarize_site_list <- function(site_list,nwis_daily_data,nwis_inst_data,fileout){
   #' 
   #' @description Function to summarize data availability info and save log file 
   #'
-  #' @param site_list_path file path and name of site list file, including the file extension
+  #' @param site_list data frame of site list
   #' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
   #' @param nwis_inst_data data frame containing instantaneous data for all NWIS instantaneous sites
   #' @param fileout file path and name for output data, including the file extension
   #'
   #' @value A data frame containing the total number of observation days (discrete observations + NWIS days), the number of unique lat/lon locations, and the number of sites broken down by data source
-  #' @example summarize_site_list(site_list_path = "2_process/out/site_list.csv",nwis_daily_data = daily_df,nwis_inst_data = inst_df)
+  #' @example summarize_site_list(site_list= p2_site_list, nwis_daily_data = daily_df,nwis_inst_data = inst_df)
   #' 
-
-  # Read in list of sites  
-  site_list <- read_csv(site_list_path,show_col_types = FALSE)
 
   # Summarize data availability
   site_summary <- site_list %>%

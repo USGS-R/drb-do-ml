@@ -1,4 +1,4 @@
-create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,hucs,crs_out="NAD83",fileout){
+create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,hucs,crs_out="NAD83"){
   #' 
   #' @description Function to create one site list that contains unique site locations for modeling
   #'
@@ -89,11 +89,8 @@ create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,
     lapply(.,transform_site_locations,crs_out=crs_out) %>%
     do.call(rbind,.)
   
-  # Save site list
-  write_csv(unique_sites, file = fileout)
   
-  return(fileout)
-  
+  return(unique_sites_out)
 }
 
 
