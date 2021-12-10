@@ -35,6 +35,11 @@ p2_targets_list <- list(
   tar_target(
     p2_sitelist_summary_csv,
     summarize_site_list(p2_site_list_csv,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
-    format = "file")
+    format = "file"),
+
+  tar_target(
+    p2_sites_w_segs,
+    get_site_flowlines(p1_reaches_sf, p2_site_list)
+  )
 
 )
