@@ -1,4 +1,4 @@
-create_site_list <- function(wqp_data,ws_boundary,nwis_sites,nwis_daily_data,nwis_inst_data,fileout){
+create_site_list <- function(wqp_data,ws_boundary,nwis_sites,nwis_daily_data,nwis_inst_data){
   #' 
   #' @description Function to create one site list that contains unique site locations for modeling
   #'
@@ -83,10 +83,6 @@ create_site_list <- function(wqp_data,ws_boundary,nwis_sites,nwis_daily_data,nwi
     rename("count_days_discrete" = "count_days_discrete_combined",
            "count_days_total" = "count_days_total_combined")
   
-  # Save site list
-  write_csv(unique_sites, file = fileout)
-  
-  return(fileout)
-  
+  return(unique_sites)
 }
 

@@ -2,6 +2,7 @@ source("2_process/src/filter_wqp_data.R")
 source("2_process/src/subset_wqp_sites.R")
 source("2_process/src/munge_inst_timeseries.R")
 source("2_process/src/create_site_list.R")
+source("2_process/src/match_sites_to_reaches.R")
 
 p2_targets_list <- list(
   
@@ -33,8 +34,7 @@ p2_targets_list <- list(
   
   # Create a list of unique site locations containing DO data  
   tar_target(
-    p2_site_list_csv,
-    create_site_list(p2_filtered_wqp_data_subset,p1_lowerdrb_boundary,p1_nwis_sites,p1_daily_data,p2_inst_data_hourly,fileout = "2_process/out/DRB_DO_sitelist.csv"),
-    format = "file")
+    p2_site_list,
+    create_site_list(p2_filtered_wqp_data_subset,p1_lowerdrb_boundary,p1_nwis_sites,p1_daily_data,p2_inst_data_hourly)),
 
 )
