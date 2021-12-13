@@ -3,6 +3,7 @@ source("2_process/src/subset_wqp_sites.R")
 source("2_process/src/munge_inst_timeseries.R")
 source("2_process/src/create_site_list.R")
 source("2_process/src/match_sites_to_reaches.R")
+source("1_fetch/src/write_data.R")
 
 p2_targets_list <- list(
   
@@ -40,6 +41,21 @@ p2_targets_list <- list(
   tar_target(
     p2_sites_w_segs,
     get_site_flowlines(p1_reaches_sf, p2_site_list)
-  )
+  ),
+  
+  tar_target(
+    p2_daily_with_seg_ids,
+    {
+      seg_and_site_ids <- p2_sites_w_segs %>% select(site_id, segidnat)
+      left_join(p2_daily_combined, seg_and_site_ids, by=c("site_no" = "site_id"))
+    }  
+  ), 
+  
+  tar_target(
+    p2_daily_with_seg_ids_csv,
+    write_to_csv(p2_daily_with_seg_ids, "2_process/out/daily_do_data.csv"),
+    format = "file"
+  ) 
+  
 
 )
