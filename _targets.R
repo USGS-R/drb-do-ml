@@ -41,17 +41,20 @@ pcode_select <- c("00300")
 drb_huc8s <- c("02040201","02040202","02040203","02040204","02040205","02040206","02040207")
 
 # Define USGS site types for which to download NWIS data (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
-site_tp_select <- c("ST","ST-CA") 
+site_tp_select <- c("ST","ST-CA","SP") 
 
 # Omit undesired sites
-# "01412350" coded as site type "ST" but within Delaware Bay and is influenced by tides
-omit_nwis_sites <- c("01412350") 
+# sites 01412350, 01484272 coded as site type "ST" but appear to be tidally-influenced
+omit_nwis_sites <- c("01412350","01484272") 
 
 # Define USGS stat codes for continuous sites that only report daily statistics (https://help.waterdata.usgs.gov/stat_code) 
 stat_cd_select <- c("00001","00002","00003")
 
+# Define earliest startDate for NWIS data retrievals
+earliest_date <- "1979-10-01"
+
 # Change dummy date to force re-build of NWIS DO sites and data download
-dummy_date <- "2021-11-30"
+dummy_date <- "2021-12-19"
 
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list,p3_targets_list)

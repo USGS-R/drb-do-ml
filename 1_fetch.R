@@ -30,34 +30,40 @@ p1_targets_list <- list(
   tar_target(
     p1_nwis_sites_daily,
     p1_nwis_sites %>%
-      filter(data_type_cd=="dv",!(site_no %in% omit_nwis_sites)) %>%
-      group_by(site_no) %>% slice(1)),
-
+      # retain "dv" sites that contain data records after user-specified {earliest_date}
+      filter(data_type_cd=="dv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
+      # for sites with multiple time series (ts_id), retain the most recent time series for site_info
+      group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)),
+  
   # Download NWIS daily data
   tar_target(
     p1_daily_data,
-    get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select),
+    get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select,start_date=earliest_date,end_date=dummy_date),
     pattern = map(p1_nwis_sites_daily)),
   
+  # Save NWIS daily data
   tar_target(
     p1_daily_data_csv,
     write_to_csv(p1_daily_data, outfile="1_fetch/out/daily_do_data.csv"),
     format = "file"
   ),
   
-  # Subset NWIS sites with sub-daily data
+  # Subset NWIS sites with instantaneous (sub-daily) data
   tar_target(
     p1_nwis_sites_inst,
     p1_nwis_sites %>%
-      filter(data_type_cd=="uv",!(site_no %in% omit_nwis_sites)) %>%
-      group_by(site_no) %>% slice(1)),
-  
+      # retain "uv" sites that contain data records after user-specified {earliest_date}
+      filter(data_type_cd=="uv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
+      # for sites with multiple time series (ts_id), retain the most recent time series for site_info
+      group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)),
+
   # Download NWIS instantaneous data
   tar_target(
     p1_inst_data,
-    get_inst_nwis_data(p1_nwis_sites_inst,pcode_select),
+    get_inst_nwis_data(p1_nwis_sites_inst,pcode_select,start_date=earliest_date,end_date=dummy_date),
     pattern = map(p1_nwis_sites_inst)),
   
+  # Save NWIS instantaneous data
   tar_target(
     p1_inst_data_csv,
     write_to_csv(p1_inst_data, outfile="1_fetch/out/inst_do_data.csv"),
