@@ -16,12 +16,6 @@ p2_targets_list <- list(
     subset_wqp_sites(p2_filtered_wqp_data,drb_huc8s,fileout="2_process/out/DRB_WQdata_DO_data.csv"),
     format = "file"),
   
-  # Aggregate instantaneous SC data to hourly averages
-  tar_target(
-    p2_inst_data_hourly,
-    aggregate_data_to_hourly(p1_inst_data,output_tz = "UTC"),
-    pattern = map(p1_inst_data)),
-  
   # Create a list of unique site locations containing DO data  
   tar_target(
     p2_site_list_csv,
