@@ -83,6 +83,12 @@ create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,
     rename("count_days_discrete" = "count_days_discrete_combined",
            "count_days_total" = "count_days_total_combined")
   
+  # Clean up different coordinate reference systems within unique_sites data frame
+  unique_sites_out <- unique_sites %>%
+    split(.,.$datum) %>% 
+    lapply(.,transform_site_locations,crs_out=crs_out) %>%
+    do.call(rbind,.)
+  
   # Save site list
   write_csv(unique_sites, file = fileout)
   
