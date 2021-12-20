@@ -13,12 +13,14 @@ output: html_document
 
 options(scipen=999)
 
-# Load WQP DO data:
-DO_wqp_data <- tar_read(p2_filtered_wqp_data_subset)
+# Load filtered WQP data subset
+DO_wqp_data <- read_csv(tar_read(p2_wqp_data_subset_csv),col_types = cols(ResultDetectionConditionText = col_character()))
 
 # Load full site list:
 site_list_path <- tar_read(p2_site_list_csv)
 site_list <- read_csv(site_list_path,show_col_types = FALSE)
+site_tally <- read_csv(tar_read(p3_sitelist_summary_csv),show_col_types = FALSE)
+unique_wqp_lat_lon <- DO_wqp_data %>% distinct(LatitudeMeasure,LongitudeMeasure) %>% summarize(n_sites=n()) 
 
 # Summarize DO observation-days:
 daily_days <- site_list %>% 
@@ -63,18 +65,18 @@ inventory_daily <- daily_DO_data %>%
 
 Dissolved oxygen data was pulled from NWIS (for continuous and daily data) as well as the Water Quality Portal, which focuses on discrete (snapshot) samples. Specifically, for the WQP, we used the harmonized multiscale surface water quality dataset for the Delaware River Basin ([Shoda et al. 2019](https://doi.org/10.5066/P9PX8LZO)). We're focused on dissolved oxygen reported in units of mg/L.  
 
-For NWIS, there were `r length(site_list$site_id[grepl("NWIS",site_list$data_src_combined)])` continuous DO sites within the lower DRB. Some of those report the instantaneous values, but for older data only daily values were available. Here's a breakdown of the sites/samples:
+For NWIS, there were `r length(site_list$site_id[grepl("NWIS",site_list$data_src_combined)])` continuous DO sites within the lower DRB. Some of those report the instantaneous values, but for older data only daily values were available. 
 
 
 ```{r r-table, echo=FALSE}
 
 # Print DO records overview table
 site_list %>% 
-  mutate(data_src_simple = as.factor(case_when(data_src_combined == "NWIS_daily/Harmonized_WQP_data" ~ "NWIS-daily",
-                           data_src_combined == "NWIS_instantaneous/Harmonized_WQP_data" ~ "NWIS-instantaneous",
+  mutate(data_src_simple = as.factor(case_when(data_src_combined == "NWIS_daily/Harmonized_WQP_data" ~ "NWIS",
+                           data_src_combined == "NWIS_instantaneous/Harmonized_WQP_data" ~ "NWIS",
                            data_src_combined == "Harmonized_WQP_data" ~ "WQP",
-                           data_src_combined == "NWIS_instantaneous" ~ "NWIS-instantaneous",
-                           data_src_combined == "NWIS_daily" ~ "NWIS-daily"))) %>%
+                           data_src_combined == "NWIS_instantaneous" ~ "NWIS",
+                           data_src_combined == "NWIS_daily" ~ "NWIS"))) %>%
   group_by(data_src_simple) %>% 
   summarise(count_unique_sites = length(unique(site_id)),
             count_observation_days = if_else(first(data_src_simple == "WQP"),sum(count_days_discrete),sum(count_days_nwis))) %>%
@@ -87,46 +89,12 @@ site_list %>%
 <br>  
 
 
-Combining the harmonized WQP dataset with data from NWIS (which includes data from NGWOS high-frequency stations), here is a map of site locations with dissolved oxygen data:  
+Combining the harmonized WQP dataset with data from NWIS (which includes data from NGWOS high-frequency stations), here is a map of site locations with dissolved oxygen data (n = `r site_tally$n_unique_latlon` unique lat/lon locations):  
 
 ```{r,echo=FALSE}
 
-# Handle different coordinate reference systems across sites:
-site_list_split <- split(site_list,f=site_list$datum)
-site_list_sp_ls <- lapply(site_list_split,function(x){
-  
-  # assume unknown crs (datum = "UNKWN") are equal to WGS84:
-  datum_assign <- case_when(x$datum[1] == "NAD83" ~ 4269,
-                            x$datum[1] == "WGS84" ~ 4326,
-                            x$datum[1] == "NAD27" ~ 4267,
-                            x$datum[1] == "UNKWN" ~ 4326)
-  
-  # convert data frame to spatial object:
-  site_list_sp <- sf::st_as_sf(x,coords=c("lon","lat"),crs=datum_assign) %>%
-  sf::st_transform(4326) %>%
-  mutate(group = as.factor(case_when(data_src_combined == "NWIS_daily/Harmonized_WQP_data" ~ "daily",
-                           data_src_combined == "NWIS_instantaneous/Harmonized_WQP_data" ~ "instantaneous",
-                           data_src_combined == "Harmonized_WQP_data" ~ "discrete",
-                           data_src_combined == "NWIS_instantaneous" ~ "instantaneous",
-                           data_src_combined == "NWIS_daily" ~ "daily")))
-  return(site_list_sp) 
-  
-})
-# Create spatial object:
-site_list_sp <- do.call(rbind,site_list_sp_ls)
-
-# Define color palette for circle markers:
-pal <- colorFactor(palette = c("orange","blue","green"),domain=site_list_sp$group)
-  
-# Plot sites:
-leaflet() %>%
-  addProviderTiles("CartoDB.DarkMatter", group = "CartoDB") %>%
-  addCircleMarkers(data=site_list_sp,radius = ~sqrt(count_days_total/40),color = ~pal(group),
-    stroke = FALSE, fillOpacity = 0.5,popup=paste("Site:", site_list_sp$site_id,"<br>",
-                                                  "n_observation-days:", site_list_sp$count_days_total)) %>%
-    addLegend("bottomright", colors = c("orange","green","blue"), labels = c("discrete","instantaneous","daily")) 
-
-
+site_list_map <- map_sites(site_list_path)
+site_list_map
 
 ```
 
