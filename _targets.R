@@ -8,7 +8,9 @@ source("2_process.R")
 source("3_visualize.R")
 
 dir.create("1_fetch/out/", showWarnings = FALSE)
+dir.create("1_fetch/log/", showWarnings = FALSE)
 dir.create("2_process/out/", showWarnings = FALSE)
+dir.create("2_process/log/", showWarnings = FALSE)
 dir.create("3_visualize/out/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
 
