@@ -10,6 +10,7 @@ source("3_visualize.R")
 dir.create("1_fetch/out/", showWarnings = FALSE)
 dir.create("2_process/out/", showWarnings = FALSE)
 dir.create("3_visualize/out/", showWarnings = FALSE)
+dir.create("3_visualize/log/", showWarnings = FALSE)
 dir.create("3_visualize/out/daily_timeseries_png/",showWarnings = FALSE)
 dir.create("3_visualize/out/hourly_timeseries_png/",showWarnings = FALSE)
 

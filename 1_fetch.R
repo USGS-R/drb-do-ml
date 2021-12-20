@@ -56,6 +56,17 @@ p1_targets_list <- list(
       filter(data_type_cd=="uv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
       # for sites with multiple time series (ts_id), retain the most recent time series for site_info
       group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)),
+  
+  # Create log file to track sites with multiple time series
+  tar_target(
+    p1_nwis_sites_inst_multipleTS_csv,
+    p1_nwis_sites %>%
+      # retain "uv" sites that contain data records after user-specified {earliest_date}
+      filter(data_type_cd=="uv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
+      # save record of sites with multiple time series
+      group_by(site_no) %>% mutate(count_ts = length(unique(ts_id))) %>%
+      filter(count_ts > 1) %>%
+      readr::write_csv(.,"3_visualize/log/summary_multiple_inst_ts.csv")),
 
   # Download NWIS instantaneous data
   tar_target(
