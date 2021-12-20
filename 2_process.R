@@ -12,8 +12,9 @@ p2_targets_list <- list(
   
   # Subset harmonized WQP data to lower DRB
   tar_target(
-    p2_filtered_wqp_data_subset,
-    subset_wqp_sites(p1_lowerdrb_boundary,p2_filtered_wqp_data)),
+    p2_wqp_data_subset_csv,
+    subset_wqp_sites(p2_filtered_wqp_data,drb_huc8s,fileout="2_process/out/DRB_WQdata_DO_data.csv"),
+    format = "file"),
   
   # Aggregate instantaneous SC data to hourly averages
   tar_target(
@@ -24,7 +25,11 @@ p2_targets_list <- list(
   # Create a list of unique site locations containing DO data  
   tar_target(
     p2_site_list_csv,
-    create_site_list(p2_filtered_wqp_data_subset,p1_lowerdrb_boundary,p1_nwis_sites,p1_daily_data,p2_inst_data_hourly,fileout = "2_process/out/DRB_DO_sitelist.csv"),
+    {
+      wqp_data_subset <- read_csv(p2_wqp_data_subset_csv,col_types = cols(ResultDetectionConditionText = col_character()))
+      create_site_list(wqp_data_subset,p1_nwis_sites,p1_daily_data,p1_inst_data,
+                       hucs=drb_huc8s,crs_out="NAD83",fileout = "2_process/out/DRB_DO_sitelist.csv")
+    },
     format = "file")
 
 )

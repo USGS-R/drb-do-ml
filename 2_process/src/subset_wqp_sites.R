@@ -1,27 +1,24 @@
-subset_wqp_sites <- function(ws_boundary,wqp_data){
+subset_wqp_sites <- function(wqp_data,hucs,fileout){
   #' 
   #' @description Function to subset discrete sample locations for the lower DRB
   #'
-  #' @param ws_boundary sf object containing the watershed boundary of interest
   #' @param wqp_data a data frame containing discrete water quality data. Data frame must contain columns "LongitudeMeasure" and "LatitudeMeasure".
+  #' @param hucs a character string containing the HUC8 watershed codes of interest
+  #' @param fileout="./data/out/filtered_wqp_SC_data.csv"
   #'
-  #' @value Outputs a data frame containing the subset of discrete water quality data for which the point locations intersect the watershed of interest
+  #' @value Outputs a data frame containing the subset of discrete water quality data for which the point locations intersect the huc watersheds of interest
   #' 
-  # Create spatial objects and project data
-  wqp_data_proj <- wqp_data %>% 
-    mutate(lon = LongitudeMeasure,
-           lat = LatitudeMeasure) %>%
-    sf::st_as_sf(.,coords=c("lon","lat"),crs=4269) %>%
-    sf::st_transform(5070)
-  ws_boundary_proj <- ws_boundary %>%
-    sf::st_as_sf() %>%
-    sf::st_transform(5070)
+
+  # For the discrete WQP data, fetch associated HUC8 code from WQP:
+  wqp_retrieved_sites <- dataRetrieval::whatWQPsites(huc = hucs)
   
-  # Find point locations that intersect watershed boundary and subset
-  wqp_data_subset <- wqp_data_proj %>%
-    filter(st_intersects(geometry, ws_boundary_proj, sparse = FALSE)) %>% 
-    st_drop_geometry()
+  # Filter discrete WQP data for sites that intersect the huc watersheds of interest
+  wqp_data_subset <- wqp_data %>%
+    filter(MonitoringLocationIdentifier %in% wqp_retrieved_sites$MonitoringLocationIdentifier)
   
-  return(wqp_data_subset)
+  # Save WQP data subset
+  write_csv(wqp_data_subset, file = fileout)
+  
+  return(fileout)
   
 }

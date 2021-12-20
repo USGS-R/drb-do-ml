@@ -6,12 +6,6 @@ source("1_fetch/src/write_data.R")
 
 p1_targets_list <- list(
   
-  # Get watershed boundary data
-  tar_target(
-    p1_lowerdrb_boundary,
-    nhdplusTools::get_huc8(id = drb_huc8s,t_srs=4269) %>% sf::st_union() %>% sf::st_make_valid()
-  ),
-  
   # Load harmonized WQP data product for discrete samples
   tar_target(
     p1_wqp_data,

@@ -1,14 +1,14 @@
-create_site_list <- function(wqp_data,ws_boundary,nwis_sites,nwis_daily_data,nwis_inst_data,fileout){
+create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,hucs,crs_out="NAD83",fileout){
   #' 
   #' @description Function to create one site list that contains unique site locations for modeling
   #'
   #' @param wqp_data data frame containing filtered data from the DRB harmonized water quality dataset for discrete samples.
   #' wqp_data must contain the following columns: c("LatitudeMeasure","LongitudeMeasure","ActivityStartDate","MonitoringLocationIdentifier",
   #' "MonitoringLocationName","OrganizationIdentifier")
-  #' @param ws_boundary an sf object representing the area of interest AOI (used to retrieve original data CRS information for WQP sites)
   #' @param nwis_sites data frame containing all NWIS continuous sites identified
   #' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
   #' @param nwis_inst_data data frame containing instantaneous data for all NWIS instantaneous sites
+  #' @param crs_out character string indicating desired crs. Defaults to "NAD83", other options include "WGS84".
   #' @param fileout file path and name for output data, including the file extension
   #'
   #' @value A data frame containing the id, name, data coverage, spatial coordinates, and data source for each unique data-site location.
@@ -21,7 +21,7 @@ create_site_list <- function(wqp_data,ws_boundary,nwis_sites,nwis_daily_data,nwi
                                MonitoringLocationIdentifier,MonitoringLocationName,OrganizationIdentifier")
   
   # For the discrete WQP data, fetch missing CRS information from WQP:
-  wqp_retrieved_sites <- dataRetrieval::whatWQPsites(bBox = sf::st_bbox(ws_boundary))
+  wqp_retrieved_sites <- dataRetrieval::whatWQPsites(huc = hucs)
   
   # For the discrete WQP data, filter unique site identifier, summarize number of observation-days, and harmonize column names  
   wqp_unique_sites <- wqp_data %>%
@@ -90,3 +90,46 @@ create_site_list <- function(wqp_data,ws_boundary,nwis_sites,nwis_daily_data,nwi
   
 }
 
+
+transform_site_locations <- function(site_list_df,crs_out){
+  #' 
+  #' @description Function to transform site locations to a consistent coordinate reference system
+  #'
+  #' @param site_list_df data frame containing site locations with a consistent crs
+  #' @param crs_out character string indicating desired crs to transform spatial coordinates. Options include "NAD83" or "WGS84"
+  #' 
+  #' @examples 
+  #' transform_site_locations(site_list,4326)
+  
+  # I'm getting some odd errors with sf::st_coordinates() if site_list_df is of class "grouped_df"
+  x <- ungroup(site_list_df)
+  
+  # define input and output epsg codes
+  # assume unknown crs (datum = "UNKNWN") are equal to wgs84:
+  epsg_in <- case_when(x$datum[1] == "NAD83" ~ 4269,
+                       x$datum[1] == "WGS84" ~ 4326,
+                       x$datum[1] == "NAD27" ~ 4267,
+                       x$datum[1] == "UNKWN" ~ 4326)
+  
+  epsg_out <- case_when(crs_out == "NAD83" ~ 4269,
+                        crs_out == "WGS84" ~ 4326)
+  
+  # convert data frame to spatial object and transform to user-specified crs:
+  if(!is.na(epsg_in)){
+    site_list_transformed <- sf::st_as_sf(x,coords=c("lon","lat"),crs=epsg_in) %>%
+      sf::st_transform(epsg_out) %>%
+      mutate(lon_new = sf::st_coordinates(.)[,1],
+             lat_new = sf::st_coordinates(.)[,2],
+             datum_new = crs_out) %>%
+      sf::st_drop_geometry() %>%
+      select(site_id,site_name,count_days_nwis,count_days_discrete,count_days_total,lon_new,lat_new,datum_new,
+             org_id,data_src_combined) %>%
+      rename("lon"="lon_new","lat"="lat_new","datum"="datum_new")
+    
+  } else {
+    site_list_transformed <- site_list_df
+  }
+  
+  return(site_list_transformed) 
+  
+}
