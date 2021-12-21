@@ -28,7 +28,7 @@ p2_targets_list <- list(
   # Aggregate instantaneous DO data to daily min/mean/maxs
   tar_target(
     p2_inst_data_daily,
-    aggregate_data_to_daily(p1_inst_data,p1_daily_data)),
+    aggregate_data_to_daily(p1_inst_data,p1_daily_data, min_daily_coverage=0.5, output_tz="America/New_York")),
 
   # Combine 1) daily DO data and 2) instantaneous DO data that has been aggregated to daily 
   tar_target(

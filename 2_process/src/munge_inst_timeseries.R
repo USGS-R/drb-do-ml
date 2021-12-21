@@ -55,7 +55,9 @@ aggregate_data_to_hourly <- function(inst_data,output_tz){
 
 }
 
-aggregate_data_to_daily <- function(inst_data, daily_data){
+
+
+aggregate_data_to_daily <- function(inst_data, daily_data, min_daily_coverage, output_tz){
   #' 
   #' @description Function to aggregate instantaneous NWIS data collected at sub-hourly (e.g. 15/5/30 min) intervals to hourly min/mean/maxs
   #'
@@ -63,19 +65,39 @@ aggregate_data_to_daily <- function(inst_data, daily_data){
   #' inst_data must include the following columns: c("Value_Inst","dateTime","site_no")
   #' @param daily_data a data frame the downloaded daily time series of DO data. This is used so that if a site is already in 
   #'  the daily sites, we won't do the aggregating here
+  #' @param min_daily_coverage - float 0-1, minimum coverage needed to return daily summaries.
+  #' A min_daily_coverage of 0.5 means that summary stats will be calculated for 
+  #' days with at least 50% coverage. Coverage is calculated on a daily basis
+  #'  as (num_non_na_vals/(num_non_na_vals + num_na_vals))
+  #' 
+  #' @param output_tz character string to set display attribute of dateTime. Possible values to provide are "UTC",
+  #' "America/New_York","America/Chicago", "America/Denver","America/Los_Angeles", "America/Anchorage", 
+  #' as well as the following which do not use daylight savings time: "America/Honolulu", "America/Jamaica",
+  #' "America/Managua","America/Phoenix", and "America/Metlakatla"
   #'
   #' @value A data frame containing daily min, mean, and max values the parameter of interest
-
+  
   
   only_inst_data = setdiff(inst_data$site_no, daily_data$site_no)
   
   daily_values <- inst_data %>%
     filter(site_no %in% only_inst_data) %>%
-    mutate(Date = as.Date(dateTime, format="%Y-%m-%d")) %>%
-    group_by(Date, site_no) %>%
-    summarise(Value = mean(Value_Inst), Value_Min = min(Value_Inst), Value_Max = max(Value_Inst)) %>%
-    na.omit()
-
+    mutate(dateTime_local = lubridate::with_tz(dateTime,tzone=output_tz),
+           Date = lubridate::date(dateTime_local)) %>%
+    group_by(site_no, Date, agency_cd, Parameter) %>%
+    summarise(Value = mean(Value_Inst, na.rm=TRUE), 
+              Value_Min = min(Value_Inst, na.rm=TRUE), 
+              Value_Max = max(Value_Inst,na.rm=TRUE), 
+              na_count=sum(is.na(Value_Inst)), 
+              value_count=sum(!is.na(Value_Inst)),
+              Value_cd = first(Value_Inst_cd),
+              Value_Max_cd = first(Value_Inst_cd),
+              Value_Min_cd = first(Value_Inst_cd),
+              .groups="keep") %>%
+    mutate(percent_coverage=value_count/(value_count + na_count)) %>%
+    filter(percent_coverage >= min_daily_coverage) %>%
+    select(-c(na_count, value_count, percent_coverage))
+  
   return(daily_values)
 }
 
