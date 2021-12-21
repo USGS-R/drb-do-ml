@@ -15,24 +15,20 @@ p2_targets_list <- list(
   
   # Subset harmonized WQP data to lower DRB
   tar_target(
-    p2_wqp_data_subset_csv,
-    subset_wqp_sites(p2_filtered_wqp_data,drb_huc8s,fileout="2_process/out/DRB_WQdata_DO_data.csv"),
-    format = "file"),
+    p2_filtered_wqp_data_subset,
+    subset_wqp_sites(p2_filtered_wqp_data,drb_huc8s)),
   
   # Create and save indicator file for WQP data
   tar_target(
     p2_wqp_ind_csv,
-    command = save_target_ind_files("2_process/log/wqp_data_ind.csv","p2_wqp_data_subset_csv"),
+    command = save_target_ind_files("2_process/log/wqp_data_ind.csv","p2_wqp_data_subset"),
     format = "file"),
   
   # Create a list of unique site locations containing DO data  
   tar_target(
     p2_site_list_csv,
-    {
-      wqp_data_subset <- read_csv(p2_wqp_data_subset_csv,col_types = cols(ResultDetectionConditionText = col_character()))
-      create_site_list(wqp_data_subset,p1_nwis_sites,p1_daily_data,p1_inst_data,
-                       hucs=drb_huc8s,crs_out="NAD83",fileout = "2_process/out/DRB_DO_sitelist.csv")
-    },
+    create_site_list(p2_filtered_wqp_data_subset,p1_nwis_sites,p1_daily_data,p1_inst_data,
+                       hucs=drb_huc8s,crs_out="NAD83",fileout = "2_process/out/DRB_DO_sitelist.csv"),
     format = "file"),
   
   # Create and save log file containing data availability summary
