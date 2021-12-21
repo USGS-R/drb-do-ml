@@ -2,7 +2,7 @@ source("2_process/src/filter_wqp_data.R")
 source("2_process/src/subset_wqp_sites.R")
 source("2_process/src/munge_inst_timeseries.R")
 source("2_process/src/create_site_list.R")
-source("2_process/src/match_sites_to_reaches.R")
+source("2_process/src/match_sites_reaches.R")
 source("1_fetch/src/write_data.R")
 
 p2_targets_list <- list(
@@ -40,7 +40,13 @@ p2_targets_list <- list(
   
   tar_target(
     p2_sites_w_segs,
-    get_site_flowlines(p1_reaches_sf, p2_site_list)
+    get_site_flowlines(
+      p1_reaches_sf,
+      p2_site_list,
+      sites_crs = 4269,
+      max_matches = 1,
+      search_radius = 0.1
+    )
   ),
   
   tar_target(
