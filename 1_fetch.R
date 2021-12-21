@@ -102,19 +102,21 @@ p1_targets_list <- list(
     format = "file"
   ),
   
+  # Unzip zipped shapefile
   tar_target(
-    p1_reaches_shp_unzipped,
+    p1_reaches_shp,
     {shapedir = "1_fetch/out/study_stream_reaches"
-    unzip(p1_reaches_shp_zip, exdir = shapedir)},
+    # `shp_files` is a vector of all files ('dbf', 'prj', 'shp', 'shx')
+    shp_files <- unzip(p1_reaches_shp_zip, exdir = shapedir)
+    # return just the .shp file
+    grep(".shp", shp_files, value = TRUE)},
     format = "file"
   ),
   
+  # read shapefile into sf object
   tar_target(
     p1_reaches_sf,
-    # third item is the .shp file (all are 'dbf', 'prj', 'shp', and 'shx')
-    st_read(p1_reaches_shp_unzipped[3])
+    st_read(p1_reaches_shp)
   )
-  
-)
-
+)  
 
