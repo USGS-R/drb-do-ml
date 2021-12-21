@@ -19,13 +19,9 @@ aggregate_data_to_hourly <- function(inst_data,output_tz){
   req_cols <- c("Value_Inst","Value_Inst_cd","dateTime","agency_cd","site_no","time_zone","Parameter")
   flag_cols <- req_cols[which(req_cols %in% names(inst_data)=="FALSE")]
   if(length(flag_cols)>0) stop("Input data is missing one or more required columns: dateTime,agency_cd,site_no,time_zone,Parameter,Value_Inst,Value_Inst_cd")
-  
-  # Omit NA values and other rows associated with undesired data quality codes:
-  data_complete <- inst_data %>%
-    filter(!is.na(Value_Inst),!(Value_Inst_cd %in% c("P Eqp","P Mnt")))
-  
+
   # Aggregate values to hourly averages:
-  data_hourly <- data_complete %>%
+  data_hourly <- inst_data %>%
     # first clean timestamps by rounding to nearest 5 min interval (e.g. 10:59:00 becomes 11:00:00) then create new hourly timestamp:
     mutate(dateTime_round = lubridate::round_date(dateTime,unit="5 minutes"),
            Date = lubridate::date(dateTime_round),
@@ -34,10 +30,10 @@ aggregate_data_to_hourly <- function(inst_data,output_tz){
     group_by(dateTime_aggr,agency_cd,site_no,time_zone,Parameter) %>%
     summarize(Value_Inst_hourly = mean(Value_Inst,na.rm=TRUE),
               Value_Inst_cd = unique(Value_Inst_cd),
-              count_subhourly_obs = sum(!is.na(Value_Inst)),
+              n_subhourly_obs = sum(!is.na(Value_Inst)),
               .groups="keep") %>%
     ungroup() %>% 
-    select(agency_cd,site_no,dateTime_aggr,Parameter,Value_Inst_hourly,time_zone,Value_Inst_cd,count_subhourly_obs)
+    select(agency_cd,site_no,dateTime_aggr,Parameter,Value_Inst_hourly,time_zone,Value_Inst_cd,n_subhourly_obs)
   
   # Pad time series:
   data_complete_ts <- data_hourly %>%
@@ -46,14 +42,14 @@ aggregate_data_to_hourly <- function(inst_data,output_tz){
                               site_no=.$site_no[1],
                               Parameter=.$Parameter[1],
                               time_zone=.$time_zone[1],
-                              count_subhourly_obs = 0))
+                              n_subhourly_obs = 0))
   
   # Format timestamps according to desired time zone:
   data_out <- data_complete_ts %>%
     mutate(dateTime_out = lubridate::with_tz(dateTime_aggr,tzone = output_tz),
-           time_zone_out = lubridate::tz(dateTime_out)) %>%
-    select(agency_cd,site_no,dateTime_out,Parameter,Value_Inst_hourly,Value_Inst_cd,count_subhourly_obs,time_zone_out) %>%
-    rename("dateTime" = "dateTime_out","time_zone" = "time_zone_out")
+           time_zone = lubridate::tz(dateTime_out)) %>%
+    select(agency_cd,site_no,dateTime_out,Parameter,Value_Inst_hourly,Value_Inst_cd,n_subhourly_obs,time_zone) %>%
+    rename("dateTime" = "dateTime_out")
   
   return(data_out)
 
