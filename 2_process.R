@@ -48,6 +48,7 @@ p2_targets_list <- list(
     summarize_site_list(p2_site_list,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
     format = "file"),
 
+  # Match PRMS stream segments to observation site ids
   tar_target(
     p2_sites_w_segs,
     get_site_flowlines(
@@ -59,11 +60,13 @@ p2_targets_list <- list(
     )
   ),
   
+  # Write the table with matched PRMS segment and observation sites to a csv file
   tar_target(
     p2_sites_w_segs_csv,
     write_to_csv(p2_sites_w_segs, "2_process/out/site_w_seg_ids.csv")
   ),
   
+  # Add the segment ids as a new column to the daily combined data
   tar_target(
     p2_daily_with_seg_ids,
     {
@@ -72,6 +75,7 @@ p2_targets_list <- list(
     }  
   ), 
   
+  # Save the daily combined data with segment ids to a csv file
   tar_target(
     p2_daily_with_seg_ids_csv,
     write_to_csv(p2_daily_with_seg_ids, "2_process/out/daily_do_data.csv"),

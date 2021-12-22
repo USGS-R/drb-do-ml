@@ -90,6 +90,7 @@ p1_targets_list <- list(
     format = "file"
   ),
   
+  # Download zipped shapefile of DRB PRMS reaches
   tar_target(
     p1_reaches_shp_zip,
     # [Jeff] I downloaded this manually from science base: 
