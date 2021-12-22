@@ -79,25 +79,30 @@ aggregate_data_to_daily <- function(inst_data, daily_data, min_daily_coverage, o
   
   
   only_inst_data = setdiff(inst_data$site_no, daily_data$site_no)
-  
+
   daily_values <- inst_data %>%
     filter(site_no %in% only_inst_data) %>%
-    mutate(dateTime_local = lubridate::with_tz(dateTime,tzone=output_tz),
-           Date = lubridate::date(dateTime_local)) %>%
+    mutate(
+      dateTime_local = lubridate::with_tz(dateTime, tzone = output_tz),
+      Date = lubridate::date(dateTime_local)
+    ) %>%
     group_by(site_no, Date, agency_cd, Parameter) %>%
-    summarise(Value = mean(Value_Inst, na.rm=TRUE), 
-              Value_Min = min(Value_Inst, na.rm=TRUE), 
-              Value_Max = max(Value_Inst,na.rm=TRUE), 
-              na_count=sum(is.na(Value_Inst)), 
-              value_count=sum(!is.na(Value_Inst)),
-              Value_cd = first(Value_Inst_cd),
-              Value_Max_cd = first(Value_Inst_cd),
-              Value_Min_cd = first(Value_Inst_cd),
-              .groups="keep") %>%
-    mutate(percent_coverage=value_count/(value_count + na_count)) %>%
+    mutate(
+      na_count = sum(is.na(Value_Inst)),
+      value_count = sum(!is.na(Value_Inst)),
+      percent_coverage = value_count / (value_count + na_count)
+    ) %>%
     filter(percent_coverage >= min_daily_coverage) %>%
-    select(-c(na_count, value_count, percent_coverage))
-  
+    summarise(
+      Value = mean(Value_Inst, na.rm = TRUE),
+      Value_Min = min(Value_Inst, na.rm = TRUE),
+      Value_Max = max(Value_Inst, na.rm = TRUE),
+      Value_cd = first(Value_Inst_cd),
+      Value_Max_cd = first(Value_Inst_cd),
+      Value_Min_cd = first(Value_Inst_cd),
+      .groups = "keep"
+    )
+ 
   return(daily_values)
 }
 
