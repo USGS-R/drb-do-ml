@@ -17,8 +17,7 @@ options(scipen=999)
 DO_wqp_data <- tar_read(p2_filtered_wqp_data_subset)
 
 # Load full site list:
-site_list_path <- tar_read(p2_site_list_csv)
-site_list <- read_csv(site_list_path,show_col_types = FALSE)
+site_list <- tar_read(p2_site_list)
 site_tally <- read_csv(tar_read(p2_sitelist_summary_csv),show_col_types = FALSE)
 unique_wqp_lat_lon <- DO_wqp_data %>% distinct(LatitudeMeasure,LongitudeMeasure) %>% summarize(n_sites=n()) 
 
@@ -93,7 +92,7 @@ Combining the harmonized WQP dataset with data from NWIS (which includes data fr
 
 ```{r,echo=FALSE}
 
-site_list_map <- map_sites(site_list_path)
+site_list_map <- map_sites(site_list)
 site_list_map
 
 ```

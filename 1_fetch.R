@@ -88,8 +88,36 @@ p1_targets_list <- list(
     p1_inst_timeseries_summary_csv,
     command = target_summary_stats(p1_inst_data,"Value_Inst","1_fetch/log/inst_timeseries_summary.csv"),
     format = "file"
-  )
+  ),
   
-)
-
+  # Download zipped shapefile of DRB PRMS reaches
+  tar_target(
+    p1_reaches_shp_zip,
+    # [Jeff] I downloaded this manually from science base: 
+    # https://www.sciencebase.gov/catalog/item/5f6a285d82ce38aaa244912e
+    # Because it's a shapefile, it's not easily downloaded using sbtools
+    # like other files are (see https://github.com/USGS-R/sbtools/issues/277).
+    # Because of that and since it's small (<700 Kb) I figured it'd be fine to
+    # just include in the repo and have it loosely referenced to the sb item ^
+    "1_fetch/in/study_stream_reaches.zip",
+    format = "file"
+  ),
+  
+  # Unzip zipped shapefile
+  tar_target(
+    p1_reaches_shp,
+    {shapedir = "1_fetch/out/study_stream_reaches"
+    # `shp_files` is a vector of all files ('dbf', 'prj', 'shp', 'shx')
+    shp_files <- unzip(p1_reaches_shp_zip, exdir = shapedir)
+    # return just the .shp file
+    grep(".shp", shp_files, value = TRUE)},
+    format = "file"
+  ),
+  
+  # read shapefile into sf object
+  tar_target(
+    p1_reaches_sf,
+    st_read(p1_reaches_shp)
+  )
+)  
 

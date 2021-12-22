@@ -1,13 +1,10 @@
-map_sites <- function(site_list_csv) {
+map_sites <- function(site_list) {
   #' 
   #' @description Function to map the unique site id's within the area of interest.
   #'
-  #' @param site_list_csv character string that indicates the path for a csv file containing the list of sites
+  #' @param site_list data frame containing the list of sites
   #' The site list file should contain the columns "datum", "data_src_combined", and "count_days_total"
 
-  # load the list of sites
-  site_list <- read_csv(site_list_csv,show_col_types = FALSE)
-  
   # check for required columns in the site list
   req_cols <- c("datum", "data_src_combined","count_days_total")
   flag_cols <- req_cols[which(req_cols %in% names(site_list)=="FALSE")]
