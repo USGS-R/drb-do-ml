@@ -37,7 +37,7 @@ p2_targets_list <- list(
   
   # Create a list of unique site locations containing DO data  
   tar_target(
-    p2_site_list_csv,
+    p2_site_list,
     create_site_list(p2_filtered_wqp_data_subset,p1_nwis_sites,p1_daily_data,p1_inst_data,
                        hucs=drb_huc8s,crs_out="NAD83")
   ), 
@@ -45,7 +45,7 @@ p2_targets_list <- list(
   # Create and save log file containing data availability summary
   tar_target(
     p2_sitelist_summary_csv,
-    summarize_site_list(p2_site_list_csv,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
+    summarize_site_list(p2_site_list,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
     format = "file"),
 
   tar_target(

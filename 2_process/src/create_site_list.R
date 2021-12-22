@@ -9,7 +9,6 @@ create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,
   #' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
   #' @param nwis_inst_data data frame containing instantaneous data for all NWIS instantaneous sites
   #' @param crs_out character string indicating desired crs. Defaults to "NAD83", other options include "WGS84".
-  #' @param fileout file path and name for output data, including the file extension
   #'
   #' @value A data frame containing the id, name, data coverage, spatial coordinates, and data source for each unique data-site location.
 
