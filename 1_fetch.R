@@ -1,4 +1,4 @@
-source("1_fetch/src/fetch_harmonized_wqp_data.R")
+source("1_fetch/src/fetch_sb_data.R")
 source("1_fetch/src/get_nwis_sites.R")
 source("1_fetch/src/get_daily_nwis_data.R")
 source("1_fetch/src/get_inst_nwis_data.R")
@@ -8,10 +8,23 @@ source("1_fetch/src/summarize_timeseries.R")
 
 p1_targets_list <- list(
   
-  # Load harmonized WQP data product for discrete samples
+  # download WQP data product from science base for discrete samples
+  tar_target(
+    p1_wqp_data_file,
+    download_sb_file(sb_id = "5e010424e4b0b207aa033d8c",
+                     file_name = "Water-Quality Data.zip",
+                     out_dir="1_fetch/out"),
+    format = "file"
+  ),
+
+  # load WQP data into R object
   tar_target(
     p1_wqp_data,
-    fetch_harmonized_wqp_data("1_fetch/out")),
+    {
+      unzip(zipfile=p1_wqp_data_file,exdir = "1_fetch/out",overwrite=TRUE)
+      readRDS(paste("1_fetch/out","/Water-Quality Data/DRB.WQdata.rds",sep=""))
+    }
+  ),
   
   # Identify NWIS sites with DO data 
   tar_target(
@@ -119,5 +132,6 @@ p1_targets_list <- list(
     p1_reaches_sf,
     st_read(p1_reaches_shp)
   )
+
 )  
 
