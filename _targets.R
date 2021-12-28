@@ -59,6 +59,10 @@ earliest_date <- "1979-10-01"
 # Change dummy date to force re-build of NWIS DO sites and data download
 dummy_date <- "2021-12-19"
 
+# test and validation sites
+validation_sites <- c("01472104", "01473500")
+test_sites <- c("01475530", "01475548")
+
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
 
