@@ -4,6 +4,7 @@ source("1_fetch/src/get_daily_nwis_data.R")
 source("1_fetch/src/get_inst_nwis_data.R")
 source("1_fetch/src/write_data.R")
 source("1_fetch/src/summarize_timeseries.R")
+source("1_fetch/src/get_ntw_attributes.R")
 
 
 p1_targets_list <- list(
@@ -118,6 +119,19 @@ p1_targets_list <- list(
   tar_target(
     p1_reaches_sf,
     st_read(p1_reaches_shp)
+  ),
+  
+  # Download DRB network attributes
+  tar_target(
+    p1_ntw_attributes,
+    get_ntw_attributes("1_fetch/out/ntw_attributes"),
+    format="file"
+    ),
+  
+  # Load network adjacency matrix
+  tar_target(
+    p1_ntw_adj_matrix,
+    read_csv(paste0(p1_ntw_attributes,"/distance_matrix_drb.csv"),show_col_types = FALSE)
   )
 )  
 
