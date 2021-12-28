@@ -80,7 +80,13 @@ p2_targets_list <- list(
     p2_daily_with_seg_ids_csv,
     write_to_csv(p2_daily_with_seg_ids, "2_process/out/daily_do_data.csv"),
     format = "file"
-  ) 
+  ),
+
+  # make list of "well-observed" sites
+  tar_target(
+   p2_well_observed_sites,
+   p2_sites_w_segs %>% filter(count_days_total > 300) %>% pull(site_id)
+ )
   
 
 )
