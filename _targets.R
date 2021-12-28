@@ -5,11 +5,13 @@ tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval"
 
 source("1_fetch.R")
 source("2_process.R")
+source("2a_model.R")
 source("3_visualize.R")
 
 dir.create("1_fetch/out/", showWarnings = FALSE)
 dir.create("1_fetch/log/", showWarnings = FALSE)
 dir.create("2_process/out/", showWarnings = FALSE)
+dir.create("2a_model/out/", showWarnings = FALSE)
 dir.create("2_process/log/", showWarnings = FALSE)
 dir.create("3_visualize/out/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
@@ -58,5 +60,5 @@ earliest_date <- "1979-10-01"
 dummy_date <- "2021-12-19"
 
 # Return the complete list of targets
-c(p1_targets_list, p2_targets_list,p3_targets_list)
+c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
 
