@@ -135,7 +135,7 @@ p1_targets_list <- list(
 
   # fetch prms met data
   tar_target(
-    p1_prms_met_data_zip_file,
+    p1_prms_met_data_zip,
     download_sb_file(sb_id = "5f6a289982ce38aaa2449135",
                      file_name = "sntemp_inputs_outputs_drb.zip",
                      out_dir = "1_fetch/out"),
@@ -144,10 +144,10 @@ p1_targets_list <- list(
 
   # unzip prms met data
   tar_target(
-    p1_prms_met_data_csv_file,
+    p1_prms_met_data_csv,
     {
-    unzip(zipfile=p1_prms_met_data_zip_file,exdir = dirname(p1_prms_met_data_zip_file),overwrite=TRUE)
-    file.path(dirname(p1_prms_met_data_zip_file), "sntemp_inputs_outputs_drb.csv")
+    unzip(zipfile=p1_prms_met_data_zip,exdir = dirname(p1_prms_met_data_zip),overwrite=TRUE)
+    file.path(dirname(p1_prms_met_data_zip), "sntemp_inputs_outputs_drb.csv")
     },
     format = "file"
   ),
@@ -155,7 +155,7 @@ p1_targets_list <- list(
   # read in prms met data
   tar_target(
     p1_prms_met_data,
-    read_csv(p1_prms_met_data_csv_file)
+    read_csv(p1_prms_met_data_csv, show_col_types = FALSE)
   ),
 
   # read in prms met data

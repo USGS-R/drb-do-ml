@@ -11,8 +11,8 @@ download_sb_file <- function(sb_id, file_name, out_dir){
   out_path = file.path(out_dir, file_name)
   # Get the data from ScienceBase:
   sbtools::item_file_download(sb_id = sb_id,
-                              names = c(file_name),
-                              destinations = c(out_path),
+                              names = file_name,
+                              destinations = out_path,
                               overwrite_file = TRUE)
   
   return(out_path)
