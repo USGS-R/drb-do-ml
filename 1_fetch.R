@@ -1,4 +1,4 @@
-source("1_fetch/src/fetch_harmonized_wqp_data.R")
+source("1_fetch/src/fetch_sb_data.R")
 source("1_fetch/src/get_nwis_sites.R")
 source("1_fetch/src/get_daily_nwis_data.R")
 source("1_fetch/src/get_inst_nwis_data.R")
@@ -8,10 +8,23 @@ source("1_fetch/src/summarize_timeseries.R")
 
 p1_targets_list <- list(
   
-  # Load harmonized WQP data product for discrete samples
+  # download WQP data product from science base for discrete samples
+  tar_target(
+    p1_wqp_data_file,
+    download_sb_file(sb_id = "5e010424e4b0b207aa033d8c",
+                     file_name = "Water-Quality Data.zip",
+                     out_dir="1_fetch/out"),
+    format = "file"
+  ),
+
+  # load WQP data into R object
   tar_target(
     p1_wqp_data,
-    fetch_harmonized_wqp_data("1_fetch/out")),
+    {
+      unzip(zipfile=p1_wqp_data_file,exdir = "1_fetch/out",overwrite=TRUE)
+      readRDS(paste("1_fetch/out","/Water-Quality Data/DRB.WQdata.rds",sep=""))
+    }
+  ),
   
   # Identify NWIS sites with DO data 
   tar_target(
@@ -118,6 +131,41 @@ p1_targets_list <- list(
   tar_target(
     p1_reaches_sf,
     st_read(p1_reaches_shp)
+  ),
+
+  # fetch prms met data
+  tar_target(
+    p1_prms_met_data_zip,
+    download_sb_file(sb_id = "5f6a289982ce38aaa2449135",
+                     file_name = "sntemp_inputs_outputs_drb.zip",
+                     out_dir = "1_fetch/out"),
+    format = "file"
+  ),
+
+  # unzip prms met data
+  tar_target(
+    p1_prms_met_data_csv,
+    {
+    unzip(zipfile=p1_prms_met_data_zip,exdir = dirname(p1_prms_met_data_zip),overwrite=TRUE)
+    file.path(dirname(p1_prms_met_data_zip), "sntemp_inputs_outputs_drb.csv")
+    },
+    format = "file"
+  ),
+
+  # read in prms met data
+  tar_target(
+    p1_prms_met_data,
+    read_csv(p1_prms_met_data_csv, show_col_types = FALSE)
+  ),
+
+  # read in prms met data
+  # [Jeff] I'm including these in the "in" folder because they are unpublished
+  # They are built in the delaware_model_prep pipeline (1_network/out/seg_attr_drb.feather)
+  tar_target(
+    p1_seg_attr_data,
+    arrow::read_feather("1_fetch/in/seg_attr_drb.feather")
   )
+
+
 )  
 
