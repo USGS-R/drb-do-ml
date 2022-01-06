@@ -4,7 +4,6 @@ source("1_fetch/src/get_daily_nwis_data.R")
 source("1_fetch/src/get_inst_nwis_data.R")
 source("1_fetch/src/write_data.R")
 source("1_fetch/src/summarize_timeseries.R")
-source("1_fetch/src/get_ntw_attributes.R")
 
 
 p1_targets_list <- list(
