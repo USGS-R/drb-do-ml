@@ -164,6 +164,21 @@ p1_targets_list <- list(
   tar_target(
     p1_seg_attr_data,
     arrow::read_feather("1_fetch/in/seg_attr_drb.feather")
+  ),
+  
+  # Download DRB network adjacency matrix
+  tar_target(
+    p1_ntw_adj_matrix_csv,
+    download_sb_file(sb_id = "5f6a289982ce38aaa2449135",
+                     file_name = "distance_matrix_drb.csv",
+                     out_dir="1_fetch/out"),
+    format="file"
+  ),
+  
+  # Read in network adjacency matrix
+  tar_target(
+    p1_ntw_adj_matrix,
+    read_csv(p1_ntw_adj_matrix_csv,show_col_types = FALSE)
   )
 
 
