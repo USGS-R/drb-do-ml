@@ -63,6 +63,13 @@ dummy_date <- "2021-12-19"
 validation_sites <- c("01472104", "01473500")
 test_sites <- c("01475530", "01475548")
 
+train_start_date <- '1980-01-01'
+train_end_date <- '2017-01-01'
+val_start_date <- '2017-01-01'
+val_end_date <- '2019-01-01'
+test_start_date <- '2019-01-01'
+test_end_date <- '2022-01-01'
+
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
 
