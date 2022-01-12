@@ -30,6 +30,26 @@ p2a_targets_list <- list(
     p2_well_observed_sites[(p2_well_observed_sites %in% p2a_well_observed_train_sites) | (p2_well_observed_sites %in% validation_sites)]
   ),
 
+   # get sites that we use for training, but also have data in the validation time period
+  tar_target(
+    p2a_well_observed_time_validation_sites,
+    p2a_well_observed_do_data %>%
+      filter(site_id %in% p2a_well_observed_train_validation_sites,
+             !site_id %in% validation_sites,
+             date >= val_start_date,
+             date < val_end_date) %>%
+      group_by(site_id) %>%
+      summarise(val_count = sum(!is.na(do_mean))) %>%
+      filter(val_count > 0) %>%
+      pull(site_id)
+  ),
+  
+  # sites that are training sites but do not have data in validation period
+  tar_target(
+    p2a_well_observed_train_only,
+    p2a_well_observed_train_sites[!p2a_well_observed_train_sites %in% p2a_well_observed_time_validation_sites]
+  ),
+
   # match seg attributes with site_ids, subset to train sites and write to feather 
   tar_target(
     p2a_well_observed_train_seg_attr,
