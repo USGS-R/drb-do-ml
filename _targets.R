@@ -60,8 +60,8 @@ earliest_date <- "1979-10-01"
 dummy_date <- "2021-12-19"
 
 # test and validation sites
-validation_sites <- c("01472104", "01473500")
-test_sites <- c("01475530", "01475548")
+val_sites <- c("01472104", "01473500")
+tst_sites <- c("01475530", "01475548")
 
 train_start_date <- '1980-01-01'
 train_end_date <- '2017-01-01'

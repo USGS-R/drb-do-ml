@@ -32,10 +32,10 @@ p3_targets_list <- list(
     p3_well_observed_site_data,
     {
       p2_sites_w_segs %>%
-        mutate(partition = case_when(site_id %in% validation_sites ~ "val",
-                                     site_id %in% test_sites ~ "test",
-                                     site_id %in% p2a_well_observed_train_only ~ "train",
-                                     site_id %in% p2a_well_observed_time_validation_sites ~ "train/val")) %>%
+        mutate(partition = case_when(site_id %in% val_sites ~ "val",
+                                     site_id %in% tst_sites ~ "test",
+                                     site_id %in% p2a_trn_only ~ "train",
+                                     site_id %in% p2a_trn_sites_w_val_data ~ "train/val")) %>%
         filter(!is.na(partition)) %>%
         st_as_sf(., coords = c("lon", "lat"), crs = 4326)
     }

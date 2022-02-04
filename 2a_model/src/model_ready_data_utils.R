@@ -1,28 +1,17 @@
 
-
-subset_seg_data_and_match_site_ids <-
-  function(seg_data, sites_w_segs, sites_subset = NULL) {
+match_site_ids_to_segs <-
+  function(seg_data, sites_w_segs) {
     #'
-    #' @description match site ids to segment data (e.g., met or attributes) and optionally subset to a certain list of sites
+    #' @description match site ids to segment data (e.g., met or attributes) 
     #'
     #' @param seg_data a data frame of meterological data with column 'seg_id_nat'
     #' @param sites_w_segs a dataframe with both segment ids ('segidnat') and site ids ('site_id')
-    #' @param sites_subset a vector of sites that the data should be subset too. If left NULL, data from all sites will
-    #' be returned
     #'
-    #' @value A data frame of seg data with site ids and optionally subset
-    
-    seg_and_site_ids <- sites_w_segs %>% select(site_id, segidnat)
-    
+    #' @value A data frame of seg data with site ids 
     
     seg_data <- seg_data %>%
-      left_join(seg_and_site_ids,
-                by = c("seg_id_nat" = "segidnat"))
-    
-    if (!is.null(sites_w_segs)) {
-      seg_data <- seg_data %>% filter(site_id %in% sites_subset)
-    }
-    
+      left_join(.,sites_w_segs[,c("site_id","segidnat")],
+                by=c("seg_id_nat" = "segidnat"))
     return(seg_data)
   }
 
@@ -51,3 +40,18 @@ write_df_to_zarr <- function(df, index_cols, out_zarr) {
   
 }
 
+
+subset_and_write_zarr <- function(df, out_zarr, sites_subset = NULL){
+  #' @description write out to zarr and optionally take a subset. This assumes your zarr index
+  #' names will be "site_id" and "date"
+  #'
+  #' @param df a data frame of data
+  #' @param out_zarr where the zarr data will be written
+  #' @param sites_subset - character vector of sites to subset to 
+  #'
+  #' @value the out_zarr path
+    if (!is.null(sites_subset)){
+      df <- df %>% filter(site_id %in% sites_subset)
+    }
+  write_df_to_zarr(df, c("site_id", "date"), out_zarr)
+}
