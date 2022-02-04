@@ -72,7 +72,6 @@ rule train:
         #directory("{outdir}/best_val_weights/"),
         "{outdir}/train_log.csv",
         "{outdir}/train_time.txt",
-    group: 'train_predict_evaluate'
     run:
         optimizer = tf.optimizers.Adam(learning_rate=config['finetune_learning_rate']) 
         model.compile(optimizer=optimizer, loss=loss_function)
@@ -101,8 +100,6 @@ rule make_predictions:
         "{outdir}/prepped.npz",
     output:
         "{outdir}/preds.feather",
-    group:
-        'train_predict_evaluate'
     run:
         weight_dir = input[0] + "/"
         model.load_weights(weight_dir)
@@ -116,48 +113,50 @@ rule make_predictions:
         preds.reset_index(drop=True).to_feather(output[0])
 
 
-rule make_validation_predictions:
+def filter_predictions(all_preds_file, partition, out_file):
+        df_preds = pd.read_feather(all_preds_file)
+        all_sites = df_preds.site_id.unique()
+        trn_sites = all_sites[(~np.isin(all_sites, config["validation_sites"])) &
+                              (~np.isin(all_sites, config["test_sites"]))]
+
+        df_preds_trn_sites = df_preds[df_preds.site_id.isin(trn_sites)] 
+
+        df_preds_val_sites = df_preds[df_preds.site_id.isin(config['validation_sites'])] 
+
+
+        if partition == "train":
+            df_preds_filt = df_preds_trn_sites[(df_preds_trn_sites.date >= config['train_start_date'][0]) &
+                                               (df_preds_trn_sites.date < config['train_end_date'][0])]
+        elif partition == "val":
+            # get all of the data in the validation sites and in the validation period
+            # this assumes that the test period follows the validation period which follows the train period
+            df_preds_filt_val = df_preds_val_sites[df_preds_val_sites.date < config['test_start_date'][0]]
+            df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < config['val_end_date'][0]) &
+                                                   (df_preds_trn_sites.date >= config['val_start_date'][0])]
+            df_preds_filt = pd.concat([df_preds_filt_val , df_preds_filt_trn], axis=0)
+
+        elif partition == "val_times":
+            # get the data in just the validation times at train and val sites
+            df_preds_filt_val = df_preds_val_sites[(df_preds_val_sites.date < config['val_end_date'][0]) &
+                                                   (df_preds_val_sites.date >= config['val_start_date'][0])]
+            df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < config['val_end_date'][0]) &
+                                                   (df_preds_trn_sites.date >= config['val_start_date'][0])]
+            df_preds_filt = pd.concat([df_preds_filt_val , df_preds_filt_trn], axis=0)
+
+
+        df_preds_filt.reset_index(drop=True).to_feather(out_file)
+
+
+
+
+rule make_filtered_predictions:
     input:
         "{outdir}/preds.feather"
     output:
-        "{outdir}/val_preds.feather"
-    group:
-        "train_predict_evaluate"
+        "{outdir}/{partition}_preds.feather"
     run:
-        df_preds = pd.read_feather(input[0])
-        all_sites = df_preds.site_id.unique()
-        trn_sites = all_sites[(~np.isin(all_sites, config["validation_sites"])) &
-                              (~np.isin(all_sites, config["test_sites"]))]
+        filter_predictions(input[0], wildcards.partition, output[0])
 
-        df_val_sites = df_preds[(df_preds.site_id.isin(config['validation_sites'])) & 
-                                (df_preds.date < config['val_end_date'][0])]
-
-        df_val_times = df_preds[(df_preds.site_id.isin(trn_sites)) & 
-                                (df_preds.date < config['val_end_date'][0]) &
-                                (df_preds.date >= config['val_start_date'][0])]
-
-        df_val_preds = pd.concat([df_val_sites, df_val_times], axis=0)
-        df_val_preds.reset_index(drop=True).to_feather(output[0])
-
-
-rule make_train_predictions:
-    input:
-        "{outdir}/preds.feather",
-    output:
-        "{outdir}/trn_preds.feather",
-    group:
-        'train_predict_evaluate'
-    run:
-        df_preds = pd.read_feather(input[0])
-        all_sites = df_preds.site_id.unique()
-        trn_sites = all_sites[(~np.isin(all_sites, config["validation_sites"])) &
-                              (~np.isin(all_sites, config["test_sites"]))]
-        df_preds_trn_sites = df_preds[df_preds.site_id.isin(trn_sites)]
-        df_trn = df_preds_trn_sites[(df_preds_trn_sites.date >= config['train_start_date'][0]) &
-                                    (df_preds_trn_sites.date < config['train_end_date'][0])]
-        df_trn.reset_index(drop=True).to_feather(output[0])
-
- 
  
 def get_grp_arg(wildcards):
      if wildcards.metric_type == 'overall':
@@ -172,18 +171,19 @@ def get_grp_arg(wildcards):
  
 rule combine_metrics:
      input:
-          "../../../out/well_observed_train_do.zarr",
+          "../../../out/well_observed_train_val_do.zarr",
           "{outdir}/trn_preds.feather",
-          "{outdir}/val_preds.feather"
+          "{outdir}/val_preds.feather",
+          "{outdir}/val_times_preds.feather"
      output:
           "{outdir}/{metric_type}_metrics.csv"
-     group: 'train_predict_evaluate'
      params:
          grp_arg = get_grp_arg
      run:
          combined_metrics(obs_file=input[0],
-                          pred_trn=input[1],
-                          pred_val=input[2],
+                          pred_data = {"train": input[1],
+                                       "val": input[2],
+                                       "val_times": input[3]},
                           spatial_idx_name='site_id',
                           time_idx_name='date',
                           group=params.grp_arg,
