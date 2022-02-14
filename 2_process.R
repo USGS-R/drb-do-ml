@@ -71,7 +71,13 @@ p2_targets_list <- list(
     p2_daily_with_seg_ids,
     {
       seg_and_site_ids <- p2_sites_w_segs %>% select(site_id, segidnat)
-      left_join(p2_daily_combined, seg_and_site_ids, by=c("site_no" = "site_id"))
+      left_join(p2_daily_combined, seg_and_site_ids, by=c("site_no" = "site_id")) %>%
+      rename(site_id = site_no,
+             date = Date,
+             do_mean = Value,
+             do_min = Value_Min,
+             do_max = Value_Max
+             )
     }  
   ), 
   
