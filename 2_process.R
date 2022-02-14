@@ -71,7 +71,13 @@ p2_targets_list <- list(
     p2_daily_with_seg_ids,
     {
       seg_and_site_ids <- p2_sites_w_segs %>% select(site_id, segidnat)
-      left_join(p2_daily_combined, seg_and_site_ids, by=c("site_no" = "site_id"))
+      left_join(p2_daily_combined, seg_and_site_ids, by=c("site_no" = "site_id")) %>%
+      rename(site_id = site_no,
+             date = Date,
+             do_mean = Value,
+             do_min = Value_Min,
+             do_max = Value_Max
+             )
     }  
   ), 
   
@@ -80,7 +86,13 @@ p2_targets_list <- list(
     p2_daily_with_seg_ids_csv,
     write_to_csv(p2_daily_with_seg_ids, "2_process/out/daily_do_data.csv"),
     format = "file"
-  ) 
+  ),
+
+  # make list of "well-observed" sites
+  tar_target(
+   p2_well_observed_sites,
+   p2_sites_w_segs %>% filter(count_days_total > 300) %>% pull(site_id)
+ )
   
 
 )

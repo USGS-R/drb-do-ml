@@ -5,11 +5,13 @@ tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval"
 
 source("1_fetch.R")
 source("2_process.R")
+source("2a_model.R")
 source("3_visualize.R")
 
 dir.create("1_fetch/out/", showWarnings = FALSE)
 dir.create("1_fetch/log/", showWarnings = FALSE)
 dir.create("2_process/out/", showWarnings = FALSE)
+dir.create("2a_model/out/", showWarnings = FALSE)
 dir.create("2_process/log/", showWarnings = FALSE)
 dir.create("3_visualize/out/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
@@ -46,7 +48,7 @@ site_tp_select <- c("ST","ST-CA","SP")
 
 # Omit undesired sites
 # sites 01412350, 01484272 coded as site type "ST" but appear to be tidally-influenced
-omit_nwis_sites <- c("01412350","01484272") 
+omit_nwis_sites <- c("01412350","01484272", "01481500", "01477050", "01467200", "014670261", "01464600")
 
 # Define USGS stat codes for continuous sites that only report daily statistics (https://help.waterdata.usgs.gov/stat_code) 
 stat_cd_select <- c("00001","00002","00003")
@@ -57,6 +59,17 @@ earliest_date <- "1979-10-01"
 # Change dummy date to force re-build of NWIS DO sites and data download
 dummy_date <- "2021-12-19"
 
+# test and validation sites
+val_sites <- c("01472104", "01473500")
+tst_sites <- c("01475530", "01475548")
+
+train_start_date <- '1980-01-01'
+train_end_date <- '2017-01-01'
+val_start_date <- '2017-01-01'
+val_end_date <- '2019-01-01'
+test_start_date <- '2019-01-01'
+test_end_date <- '2022-01-01'
+
 # Return the complete list of targets
-c(p1_targets_list, p2_targets_list,p3_targets_list)
+c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
 

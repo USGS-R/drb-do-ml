@@ -26,6 +26,30 @@ p3_targets_list <- list(
                                 "3_visualize/out/filtered_daily_means.jpg",
                                 "3_visualize/out/filtered_inst_means.jpg")),
     format = "file"
+  ),
+  
+  tar_target(
+    p3_well_observed_site_data,
+    {
+      p2_sites_w_segs %>%
+        mutate(partition = case_when(site_id %in% val_sites ~ "val",
+                                     site_id %in% tst_sites ~ "test",
+                                     site_id %in% p2a_trn_only ~ "train",
+                                     site_id %in% p2a_trn_sites_w_val_data ~ "train/val")) %>%
+        filter(!is.na(partition)) %>%
+        st_as_sf(., coords = c("lon", "lat"), crs = 4326)
+    }
+  ),
+
+  tar_target(
+    p3_well_observed_site_data_json,
+    {
+      filename = "3_visualize/out/well_observed_trn_val_test.geojson"
+      st_write(p3_well_observed_site_data, filename, append=FALSE)
+      filename
+    },
+    format = "file"
   )
+
 )
 
