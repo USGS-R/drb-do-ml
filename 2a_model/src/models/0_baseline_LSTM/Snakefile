@@ -17,9 +17,10 @@ loss_function = lf.multitask_rmse(config['lambdas'])
 
 rule all:
     input:
-        expand("{outdir}/{metric_type}_metrics.csv",
+        expand("{outdir}/rep_{rep}/{metric_type}_metrics.csv",
                 outdir=out_dir,
                 metric_type=['overall', 'reach'],
+                rep=list(range(config['num_replicates'])),
         )
         
 
@@ -124,7 +125,7 @@ def filter_predictions(all_preds_file, partition, out_file):
         df_preds_val_sites = df_preds[df_preds.site_id.isin(config['validation_sites'])] 
 
 
-        if partition == "train":
+        if partition == "trn":
             df_preds_filt = df_preds_trn_sites[(df_preds_trn_sites.date >= config['train_start_date'][0]) &
                                                (df_preds_trn_sites.date < config['train_end_date'][0])]
         elif partition == "val":
