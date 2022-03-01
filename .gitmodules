@@ -1,0 +1,3 @@
+[submodule "2a_model/src/models/river-dl"]
+	path = 2a_model/src/models/river-dl
+	url = git@github.com:jsadler2/river-dl.git
