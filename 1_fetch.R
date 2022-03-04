@@ -50,13 +50,6 @@ p1_targets_list <- list(
     get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select,start_date=earliest_date,end_date=dummy_date),
     pattern = map(p1_nwis_sites_daily)),
   
-  # Save NWIS daily data
-  tar_target(
-    p1_daily_data_csv,
-    write_to_csv(p1_daily_data, outfile="1_fetch/out/daily_do_data.csv"),
-    format = "file"
-  ),
-  
   # Subset NWIS sites with instantaneous (sub-daily) data
   tar_target(
     p1_nwis_sites_inst,
@@ -71,12 +64,6 @@ p1_targets_list <- list(
     p1_inst_data,
     get_inst_nwis_data(p1_nwis_sites_inst,pcode_select,start_date=earliest_date,end_date=dummy_date),
     pattern = map(p1_nwis_sites_inst)),
-  
-  # Save NWIS instantaneous data
-  tar_target(
-    p1_inst_data_csv,
-    write_to_csv(p1_inst_data, outfile="1_fetch/out/inst_do_data.csv"),
-    format = "file"),
   
   # Create log file to track sites with multiple time series
   tar_target(
