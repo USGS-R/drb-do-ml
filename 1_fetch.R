@@ -49,6 +49,26 @@ p1_targets_list <- list(
     p1_daily_data,
     get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select,start_date=earliest_date,end_date=dummy_date),
     pattern = map(p1_nwis_sites_daily)),
+
+
+  # Download NWIS daily data for other parameters (flow, temperature, SC) (see codes below)
+  tar_target(
+    p1_daily_aux_data,
+    dataRetrieval::readNWISdv(
+                              siteNumbers = p1_nwis_sites_daily$site_no,
+                              parameterCd=c("00060", "00010", "00095"),
+                              statCd=stat_cd_select,
+                              startDate=earliest_date,
+                              endDate=dummy_date) %>%
+    dataRetrieval::renameNWISColumns() %>%
+    select(!starts_with("..2..")),
+    pattern = map(p1_nwis_sites_daily)),
+
+  # Save daily aux data to csv
+  tar_target(
+    p1_daily_aux_csv,
+    write_to_csv(p1_daily_aux_data, outfile="1_fetch/out/daily_aux_data.csv"),
+    format = "file"),
   
   # Save NWIS daily data
   tar_target(
@@ -180,7 +200,6 @@ p1_targets_list <- list(
     p1_ntw_adj_matrix,
     read_csv(p1_ntw_adj_matrix_csv,show_col_types = FALSE)
   )
-
 
 )  
 
