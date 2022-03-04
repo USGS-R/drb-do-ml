@@ -1,11 +1,4 @@
 
-plot_do_overview <- function(plot_file, p1_daily_data_csv, p1_inst_data_csv, filesout){
-    reticulate::source_python(plot_file)
-    return(filesout)
-}
-
-
-
 plot_daily_data <- function(data,fileout,min_count = 0, start_date = "",end_date = "",fig_cols,fig_height,fig_width){
   #' 
   #' @description Function to plot daily mean dissolved oxygen (DO)
