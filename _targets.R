@@ -1,7 +1,8 @@
 library(targets)
 
 options(tidyverse.quiet = TRUE)
-tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval","knitr","leaflet","sf","sbtools")) 
+tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval",
+                            "knitr","leaflet","sf","sbtools","ggplot2")) 
 
 source("1_fetch.R")
 source("2_process.R")

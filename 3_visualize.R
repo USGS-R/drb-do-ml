@@ -8,25 +8,45 @@ p3_targets_list <- list(
   
   # Render data summary report (report target has format = "file")
   tarchetypes::tar_render(p3_wqp_spC_report, "3_visualize/src/report-do-inventory.Rmd",output_dir = "3_visualize/out"),
-
-  # Generate summary plots using python
-  tar_target(p3_do_plot_python_file,
-             "3_visualize/src/do_overview_plots.py",
-             format = "file"),
-
-  # Save summary plots
+  
+  # Generate summary plots (all daily and inst data)
   tar_target(
-    p3_do_summary_plots,
-    plot_do_overview(p3_do_plot_python_file,
-                     p1_daily_data_csv,
-                     p1_inst_data_csv,
-                     filesout=c("3_visualize/out/inst_daily_means.jpg",
-                                "3_visualize/out/daily_daily_means.jpg",
-                                "3_visualize/out/doy_means.jpg",
-                                "3_visualize/out/filtered_daily_means.jpg",
-                                "3_visualize/out/filtered_inst_means.jpg")),
+    p3_daily_summary_plot_png,
+    plot_daily_data(p1_daily_data, fileout = "3_visualize/out/daily_daily_means.png",
+                    fig_cols = 5, fig_width = 8, fig_height = 7),
     format = "file"
   ),
+  
+  tar_target(
+    p3_inst_summary_plot_png,
+    plot_daily_data(p1_inst_data, fileout = "3_visualize/out/inst_daily_means.png",
+                    fig_cols = 4, fig_width = 6, fig_height = 7),
+    format = "file"
+  ),
+  
+  tar_target(
+    p3_doy_means_png,
+    plot_doy_means(p2_daily_combined,fileout = "3_visualize/out/doy_means.png",
+                   fig_height = 3, fig_width = 4),
+    format = "file"
+  ),
+  
+  # Generate summary plots (well-observed data only)
+  tar_target(
+    p3_daily_summary_plot_filtered_png,
+    plot_daily_data(p1_daily_data, fileout = "3_visualize/out/filtered_daily_means.png",
+                    min_count = 300, start_date = "1980-01-01", end_date = "1994-01-01",
+                    fig_cols = 1, fig_width = 4, fig_height = 10),
+    format = "file"
+  ),
+  
+  tar_target(
+    p3_inst_summary_plot_filtered_png,
+    plot_daily_data(p1_inst_data, fileout = "3_visualize/out/filtered_inst_means.png",
+                    min_count = 300, fig_cols = 1, fig_width = 4, fig_height = 10),
+    format = "file"
+  ),
+  
   
   tar_target(
     p3_well_observed_site_data,
