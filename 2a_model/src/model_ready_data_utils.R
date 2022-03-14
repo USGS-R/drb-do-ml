@@ -10,7 +10,7 @@ match_site_ids_to_segs <-
     #' @value A data frame of seg data with site ids 
     
     seg_data <- seg_data %>%
-      left_join(.,sites_w_segs[,c("site_id","segidnat")],
+      left_join(sites_w_segs[,c("site_id","segidnat")],
                 by=c("seg_id_nat" = "segidnat"))
     return(seg_data)
   }
@@ -27,14 +27,18 @@ write_df_to_zarr <- function(df, index_cols, out_zarr) {
   
   # convert to a python (pandas) DataFrame so we have access to the object methods (set_index and to_xarray)
   py_df <- reticulate::r_to_py(df)
+  pd <- reticulate::import("pandas")
+  py_df[["date"]] = pd$to_datetime(py_df$date)
+  py_df[["site_id"]] = py_df$site_id$astype("string")
   
   # set the index so that when we convert to an xarray dataset it is indexed properly
   py_df  <- py_df$set_index(index_cols)
+
   
   # convert to an xarray dataset
   ds <- py_df$to_xarray()
-  
   ds$to_zarr(out_zarr, mode = 'w')
+
   
   return(out_zarr)
   
@@ -53,5 +57,6 @@ subset_and_write_zarr <- function(df, out_zarr, sites_subset = NULL){
     if (!is.null(sites_subset)){
       df <- df %>% filter(site_id %in% sites_subset)
     }
-  write_df_to_zarr(df, c("site_id", "date"), out_zarr)
+  out_zarr <- write_df_to_zarr(df, c("site_id", "date"), out_zarr)
+  return(out_zarr)
 }
