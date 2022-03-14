@@ -56,7 +56,7 @@ p2_targets_list <- list(
       p2_site_list,
       sites_crs = 4269,
       max_matches = 1,
-      search_radius = 0.1
+      search_radius = 500
     )
   ),
   
