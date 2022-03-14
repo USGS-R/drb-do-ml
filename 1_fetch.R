@@ -186,6 +186,27 @@ p1_targets_list <- list(
   tar_target(
     p1_ntw_adj_matrix,
     read_csv(p1_ntw_adj_matrix_csv,show_col_types = FALSE)
+  ),
+
+  # Download and unzip metabolism estimates
+  tar_target(
+    p1_metab_tsv,
+    {
+    metab_file <- download_sb_file(sb_id = "59eb9c0ae4b0026a55ffe389",
+                                   file_name = "daily_predictions.zip",
+                                   out_dir="1_fetch/out")
+    unzip(zipfile=metab_file, exdir = dirname(metab_file), overwrite=TRUE)
+    file.path(dirname(metab_file), "daily_predictions.tsv")
+    },
+    format="file" 
+  ),
+  
+  # Download and unzip metabolism estimates
+  tar_target(
+    p1_metab,
+    {
+      read_tsv(p1_metab_tsv, show_col_types = FALSE)
+    }
   )
 
 )  
