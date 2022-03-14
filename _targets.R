@@ -1,7 +1,8 @@
 library(targets)
 
 options(tidyverse.quiet = TRUE)
-tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval","knitr","leaflet","sf","sbtools")) 
+tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval",
+                            "knitr","leaflet","sf","sbtools","ggplot2")) 
 
 source("1_fetch.R")
 source("2_process.R")
@@ -48,7 +49,7 @@ site_tp_select <- c("ST","ST-CA","SP")
 
 # Omit undesired sites
 # sites 01412350, 01484272 coded as site type "ST" but appear to be tidally-influenced
-omit_nwis_sites <- c("01412350","01484272", "01481500", "01477050", "01467200", "014670261", "01464600")
+omit_nwis_sites <- c("01412350","01484272", "01477050", "01467200", "014670261", "01464600")
 
 # Define USGS stat codes for continuous sites that only report daily statistics (https://help.waterdata.usgs.gov/stat_code) 
 stat_cd_select <- c("00001","00002","00003")
