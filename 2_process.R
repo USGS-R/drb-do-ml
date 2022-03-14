@@ -51,13 +51,11 @@ p2_targets_list <- list(
   # Match PRMS stream segments to observation site ids
   tar_target(
     p2_sites_w_segs,
-    get_site_flowlines(
-      p1_reaches_sf,
-      p2_site_list,
-      sites_crs = 4269,
-      max_matches = 1,
-      search_radius = 500
-    )
+    get_site_flowlines(p1_reaches_sf, p2_site_list, sites_crs = 4269,
+                       max_matches = 1, search_radius = 1000) %>%
+      # only retain sites that get matched to flowlines based on a 
+      # cutoff value of bird_dist_to_subseg_m:
+      filter(bird_dist_to_subseg_m <= 500)
   ),
   
   # Write the table with matched PRMS segment and observation sites to a csv file
