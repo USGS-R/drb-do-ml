@@ -29,7 +29,7 @@ get_site_flowlines <- function(reach_sf, sites, sites_crs, max_matches = 1, sear
     mutate(REACHCODE = COMID, ToMeas = 100, FromMeas = 100) %>%
     # project reaches to Albers Equal Area Conic so that offsets returned by 
     # get_flowline_index are in meters rather than degrees
-    st_transform(.,5070)
+    st_transform(5070)
   
   sites_sf <- sites %>% rowwise() %>%
     filter(across(c(lon, lat), ~ !is.na(.x))) %>%
@@ -61,7 +61,7 @@ get_site_flowlines <- function(reach_sf, sites, sites_crs, max_matches = 1, sear
     left_join(flowline_indices, by = "id") %>%
     select(-id) %>%
     # add `segidnat` column
-    left_join(.,reach_sf %>%
+    left_join(reach_sf %>%
                 select(subsegid, segidnat) %>%
                 sf::st_drop_geometry(),
               by = "subsegid")
