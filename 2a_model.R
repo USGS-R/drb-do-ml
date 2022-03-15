@@ -79,17 +79,31 @@ p2a_targets_list <- list(
   ),
 
 
-  # write trn do data to zarr
+  # write trn do and metab data to zarr
   tar_target(
     p2a_trn_do_zarr,
-    subset_and_write_zarr(p2_daily_with_seg_ids, "2a_model/out/well_observed_trn_do.zarr", p2a_trn_sites),
+    {
+      # need to join the metab data with the DO observations. First we create a new column "site_id"
+      # (to match the p2_daily_with_seg_ids column name). This column is the same as site_name of p1_metab,
+      # but the 'nwis_' before the site number is removed so that the join can be made.
+      do_and_metab <- p2_daily_with_seg_ids %>%
+          left_join(p1_metab %>% mutate(site_id = str_replace(site_name, "nwis_", "")))
+      subset_and_write_zarr(do_and_metab, "2a_model/out/well_observed_trn_targets.zarr", p2a_trn_sites)
+    },
     format="file"
   ),
 
-  # write trn and val do data to zarr
+  # write trn and val do and metab data to zarr
   tar_target(
     p2a_trn_val_do_zarr,
-    subset_and_write_zarr(p2_daily_with_seg_ids, "2a_model/out/well_observed_trn_do.zarr", p2a_trn_val_sites),
+    {
+      # need to join the metab data with the DO observations. First we create a new column "site_id"
+      # (to match the p2_daily_with_seg_ids column name). This column is the same as site_name of p1_metab,
+      # but the 'nwis_' before the site number is removed so that the join can be made.
+      do_and_metab <- p2_daily_with_seg_ids %>%
+          left_join(p1_metab %>% mutate(site_id = str_replace(site_name, "nwis_", "")))
+      subset_and_write_zarr(do_and_metab, "2a_model/out/well_observed_trn_val_targets.zarr", p2a_trn_val_sites)
+    },
     format="file"
   )
 
