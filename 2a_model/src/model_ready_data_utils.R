@@ -29,7 +29,8 @@ write_df_to_zarr <- function(df, index_cols, out_zarr) {
   py_df <- reticulate::r_to_py(df)
   pd <- reticulate::import("pandas")
   py_df[["date"]] = pd$to_datetime(py_df$date)
-  py_df[["site_id"]] = py_df$site_id$astype("string")
+  py_df[["site_id"]] = py_df$site_id$astype("str")
+
   
   # set the index so that when we convert to an xarray dataset it is indexed properly
   py_df  <- py_df$set_index(index_cols)
