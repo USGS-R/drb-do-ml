@@ -42,13 +42,17 @@ get_site_flowlines <- function(reach_sf, sites, sites_crs, max_matches = 1, sear
   # Below, precision indicates the resolution of measure precision (in meters) in the output; 
   # since we are interested in a more accurate estimate of the `offset` distance between a 
   # point and the matched reach, set precision to 1 m.
+  # Conduct initial search using a larger radius (search_radius*2) than specified to 
+  # account for any uncertainty in the RANN::nn2 nearest neighbor search. Then 
+  # filter sites to include those within the specified search_radius.
   flowline_indices <- nhdplusTools::get_flowline_index(flines = reaches_nhd_fields,
                                                        points = sites_sf,
                                                        max_matches = max_matches,
-                                                       search_radius = search_radius,
+                                                       search_radius = search_radius*2,
                                                        precision = 1) %>%
     select(COMID, id, offset) %>%
-    rename(subsegid = COMID, bird_dist_to_subseg_m = offset)
+    rename(subsegid = COMID, bird_dist_to_subseg_m = offset) %>%
+    filter(bird_dist_to_subseg_m <= search_radius)
   
   # nhdplusTools returns an "id" column which is just an index from 1 to 
   # the number of sites. To later join to the site-ids, we need to add
@@ -58,7 +62,9 @@ get_site_flowlines <- function(reach_sf, sites, sites_crs, max_matches = 1, sear
   #rejoin to original reaches df
   message("rejoining with other geometries")
   sites_w_reach_ids <- sites %>%
-    left_join(flowline_indices, by = "id") %>%
+    # only retain sites that got matched to flowlines and are 
+    # within specified search_radius
+    right_join(flowline_indices, by = "id") %>%
     select(-id) %>%
     # add `segidnat` column
     left_join(reach_sf %>%
