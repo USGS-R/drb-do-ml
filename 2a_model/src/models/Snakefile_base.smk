@@ -10,17 +10,10 @@ from river_dl.postproc_utils import plot_obs, plot_ts
 from river_dl.predict import predict_from_arbitrary_data
 from river_dl.train import train_model
 from river_dl import loss_functions as lf
-from model import LSTMModel
 
 out_dir = os.path.join(config['out_dir'], config['exp_name'])
 loss_function = lf.multitask_rmse(config['lambdas'])
 
-rule all:
-    input:
-          expand("{outdir}/exp_{metric_type}_metrics.csv",
-                  outdir=out_dir,
-                  metric_type=['overall', 'reach'])
-        
 
 rule as_run_config:
     output:
@@ -65,18 +58,11 @@ rule train:
         "{outdir}/nstates_{nstates}/rep_{rep}/train_log.csv",
         "{outdir}/nstates_{nstates}/rep_{rep}/train_time.txt",
     run:
-        model = LSTMModel(
-            int(wildcards.nstates),
-            recurrent_dropout=config['recurrent_dropout'],
-            dropout=config['dropout'],
-            num_tasks=len(config['y_vars'])
-        )
-
         optimizer = tf.optimizers.Adam(learning_rate=config['finetune_learning_rate']) 
-        model.compile(optimizer=optimizer, loss=loss_function)
+        params.model.compile(optimizer=optimizer, loss=loss_function)
         data = np.load(input[0], allow_pickle=True)
         nsegs = len(np.unique(data["ids_trn"]))
-        train_model(model,
+        train_model(params.model,
                     x_trn = data['x_trn'],
                     y_trn = data['y_obs_trn'],
                     epochs = config['pt_epochs'],
@@ -101,20 +87,12 @@ rule make_predictions:
         "{outdir}/nstates_{nstates}/rep_{rep}/preds.feather",
     run:
         weight_dir = input[0] + "/"
-
-        model = LSTMModel(
-            int(wildcards.nstates),
-            recurrent_dropout=config['recurrent_dropout'],
-            dropout=config['dropout'],
-            num_tasks=len(config['y_vars'])
-        )
-
-        model.load_weights(weight_dir)
+        params.model.load_weights(weight_dir)
         preds = predict_from_arbitrary_data(raw_data_file=input[1],
                                             pred_start_date="1980-01-01",
                                             pred_end_date="2019-01-01",
                                             train_io_data=input[2],
-                                            model=model, 
+                                            model=params.model, 
                                             spatial_idx_name='site_id',
                                             time_idx_name='date')
         preds.reset_index(drop=True).to_feather(output[0])
