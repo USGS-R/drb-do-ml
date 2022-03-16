@@ -1,0 +1,27 @@
+from model import LSTMModel
+
+configfile: "config.yml"
+
+out_dir = os.path.join(config['out_dir'], config['exp_name'])
+
+rule all:
+    input:
+          expand("{outdir}/exp_{metric_type}_metrics.csv",
+                  outdir=out_dir,
+                  metric_type=['overall', 'reach'])
+        
+
+module base_workflow:
+    snakefile: "../Snakefile_base.smk"
+    config: config
+
+
+use rule * from base_workflow as base_*
+
+
+use rule train from base_workflow as base_train with:
+    params:
+        model = lambda wildcards: LSTMModel(int(wildcards.nstates), recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars'])) 
+
+use rule make_predictions from base_workflow as base_make_predictions with:
+    params: model = lambda wildcards: LSTMModel(int(wildcards.nstates), recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars']))
