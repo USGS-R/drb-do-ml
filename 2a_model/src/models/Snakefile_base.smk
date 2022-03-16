@@ -24,8 +24,8 @@ rule as_run_config:
 
 rule prep_io_data:
     input:
-        "../../../out/well_observed_train_inputs.zarr",
-        "../../../out/well_observed_train_do.zarr",
+        "../../../out/well_observed_trn_inputs.zarr",
+        "../../../out/well_observed_trn_targets.zarr",
     output:
         "{outdir}/nstates_{nstates}/rep_{rep}/prepped.npz"
     run:
@@ -81,7 +81,7 @@ rule train:
 rule make_predictions:
     input:
         "{outdir}/nstates_{nstates}/rep_{rep}/train_weights/",
-        "../../../out/well_observed_train_val_inputs.zarr",
+        "../../../out/well_observed_trn_val_inputs.zarr",
         "{outdir}/nstates_{nstates}/rep_{rep}/prepped.npz",
     output:
         "{outdir}/nstates_{nstates}/rep_{rep}/preds.feather",
@@ -156,7 +156,7 @@ def get_grp_arg(wildcards):
  
 rule combine_metrics:
      input:
-          "../../../out/well_observed_train_val_do.zarr",
+          "../../../out/well_observed_trn_val_targets.zarr",
           "{outdir}/nstates_{nstates}/rep_{rep}/trn_preds.feather",
           "{outdir}/nstates_{nstates}/rep_{rep}/val_preds.feather",
           "{outdir}/nstates_{nstates}/rep_{rep}/val_times_preds.feather"
