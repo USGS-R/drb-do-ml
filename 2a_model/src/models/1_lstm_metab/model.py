@@ -2,13 +2,12 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 
-class LSTMModel(tf.keras.Model):
+class LSTMMetab(tf.keras.Model):
     def __init__(
-        self, hidden_size, num_tasks, recurrent_dropout=0, dropout=0,
+        self, hidden_size, recurrent_dropout=0, dropout=0,
     ):
         """
         :param hidden_size: [int] the number of hidden units
-        :param num_tasks: [int] number of outputs to predict 
         :param recurrent_dropout: [float] value between 0 and 1 for the
         probability of a recurrent element to be zero
         :param dropout: [float] value between 0 and 1 for the probability of an
@@ -21,42 +20,19 @@ class LSTMModel(tf.keras.Model):
             recurrent_dropout=recurrent_dropout,
             dropout=dropout,
         )
-        self.dense = layers.Dense(num_tasks)
+        self.metab_out = layers.Dense(3)
+        self.do_range_multiplier = layers.Dense(1)
+        self.do_mean_wgt = layers.Dense(1)
 
-    @tf.function
-    def call(self, inputs):
+    def call(self, inputs, DO_sat):
         h = self.rnn_layer(inputs)
-        prediction = self.dense(h)
-        return prediction
+        metab = self.metab_out(h)
+        GPP = metab[:, :, 0]
+        ER = metab[:, :, 1]
+        K = metab[:, :, 2]
+        DO_min = DO_sat - ER + K
+        DO_max = DO_min + GPP - K
+        DO_mean = DO_min + self.do_range_multiplier(DO_max - DO_min) + tf.squeeze(self.do_mean_wgt(h))
+        return tf.stack((DO_min, DO_mean, DO_max, GPP, ER, K), axis=2)
 
-
-class LSTMModelStates(tf.keras.Model):
-    """
-    LSTM model but returning states (h) instead of the predictions (y)
-    """
-    def __init__(
-        self, hidden_size, num_tasks, recurrent_dropout=0, dropout=0,
-    ):
-        """
-        :param hidden_size: [int] the number of hidden units
-        :param num_tasks: [int] number of outputs to predict 
-        :param recurrent_dropout: [float] value between 0 and 1 for the
-        probability of a recurrent element to be zero
-        :param dropout: [float] value between 0 and 1 for the probability of an
-        input element to be zero
-        """
-        super().__init__()
-        self.rnn_layer = layers.LSTM(
-            hidden_size,
-            return_sequences=True,
-            recurrent_dropout=recurrent_dropout,
-            dropout=dropout,
-        )
-        self.dense = layers.Dense(num_tasks)
-
-    @tf.function
-    def call(self, inputs):
-        h = self.rnn_layer(inputs)
-        prediction = self.dense(h)
-        return h
 
