@@ -1,5 +1,3 @@
 agency_cd,site_no,station_nm,site_tp_cd,dec_lat_va,dec_long_va,coord_acy_cd,dec_coord_datum_cd,alt_va,alt_acy_va,alt_datum_cd,huc_cd,data_type_cd,parm_cd,stat_cd,ts_id,loc_web_ds,medium_grp_cd,parm_grp_cd,srs_id,access_cd,begin_date,end_date,count_nu,count_ts
-USGS,01467200,"Delaware River at Penn's Landing, Philadelphia, PA",ST,39.95400165,-75.1373987,S,"NAD83",NA,NA,NA,02040202,uv,00300,NA,121396,NA,wat,NA,154302,0,2007-10-01,2020-12-03,4812,2
-USGS,01467200,"Delaware River at Penn's Landing, Philadelphia, PA",ST,39.95400165,-75.1373987,S,"NAD83",NA,NA,NA,02040202,uv,00300,NA,271416,"ISM Test Bed, [ISM Test Bed (barge)]",wat,NA,154302,0,2020-07-23,2021-12-20,515,2
 USGS,01482537,Salem River at Courses Landing NJ,ST,39.66055556,-75.4091667,S,"NAD83",NA,NA,NA,02040206,uv,00300,NA,290958,at 0.5 ft depth,wat,NA,154302,0,2008-08-06,2008-10-02,57,2
 USGS,01482537,Salem River at Courses Landing NJ,ST,39.66055556,-75.4091667,S,"NAD83",NA,NA,NA,02040206,uv,00300,NA,290959,at 2.0 ft depth,wat,NA,154302,0,2008-08-06,2008-10-02,57,2
