@@ -36,7 +36,7 @@ test_sites: ["01475530", "01475548"]
 
 
 pt_epochs: 100
-hidden_size: 10
+hidden_size: [10, 5]
 
 dropout: 0.2
 recurrent_dropout: 0.2
