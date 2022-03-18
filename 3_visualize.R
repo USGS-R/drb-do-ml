@@ -65,7 +65,7 @@ p3_targets_list <- list(
     p3_well_observed_site_data_json,
     {
       filename = "3_visualize/out/well_observed_trn_val_test.geojson"
-      st_write(p3_well_observed_site_data, filename, append=FALSE)
+      st_write(p3_well_observed_site_data, filename, append = FALSE, delete_dsn = TRUE, driver = "GeoJSON", quiet = TRUE)
       filename
     },
     format = "file"
