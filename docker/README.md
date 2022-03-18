@@ -1,3 +1,4 @@
+[Originally written by @jds485]
 # Instructions for building the Docker container from the Dockerfile and running code within the container
 
 ## Starting docker daemon within WSL2 or Linux OS
@@ -9,35 +10,30 @@
 ## Building an image from the Dockerfile
 If you changed the Dockerfile, you will have to build a new image and tag it. The following commad is used to build the image. The path to Dockerfile can be on Windows (/mnt/c) or WSL Linux filesystem. The syntax is:
 
-`docker build -t drb-insal-gs:<tag> <path to Dockerfile>`
+`docker build -t drb-do:<tag> <path to Dockerfile>`
 
 The tag should be a version, like `v0.1`. Every new build should use a new version number. Images can have multiple tags. The latest build should also have the `latest` tag.
 
 Windows filesystem:
 
-`docker build -t drb-insal-gs:v0.1 /mnt/c/users/jsmith/OneDrive\ -\ DOI/Documents/Projects/DRB-InlandSalinity/drb-inland-salinity-ml/docker/`
+`docker build -t drb-do:v0.1 /mnt/c/users/jsmith/OneDrive\ -\ DOI/Documents/drb-do-ml/docker/`
 
 Linux filesystem: I cloned our repo to /home/jsmith/
 
-`docker build -t drb-insal-gs:v0.1 /home/jsmith/drb-inland-salinity-ml/docker/`
-
-### Tagging the container registry's image:
-The tag format required for the registry is <registry repo name>:<tag>. This will allow you to push the image to the registry after it is built.
-
-`docker build -t code.usgs.gov:5001/wma/wp/drb-inland-salinity-container:v0.1 /home/jsmith/drb-inland-salinity-ml/docker/`
+`docker build -t drb-do:v0.1 /home/jsmith/drb-do-ml/docker/`
 
 ## Running Rstudio in the container
 For git repo stored in WSL or Linux directory:
 
 `docker run --rm -p 8787:8787 -v <path_to_repo>:/home/<Linux_username>/<working_directory_name> -e USER="<Linux_username>" <container_name:tag>`
 
-`docker run --rm -p 8787:8787 -v /home/jsmith/drb-inland-salinity-ml/:/home/jsmith/ -e USER="jsmith" drb-insal-gs:v0.1`
+`docker run --rm -p 8787:8787 -v /home/jsmith/drb-do-ml/:/home/jsmith/ -e USER="jsmith" drb-do:v0.1`
 
 For git repo stored in Windows filesystem
 
 `docker run --rm -p 8787:8787 -v /mnt/<path_to_repo>:/home/<USGS_username>/<working_directory_name> -e USER="<USGS_username>" <container_name:tag>`
 
-`docker run --rm -p 8787:8787 -v /mnt/c/Users/jsmith/OneDrive\ -\ DOI/Documents/Projects/DRB-InlandSalinity/drb-inland-salinity-ml/:/home/jsmith -e USER="jsmith" drb-insal-gs:v0.1`
+`docker run --rm -p 8787:8787 -v /mnt/c/Users/jsmith/OneDrive\ -\ DOI/Documents/Projects/DRB-InlandSalinity/drb-do-ml/:/home/jsmith -e USER="jsmith" drb-do:v0.1`
 
 Explanation of options:
 - -v mounts your files to the server
