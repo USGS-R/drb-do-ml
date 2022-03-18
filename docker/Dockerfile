@@ -7,9 +7,6 @@
 #which is based on tidyverse, which is based on rstudio, which is based on r-ver.
 FROM rocker/geospatial:4.1.2
 
-# Add DOI CA to local CAs so that SSL can work over VPN
-COPY DOIRootCA2.crt /usr/local/share/ca-certificates
-RUN update-ca-certificates
 
 #If needed, install Linux libraries and remove cache
 #you'll know to add libraries if you get an error installing R/Python/etc. packages that you add.
@@ -26,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 #I'm not worried about specifying versions here because we specify the R subsubversion in FROM
 #and packages are downloaded from MRAN for the date that the subsubversion was released.
 #The snapshot date is used here just in case. 
-RUN install2.r --error -r https://cran.microsoft.com/snapshot/2022-01-31 \
+RUN install2.r --error \
   dataRetrieval \
   lubridate \
   nhdplusTools \
@@ -48,24 +45,25 @@ RUN install2.r --error -r https://cran.microsoft.com/snapshot/2022-01-31 \
   # place a space and backslash after the package name
 
 # Need this if running python in the project directory
-# RUN python3.6 -m pip install --upgrade pip
-# RUN /rocker_scripts/install_binder.sh
+RUN /rocker_scripts/install_python.sh
 
 #add additional Python packages to install:
-#RUN pip install \
-#	dask \
-#	jupyterlab \
-#	matplotlib \
-#	netCDF4 \
-#	pandas \
-#	pyarrow \
-#	scikit-learn \
-#	scipy \
-#	seaborn \
-#	statsmodels \
-#	tensorflow==2.5.0 \
-#	tensorflow-gpu==2.5.0 \
-#	tensorflow-estimator==2.5.0 \
-#	torch \
-#	xarray \
-#	zarr
+RUN pip install \
+    dask \
+    jupyterlab \
+    matplotlib \
+    netCDF4 \
+    pandas \
+    pyarrow \
+    scikit-learn \
+    scipy \
+    seaborn \
+    snakemake \
+    statsmodels \
+    tensorflow \
+    torch \ 
+    torchvision \
+    torchaudio \
+    tqdm \
+    xarray \
+    zarr
