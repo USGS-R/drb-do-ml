@@ -2,6 +2,10 @@ import os
 import tensorflow as tf
 import numpy as np
 import pandas as pd
+import sys
+
+code_dir = "../river-dl"
+sys.path.append(code_dir)
 
 from river_dl.preproc_utils import asRunConfig
 from river_dl.preproc_utils import prep_all_data
