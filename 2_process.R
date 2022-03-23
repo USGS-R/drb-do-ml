@@ -92,7 +92,9 @@ p2_targets_list <- list(
   # make list of "well-observed" sites
   tar_target(
    p2_well_observed_sites,
-   p2_sites_w_segs %>% filter(count_days_total > 300) %>% pull(site_id)
+   p2_sites_w_segs %>% 
+     filter(count_days_total > 300) %>% 
+     pull(site_id)
  ),
  
  # filter p1_reaches_sf to segments with "well-observed" sites
@@ -105,7 +107,15 @@ p2_targets_list <- list(
    p1_reaches_sf %>% filter(segidnat %in% well_obs_reach_ids)
    }
  ),
-  
+ 
+ # make list of "moderately-observed" sites
+ tar_target(
+   p2_med_observed_sites,
+   p2_sites_w_segs %>%
+     filter(count_days_nwis >= 100) %>%
+     pull(site_id)
+ ),
+
   # Estimate daily (normalized) max-light
   tar_target(
     p2_daily_max_light,
