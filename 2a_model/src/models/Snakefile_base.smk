@@ -22,36 +22,11 @@ rule as_run_config:
         asRunConfig(config,output[0])
 
 
-rule prep_io_data:
-    input:
-        "../../../out/well_observed_trn_inputs.zarr",
-        "../../../out/well_observed_trn_targets.zarr",
-    output:
-        "{outdir}/nstates_{nstates}/rep_{rep}/prepped.npz"
-    run:
-        prep_all_data(
-                  x_data_file=input[0],
-                  y_data_file=input[1],
-                  x_vars=config['x_vars'],
-                  y_vars_finetune=config['y_vars'],
-                  spatial_idx_name='site_id',
-                  time_idx_name='date',
-                  train_start_date=config['train_start_date'],
-                  train_end_date=config['train_end_date'],
-                  val_start_date=config['val_start_date'],
-                  val_end_date=config['val_end_date'],
-                  test_start_date=config['test_start_date'],
-                  test_end_date=config['test_end_date'],
-                  out_file=output[0],
-                  trn_offset = config['trn_offset'],
-                  tst_val_offset = config['tst_val_offset'])
-
-
 
 # Finetune/train the model on observations
 rule train:
     input:
-        "{outdir}/nstates_{nstates}/rep_{rep}/prepped.npz"
+        "{outdir}/prepped.npz"
     output:
         directory("{outdir}/nstates_{nstates}/rep_{rep}/train_weights/"),
         #directory("{outdir}/best_val_weights/"),
@@ -82,7 +57,7 @@ rule make_predictions:
     input:
         "{outdir}/nstates_{nstates}/rep_{rep}/train_weights/",
         "../../../out/well_observed_trn_val_inputs.zarr",
-        "{outdir}/nstates_{nstates}/rep_{rep}/prepped.npz",
+        "{outdir}/prepped.npz",
     output:
         "{outdir}/nstates_{nstates}/rep_{rep}/preds.feather",
     run:
@@ -194,7 +169,7 @@ rule exp_metrics:
  
 rule plot_prepped_data:
      input:
-         "{outdir}/nstates_{nstates}/rep_{rep}/prepped.npz",
+         "{outdir}/prepped.npz",
      output:
          "{outdir}/nstates_{nstates}/rep_{rep}/{variable}_part_{partition}.png",
      run:

@@ -115,6 +115,17 @@ p2a_targets_list <- list(
       subset_and_write_zarr(do_and_metab, "2a_model/out/well_observed_trn_val_targets.zarr", p2a_trn_val_sites)
     },
     format="file"
+  ),
+
+  # write prepped file to .npz
+  tar_target(
+    p2a_0_baseline_prepped,
+    prep_io_data(x_data_file = p2a_trn_inputs_zarr,
+                 y_data_file = p2a_trn_targets_zarr,
+                 config_dir = "2a_model/src/models/0_baseline_LSTM",
+                 out_file = "2a_model/out/models/0_baseline_LSTM/prepped.npz"),
+
+    format="file"
   )
 
 )
