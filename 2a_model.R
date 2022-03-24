@@ -95,7 +95,7 @@ p2a_targets_list <- list(
 
   # write trn do and metab data to zarr
   tar_target(
-    p2a_trn_do_zarr,
+    p2a_trn_targets_zarr,
     {
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
@@ -107,7 +107,7 @@ p2a_targets_list <- list(
 
   # write trn and val do and metab data to zarr
   tar_target(
-    p2a_trn_val_do_zarr,
+    p2a_trn_val_targets_zarr,
     {
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
