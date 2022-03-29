@@ -1,5 +1,6 @@
 from model import LSTMModel
 
+workdir: "2a_model/src/models/0_baseline_LSTM"
 configfile: "config.yml"
 
 out_dir = os.path.join(config['out_dir'], config['exp_name'])

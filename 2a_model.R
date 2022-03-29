@@ -119,13 +119,31 @@ p2a_targets_list <- list(
 
   # write prepped file to .npz
   tar_target(
-    p2a_0_baseline_prepped,
+    p2a_model_ids,
+    c("0_baseline_LSTM")
+  ),
+
+  tar_target(
+    p2a_prepped,
+    {
+    dir.create(sprintf("2a_model/out/models/%s", p2a_model_ids), showWarnings = FALSE)
     prep_io_data(x_data_file = p2a_trn_inputs_zarr,
                  y_data_file = p2a_trn_targets_zarr,
-                 config_dir = "2a_model/src/models/0_baseline_LSTM",
-                 out_file = "2a_model/out/models/0_baseline_LSTM/prepped.npz"),
+                 config_dir = sprintf("2a_model/src/models/%s", p2a_model_ids),
+                 out_file = sprintf("2a_model/out/models/%s/prepped.npz", p2a_model_ids))
+    },
+    format="file",
+    pattern = map(p2a_model_ids)
+  ),
 
-    format="file"
+  tar_target(
+    p2a_metrics_files,
+    {
+    p2a_prepped
+    system(sprintf("snakemake -s 2a_model/src/models/%s/Snakefile -j4", p2a_model_ids))
+    sprintf("2a_model/out/models/%s/exp_overall_metrics.csv", p2a_model_ids)
+    },
+    format="file",
+    pattern = map(p2a_model_ids)
   )
-
 )
