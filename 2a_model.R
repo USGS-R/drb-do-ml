@@ -87,7 +87,7 @@ p2a_targets_list <- list(
       trn_input <- p2a_met_data_w_sites %>%
         filter(site_id %in% p2a_trn_val_sites) %>%
         inner_join(p2a_seg_attr_w_sites, by = "site_id")
-      subset_and_write_zarr(trn_input, "2a_model/out/well_observed_trn_inputs.zarr")
+      subset_and_write_zarr(trn_input, "2a_model/out/well_observed_trn_val_inputs.zarr")
     },
     format="file"
   ),
@@ -117,12 +117,15 @@ p2a_targets_list <- list(
     format="file"
   ),
 
-  # write prepped file to .npz
+  # gather model ids - add to this list when you want to reproduce
+  # outputs from a new model
   tar_target(
     p2a_model_ids,
     c("0_baseline_LSTM")
   ),
 
+
+  # write prepped file to .npz
   tar_target(
     p2a_prepped,
     {
@@ -136,11 +139,40 @@ p2a_targets_list <- list(
     pattern = map(p2a_model_ids)
   ),
 
+  # 'touch' (update modified time) trained model weights so Snakemake doesn't retrain models
+  tar_target(
+    p2a_wgt_paths,
+    {
+    # including the prepped data so that that target is built first 
+    p2a_prepped
+
+    # get a list of all of the weight files in the repo
+    wgt_files = list.files(sprintf("2a_model/out/models/%s", p2a_model_ids),
+                           "train_weights",
+                           full.names=TRUE,
+                           recursive = TRUE,
+                           include.dirs = TRUE)
+    wgt_files_joined = paste(wgt_files, collapse=" ")
+    # need to make the paths relative to the Snakefile
+    wgt_files_joined = gsub("2a_model", "../../..", wgt_files_joined)
+
+    # use Snakemake to "touch" each of the files
+    system(sprintf("snakemake %s -s 2a_model/src/models/%s/Snakefile -j4 --touch", wgt_files_joined, p2a_model_ids))
+    wgt_files
+    },
+    pattern = map(p2a_model_ids)
+    ),
+                         
+  # produce the final metrics files (and all intermediate files including predictions)
+  # of each "model_id" with snakemake
   tar_target(
     p2a_metrics_files,
     {
+    # include wgt_paths and prepped
+    p2a_wgt_paths
     p2a_prepped
-    system(sprintf("snakemake -s 2a_model/src/models/%s/Snakefile -j4", p2a_model_ids))
+
+    system(sprintf("snakemake -s 2a_model/src/models/%s/Snakefile -j8", p2a_model_ids))
     sprintf("2a_model/out/models/%s/exp_overall_metrics.csv", p2a_model_ids)
     },
     format="file",
