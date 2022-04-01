@@ -1,4 +1,5 @@
-import numpy as np
+# import numpy as np
+import tensorflow as tf
 
 
 def calc_press_pa(elev):
@@ -18,7 +19,7 @@ def calc_press_pa(elev):
     Tb = 293.15 # reference temperature; 20 deg C
     Pb = 101325 # reference pressure; Pa at 20 deg C
 
-    P = Pb * np.exp((-g0 * M * elev)/(R * Tb))
+    P = Pb * tf.math.exp((-g0 * M * elev)/(R * Tb))
 
     return P
 
@@ -43,14 +44,14 @@ def calc_DO_sat(temp_C, elev, salinity=0):
 
     temp_K = temp_C + 273.15
 
-    DO = np.exp(A1 + (A2/temp_K) -
+    DO = tf.math.exp(A1 + (A2/temp_K) -
                      (A3/(temp_K**2)) +
                      (A4/(temp_K**3)) -
                      (A5/(temp_K**4)))
 
 
     # salinity factor
-    Fs = np.exp(-salinity*(0.017674 - (10.754/temp_K) + (2140.7/(temp_K**2))))
+    Fs = tf.math.exp(-salinity*(0.017674 - (10.754/temp_K) + (2140.7/(temp_K**2))))
 
 
     # pressure factor 
@@ -59,7 +60,7 @@ def calc_DO_sat(temp_C, elev, salinity=0):
          temp_C*1.426e-5 +\
          (temp_C**2)*6.436e-8
 
-    u = np.exp(11.8571 - (3840.70/temp_K) - (216961/(temp_K**2)))
+    u = tf.math.exp(11.8571 - (3840.70/temp_K) - (216961/(temp_K**2)))
 
 
     Fp = ((P_atm - u)*(1-(theta*P_atm))) /\
