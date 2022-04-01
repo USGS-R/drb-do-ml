@@ -1,4 +1,5 @@
-from model import LSTMModel
+from model import LSTMMetab
+import numpy as np
 
 configfile: "config.yml"
 
@@ -19,9 +20,37 @@ module base_workflow:
 use rule * from base_workflow as base_*
 
 
+def get_var_mean_std(data, var_name):
+    var_idx = np.where(data["x_vars"] == var_name)
+    var_mean = data["x_mean"][var_idx][0]
+    var_std = data["x_std"][var_idx][0]
+    return var_mean, var_std
+    
+
+def get_elev_light_std_means(prepped_file):
+    data = np.load(prepped_file)
+    el_mean, el_std = get_var_mean_std(data, "hru_elev")
+    lt_mean, lt_std = get_var_mean_std(data, "light_ratio")
+    return el_mean, el_std, lt_mean, lt_std
+    
+
+def get_model(wildcards, input):
+    el_mean, el_std, lt_mean, lt_std = get_elev_light_std_means(input[0])
+    model = LSTMMetab(int(wildcards.nstates),
+                      elev_mean=el_mean,
+                      elev_std=el_std,
+                      elev_idx=6,
+                      light_ratio_mean=lt_mean,
+                      light_ratio_std=lt_std,
+                      light_ratio_idx=-1,
+                      recurrent_dropout=config['recurrent_dropout'],
+                      dropout=config['dropout'],
+                      ) 
+    return model
+
+
 use rule train from base_workflow as base_train with:
-    params:
-        model = lambda wildcards: LSTMModel(int(wildcards.nstates), recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars'])) 
+    params: model = get_model
 
 use rule make_predictions from base_workflow as base_make_predictions with:
-    params: model = lambda wildcards: LSTMModel(int(wildcards.nstates), recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars']))
+    params: model = get_model
