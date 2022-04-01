@@ -26,7 +26,6 @@ rule as_run_config:
         asRunConfig(config,output[0])
 
 
-
 # Finetune/train the model on observations
 rule train:
     input:
@@ -60,7 +59,7 @@ rule train:
 rule make_predictions:
     input:
         "{outdir}/nstates_{nstates}/rep_{rep}/train_weights/",
-        "../../../out/well_observed_trn_val_inputs.zarr",
+        "../../../out/well_obs_inputs.zarr",
         "{outdir}/prepped.npz",
     output:
         "{outdir}/nstates_{nstates}/rep_{rep}/preds.feather",

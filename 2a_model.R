@@ -67,52 +67,29 @@ p2a_targets_list <- list(
   # write trn met and seg attribute data to zarr
   # note - I have to subset before passing to subset_and_write_zarr or else I
   # get a memory error on the join
-  tar_target(
-    p2a_trn_inputs_zarr,
-    { 
-      trn_input <- p2a_met_data_w_sites %>%
-        filter(site_id %in% p2a_trn_sites) %>%
-        inner_join(p2a_seg_attr_w_sites, by = "site_id")
-      subset_and_write_zarr(trn_input, "2a_model/out/well_observed_trn_inputs.zarr")
-    },
-    format="file"
-  ),
-
   # write trn and val met and seg attribute data to zarr
   # note - I have to subset before passing to subset_and_write_zarr or else I
   # get a memory error on the join
   tar_target(
-    p2a_trn_val_inputs_zarr,
+    p2a_well_obs_inputs_zarr,
     { 
       trn_input <- p2a_met_data_w_sites %>%
         filter(site_id %in% p2a_trn_val_sites) %>%
         inner_join(p2a_seg_attr_w_sites, by = "site_id")
-      subset_and_write_zarr(trn_input, "2a_model/out/well_observed_trn_val_inputs.zarr")
+      subset_and_write_zarr(trn_input, "2a_model/out/well_obs_inputs.zarr")
     },
     format="file"
   ),
 
-
-  # write trn do and metab data to zarr
-  tar_target(
-    p2a_trn_targets_zarr,
-    {
-      # need to join the metab data with the DO observations. 
-      do_and_metab <- p2_daily_with_seg_ids %>%
-          left_join(p2_metab_filtered, by=c("site_id", "date"))
-      subset_and_write_zarr(do_and_metab, "2a_model/out/well_observed_trn_targets.zarr", p2a_trn_sites)
-    },
-    format="file"
-  ),
 
   # write trn and val do and metab data to zarr
   tar_target(
-    p2a_trn_val_targets_zarr,
+    p2a_well_obs_targets_zarr,
     {
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
-          left_join(p2_metab_filtered, by=c("site_id", "date"))
-      subset_and_write_zarr(do_and_metab, "2a_model/out/well_observed_trn_val_targets.zarr", p2a_trn_val_sites)
+          left_join(p1_metab, by=c("site_id", "date"))
+      subset_and_write_zarr(do_and_metab, "2a_model/out/well_obs_targets.zarr", p2a_trn_val_sites)
     },
     format="file"
   ),
