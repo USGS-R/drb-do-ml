@@ -1,7 +1,7 @@
 calc_daily_light <- function(start_date, end_date, longitude, latitude){
   #'
-  #' @description Function to calculate daily (normalized) light over a range of 
-  #' dates using a site's lat/lon location.
+  #' @description Function to calculate daily (normalized) max light (i.e. light ratio)
+  #' over a range of dates using a site's lat/lon location.
   #' 
   #' @param start_date character string indicating the earliest date to calculate 
   #' daily light. Must be in the format "%Y-%m-%d".
@@ -19,7 +19,7 @@ calc_daily_light <- function(start_date, end_date, longitude, latitude){
   #' represents the fraction of total day length represented by the 30-minute 
   #' window that coincides with the daily DO-maximum.
   #' 
-  #' @note the streamMetabolizer package is required to calculate daily light.
+  #' @note the streamMetabolizer package is required to calculate daily max light.
   #' streamMetabolizer can be installed using:
   #' remotes::install_github('appling/unitted')
   #' remotes::install_github("USGS-R/streamMetabolizer")
@@ -57,3 +57,67 @@ calc_daily_light <- function(start_date, end_date, longitude, latitude){
   return(light_dat_daily)
   
 }
+
+
+calc_seg_light_ratio <- function(segment, start_date, end_date){
+  #'
+  #' @description Function to calculate daily (normalized) max light (i.e. light ratio)
+  #' over a range of dates for a given river segment.
+  #' 
+  #' @param segment sf LINESTRING representing a single river reach
+  #' @param start_date character string indicating the earliest date to calculate 
+  #' daily light. Must be in the format "%Y-%m-%d".
+  #' @param end_date character string indicating the latest date to calculate 
+  #' daily light. Must be in the format "%Y-%m-%d".
+  #' 
+  #' @value returns a data frame with the fields "date_localtime", which is the
+  #' date represented by local time; "max_light," which represents the maximum light 
+  #' estimated within a 30-min window during the day; "sum_light", which represents
+  #' the cumulative light estimated over the day; "day_length", which is the total
+  #' hours in a day where light > 0; "frac_light" is the ratio between "max_light" and
+  #' "sum_light"; "frac_daylength" is equal to 30 minutes divided by "day_length" and 
+  #' represents the fraction of total day length represented by the 30-minute 
+  #' window that coincides with the daily DO-maximum.
+  #' 
+  #' @note the streamMetabolizer package is required to calculate daily max light.
+  #' streamMetabolizer can be installed using:
+  #' remotes::install_github('appling/unitted')
+  #' remotes::install_github("USGS-R/streamMetabolizer")
+  #'  
+  
+
+  # 1. Get lat/lon coordinates for each segment
+  # cast segment LINESTRING to POINT 
+  segment_as_pts <- segment$geometry %>%
+    sf::st_cast("POINT") %>%
+    sf::st_as_sf() %>%
+    mutate(lat = sf::st_coordinates(.)[,2],
+           lon = sf::st_coordinates(.)[,1])
+  
+  # find segment centroid
+  segment_centroid <- segment %>%
+    sf::st_centroid(geometry) %>%
+    mutate(nearest_pt = sf::st_nearest_feature(.,segment_as_pts)) %>%
+    # suppress warnings from sf that attributes are assumed constant
+    # over geometries of x
+    suppressWarnings()
+  
+  # snap segment centroid to nearest POINT node along LINESTRING
+  segment_centroid_snap <- segment_as_pts[unique(segment_centroid$nearest_pt),] %>%
+    sf::st_drop_geometry() 
+  
+  # 2. Estimate daily normalized max light (i.e., the light ratio) for each segment
+  daily_light <- calc_daily_light(start_date, 
+                                  end_date, 
+                                  segment_centroid_snap$lon, 
+                                  segment_centroid_snap$lat)
+  
+  # Format columns
+  daily_light_out <- daily_light %>%
+    mutate(subsegid = unique(segment$subsegid),
+           seg_id_nat = unique(segment$segidnat))
+  
+  return(daily_light_out)
+  
+}
+
