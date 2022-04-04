@@ -74,8 +74,12 @@ p1_targets_list <- list(
   tar_target(
     p1_nwis_sites_inst,
     p1_nwis_sites %>%
-      # retain "uv" sites that contain data records after user-specified {earliest_date}
-      filter(data_type_cd=="uv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
+      # retain "uv" sites that contain data records after user-specified {earliest_date} and
+      # before user-specified {dummy_date}
+      filter(data_type_cd=="uv",
+             !(site_no %in% omit_nwis_sites),
+             end_date > earliest_date,
+             begin_date < dummy_date) %>%
       # for sites with multiple time series (ts_id), retain the most recent time series for site_info
       group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)),
   
