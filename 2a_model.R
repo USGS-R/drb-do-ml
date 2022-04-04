@@ -3,10 +3,24 @@ source("2a_model/src/model_ready_data_utils.R")
 p2a_targets_list <- list(
 
   ## PREPARE (RENAME, JOIN) INPUT AND OUTPUT FILES ##
+  # join met data with light input data
+  tar_target(
+    p2a_met_light_data,
+    p1_prms_met_data %>%
+      left_join(p2_daily_max_light %>%
+                  # omit subseg's not included in met data
+                  filter(!subsegid %in% c("3_1","8_1","51_1")) %>%
+                  select(seg_id_nat, date_localtime, frac_light) %>%
+                  # format column names
+                  rename(light_ratio = frac_light,
+                         date = date_localtime),
+                by = c("seg_id_nat", "date"))
+  ),
+  
   # match to site_ids to seg_ids
   tar_target(
     p2a_met_data_w_sites,
-    match_site_ids_to_segs(p1_prms_met_data, p2_sites_w_segs)
+    match_site_ids_to_segs(p2a_met_light_data, p2_sites_w_segs)
   ),
 
   # match seg attributes with site_ids
