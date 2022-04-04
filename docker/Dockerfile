@@ -44,6 +44,9 @@ RUN install2.r --error \
   # Add packages in alphanumeric order
   # place a space and backslash after the package name
 
+RUN R -e 'remotes::install_github("appling/unitted")'
+RUN R -e 'remotes::install_github("appling/streamMetabolizer")'
+
 # Need this if running python in the project directory
 RUN /rocker_scripts/install_python.sh
 
