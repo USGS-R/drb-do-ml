@@ -192,7 +192,7 @@ p1_targets_list <- list(
     read_csv(p1_ntw_adj_matrix_csv,show_col_types = FALSE)
   ),
 
-  # Download and unzip metabolism estimates
+  # Download and unzip metabolism estimates from https://www.sciencebase.gov/catalog/item/59eb9c0ae4b0026a55ffe389
   tar_target(
     p1_metab_tsv,
     {
@@ -205,16 +205,35 @@ p1_targets_list <- list(
     format="file" 
   ),
   
-  # Download and unzip metabolism estimates from https://www.sciencebase.gov/catalog/item/59eb9c0ae4b0026a55ffe389
+  # Load downloaded metabolism estimates
   tar_target(
     p1_metab,
-    
       read_tsv(p1_metab_tsv, show_col_types = FALSE) %>%
       # create a new column "site_id". This column is the same as site_name from the
       # original data, but the 'nwis_' before the site number is removed to match site naming
       # conventions used in our pipeline.
       mutate(site_id = str_replace(site_name, "nwis_", ""))
     
+  ),
+  
+  # Download and unzip metabolism diagnostics from https://www.sciencebase.gov/catalog/item/59eb9bafe4b0026a55ffe382
+  # metab diagnostics contains 1 row per streamMetabolizer model for each site
+  tar_target(
+    p1_metab_diagnostics_tsv,
+    {
+    diagnostics_file <- download_sb_file(sb_id = "59eb9bafe4b0026a55ffe382",
+                                         file_name = "diagnostics.zip",
+                                         out_dir="1_fetch/out")
+    unzip(zipfile=diagnostics_file, exdir = dirname(diagnostics_file), overwrite=TRUE)
+    file.path(dirname(diagnostics_file), "diagnostics.tsv")
+    }
+  ),
+  
+  tar_target(
+    p1_metab_diagnostics,
+    read_tsv(p1_metab_diagnostics_tsv, show_col_types = FALSE) %>%
+      # create a new column "site_id"; see p1_metab target for details.
+      mutate(site_id = str_replace(site, "nwis_",""))
   )
 
 )  
