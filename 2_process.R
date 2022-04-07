@@ -5,6 +5,7 @@ source("2_process/src/create_site_list.R")
 source("2_process/src/summarize_site_list.R")
 source("2_process/src/save_target_ind_files.R")
 source("2_process/src/match_sites_reaches.R")
+source("2_process/src/calc_daily_light.R")
 source("1_fetch/src/write_data.R")
 
 p2_targets_list <- list(
@@ -82,6 +83,13 @@ p2_targets_list <- list(
     p2_daily_with_seg_ids_csv,
     write_to_csv(p2_daily_with_seg_ids, "2_process/out/daily_do_data.csv"),
     format = "file"
+  ),
+  
+  # Estimate daily (normalized) max-light
+  tar_target(
+    p2_daily_max_light,
+    calc_seg_light_ratio(p1_reaches_sf, start_date = earliest_date, end_date = dummy_date),
+    pattern = map(p1_reaches_sf)
   ),
 
   # make list of "well-observed" sites
