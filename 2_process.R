@@ -104,7 +104,7 @@ p2_targets_list <- list(
    p2_metab_filtered,
    filter_metab_sites(p1_metab,p1_metab_diagnostics,
                       sites = p2_daily_with_seg_ids$site_id,
-                      model_conf_vals = c("H","M"),
+                      model_conf_vals = c("H"),
                       cutoff_ER_K_corr = 0.4)
  )
 
