@@ -19,6 +19,7 @@ out_dir = os.path.join(config['out_dir'], config['exp_name'])
 loss_function = lf.multitask_rmse(config['lambdas'])
 
 
+
 rule as_run_config:
     output:
         "{outdir}/asRunConfig.yml"
@@ -31,10 +32,10 @@ rule train:
     input:
         "{outdir}/prepped.npz"
     output:
-        directory("{outdir}/nstates_{nstates}/rep_{rep}/train_weights/"),
+        directory("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/"),
         #directory("{outdir}/best_val_weights/"),
-        "{outdir}/nstates_{nstates}/rep_{rep}/train_log.csv",
-        "{outdir}/nstates_{nstates}/rep_{rep}/train_time.txt",
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_log.csv",
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_time.txt",
     run:
         optimizer = tf.optimizers.Adam(learning_rate=config['finetune_learning_rate']) 
         params.model.compile(optimizer=optimizer, loss=loss_function)
@@ -43,7 +44,7 @@ rule train:
         train_model(params.model,
                     x_trn = data['x_trn'],
                     y_trn = data['y_obs_trn'],
-                    epochs = config['pt_epochs'],
+                    epochs = int(wildcards.epochs),
                     batch_size = nsegs,
                     x_val = data['x_val'],
                     y_val = data['y_obs_val'],
@@ -59,10 +60,10 @@ rule train:
 rule make_predictions:
     input:
         "{outdir}/prepped.npz",
-        "{outdir}/nstates_{nstates}/rep_{rep}/train_weights/",
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
         "../../../out/well_obs_inputs.zarr",
     output:
-        "{outdir}/nstates_{nstates}/rep_{rep}/preds.feather",
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather",
     run:
         weight_dir = input[1] + "/"
         params.model.load_weights(weight_dir)
@@ -114,9 +115,9 @@ def filter_predictions(all_preds_file, partition, out_file):
 
 rule make_filtered_predictions:
     input:
-        "{outdir}/nstates_{nstates}/rep_{rep}/preds.feather"
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather"
     output:
-        "{outdir}/nstates_{nstates}/rep_{rep}/{partition}_preds.feather"
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{partition}_preds.feather"
     run:
         filter_predictions(input[0], wildcards.partition, output[0])
 
@@ -134,12 +135,12 @@ def get_grp_arg(wildcards):
  
 rule combine_metrics:
      input:
-          "../../../out/well_observed_trn_val_targets.zarr",
-          "{outdir}/nstates_{nstates}/rep_{rep}/trn_preds.feather",
-          "{outdir}/nstates_{nstates}/rep_{rep}/val_preds.feather",
-          "{outdir}/nstates_{nstates}/rep_{rep}/val_times_preds.feather"
+          "../../../out/well_obs_targets.zarr",
+          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/trn_preds.feather",
+          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_preds.feather",
+          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_times_preds.feather"
      output:
-          "{outdir}/nstates_{nstates}/rep_{rep}/{metric_type}_metrics.csv"
+          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{metric_type}_metrics.csv"
      params:
          grp_arg = get_grp_arg
      run:
@@ -151,16 +152,18 @@ rule combine_metrics:
                           time_idx_name='date',
                           group=params.grp_arg,
                           id_dict={"nstates": wildcards.nstates,
-                                   "rep_id": wildcards.rep},
+                                   "rep_id": wildcards.rep,
+                                   "nepochs": wildcards.epochs},
                           outfile=output[0])
  
  
 rule exp_metrics:
      input:
-        expand("{outdir}/nstates_{nstates}/rep_{rep}/{{metric_type}}_metrics.csv",
+        expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{{metric_type}}_metrics.csv",
                 outdir=out_dir,
                 rep=list(range(config['num_replicates'])),
                 nstates=config['hidden_size'],
+                epochs=config['epochs'],
         )
      output:
           "{outdir}/exp_{metric_type}_metrics.csv"
@@ -174,7 +177,7 @@ rule plot_prepped_data:
      input:
          "{outdir}/prepped.npz",
      output:
-         "{outdir}/nstates_{nstates}/rep_{rep}/{variable}_part_{partition}.png",
+         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{variable}_part_{partition}.png",
      run:
          plot_obs(input[0],
                   wildcards.variable,
