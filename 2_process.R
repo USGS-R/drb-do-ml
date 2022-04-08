@@ -6,6 +6,7 @@ source("2_process/src/summarize_site_list.R")
 source("2_process/src/save_target_ind_files.R")
 source("2_process/src/match_sites_reaches.R")
 source("2_process/src/calc_daily_light.R")
+source("2_process/src/metab_utils.R")
 source("1_fetch/src/write_data.R")
 
 p2_targets_list <- list(
@@ -96,7 +97,15 @@ p2_targets_list <- list(
   tar_target(
    p2_well_observed_sites,
    p2_sites_w_segs %>% filter(count_days_total > 300) %>% pull(site_id)
+ ),
+ 
+ # Filter daily metabolism estimates based on model diagnostics
+ tar_target(
+   p2_metab_filtered,
+   filter_metab_sites(p1_metab,p1_metab_diagnostics,
+                      sites = p2_daily_with_seg_ids$site_id,
+                      model_conf_vals = c("H"),
+                      cutoff_ER_K_corr = 0.4)
  )
-  
 
 )
