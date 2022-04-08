@@ -48,9 +48,10 @@ filter_metab_sites <- function(metab_estimates, metab_diagnostics, sites, model_
   metab_estimates_filtered <- metab_estimates %>%
     # select only those sites that are within desired sites 
     filter(site_id %in% sites) %>%
+    mutate(resolution = as.character(resolution)) %>%
     # select only those sites where we have high or medium confidence in the model
-    left_join(metab_diagnostics[,c("site","model_confidence","site_min_confidence")], 
-              by = c("site_name" = "site")) %>%
+    left_join(metab_diagnostics[,c("site","resolution","model_confidence","site_min_confidence")], 
+              by = c("site_name" = "site", "resolution")) %>%
     filter(site_min_confidence %in% model_conf_vals) %>%
     # select only those sites where the correlation between ER and K600 < user-defined cutoff
     left_join(ER_K_corr(.), by = "site_name") %>%

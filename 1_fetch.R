@@ -233,7 +233,8 @@ p1_targets_list <- list(
     p1_metab_diagnostics,
     read_tsv(p1_metab_diagnostics_tsv, show_col_types = FALSE) %>%
       # create a new column "site_id"; see p1_metab target for details.
-      mutate(site_id = str_replace(site, "nwis_",""))
+      mutate(site_id = str_replace(site, "nwis_",""),
+             resolution = str_replace(resolution, "min",""))
   )
 
 )  
