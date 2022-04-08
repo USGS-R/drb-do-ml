@@ -18,7 +18,7 @@ from river_dl import loss_functions as lf
 out_dir = os.path.join(config['out_dir'], config['exp_name'])
 loss_function = lf.multitask_rmse(config['lambdas'])
 
-
+include: "visualize_models.smk"
 
 rule as_run_config:
     output:
