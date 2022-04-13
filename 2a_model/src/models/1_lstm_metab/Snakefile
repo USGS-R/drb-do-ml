@@ -44,7 +44,15 @@ def get_model(wildcards, input):
 
 
 use rule train from base_workflow as base_train with:
-    params: model = get_model
+    input:
+        "../../../out/models/1_lstm_metab/prepped.npz"
+    params:
+        model = get_model
 
 use rule make_predictions from base_workflow as base_make_predictions with:
-    params: model = get_model
+    input:
+        "../../../out/models/1_lstm_metab/prepped.npz",
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
+        "../../../out/well_obs_inputs.zarr",
+    params:
+        model = get_model
