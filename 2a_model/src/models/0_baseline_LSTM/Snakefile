@@ -9,7 +9,14 @@ rule all:
     input:
           expand("{outdir}/exp_{metric_type}_metrics.csv",
                   outdir=out_dir,
-                  metric_type=['overall', 'reach'])
+                  metric_type=['overall', 'reach']),
+          expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/plots/ts_{site_id}_{year}.png",
+                 outdir=out_dir,
+                 nstates=config['hidden_size'],
+                 epochs=config['epochs'],
+                 rep=list(range(config['num_replicates'])),
+                 site_id=['01480870'],
+                 year=[2012])
         
 
 module base_workflow:
