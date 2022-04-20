@@ -1,7 +1,10 @@
-from model import LSTMMetab
+from model import LSTMMetabFlex
+import sys
+sys.path.append("../1_lstm_metab")
+
 from snakemake_utils import get_elev_light_std_means
 
-workdir: "2a_model/src/models/1_lstm_metab"
+workdir: "2a_model/src/models/3_lstm_metab_flex"
 configfile: "config.yml"
 
 out_dir = os.path.join(config['out_dir'], config['exp_name'])
@@ -30,16 +33,16 @@ use rule * from base_workflow as base_*
 
 def get_model(wildcards, input):
     el_mean, el_std, lt_mean, lt_std = get_elev_light_std_means(input[0])
-    model = LSTMMetab(int(wildcards.nstates),
-                      elev_mean=el_mean,
-                      elev_std=el_std,
-                      elev_idx=6,
-                      light_ratio_mean=lt_mean,
-                      light_ratio_std=lt_std,
-                      light_ratio_idx=-1,
-                      recurrent_dropout=config['recurrent_dropout'],
-                      dropout=config['dropout'],
-                      ) 
+    model = LSTMMetabFlex(int(wildcards.nstates),
+                          elev_mean=el_mean,
+                          elev_std=el_std,
+                          elev_idx=6,
+                          light_ratio_mean=lt_mean,
+                          light_ratio_std=lt_std,
+                          light_ratio_idx=-1,
+                          recurrent_dropout=config['recurrent_dropout'],
+                          dropout=config['dropout'],
+                          ) 
     return model
 
 

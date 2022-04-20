@@ -1,11 +1,12 @@
 import tensorflow as tf
 from tensorflow.keras import layers
 import sys
-sys.path.append("../1_lstm_metab")
+sys.path.append("2a_model/src/models/1_lstm_metab")
 import metab_utils
 
 
-class LSTMMetab(tf.keras.Model):
+
+class LSTMMetabFlex(tf.keras.Model):
     def __init__(
         self,
         hidden_size,

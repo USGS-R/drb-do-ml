@@ -1,5 +1,5 @@
 out_dir: "../../../out/models"
-exp_name: "1_lstm_metab"
+exp_name: "3_lstm_metab_flex"
 
 
 #### for flow modeling, seg_width should be removed from x_vars
@@ -36,8 +36,8 @@ validation_sites: ["01472104", "01473500", "01481500"]
 test_sites: ["01475530", "01475548"]
 
 
-epochs: [100, 200, 400]
-hidden_size: [10, 20, 40]
+epochs: [100]
+hidden_size: [10]
 
 dropout: 0.2
 recurrent_dropout: 0.2
