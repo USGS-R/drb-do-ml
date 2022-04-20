@@ -1,5 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers
+import sys
+sys.path.append("../1_lstm_metab")
 import metab_utils
 
 
@@ -37,6 +39,8 @@ class LSTMMetab(tf.keras.Model):
         self.metab_out = layers.Dense(5)
         self.do_range_multiplier = layers.Dense(1)
         self.do_mean_wgt = layers.Dense(1)
+        self.do_min_wgt = layers.Dense(1)
+        self.do_max_wgt = layers.Dense(1)
 
         self.elev_mean = elev_mean
         self.elev_std = elev_std
@@ -71,8 +75,10 @@ class LSTMMetab(tf.keras.Model):
         er_ratio = 1/48
 
         # use the metabolism estimates to calculate DO min, max, mean
-        DO_min = DO_sat + (ER/k2) 
-        DO_max = DO_sat + ((GPP * light_ratio) + ER * er_ratio)/(k2 * er_ratio)
+        DO_min = DO_sat + (ER/k2) + tf.squeeze(self.do_min_wgt(h))
+        DO_max = DO_sat + \
+                 ((GPP * light_ratio) + ER * er_ratio)/(k2 * er_ratio) + \
+                 tf.squeeze(self.do_max_wgt(h))
         DO_mean = DO_min + \
                   self.do_range_multiplier(DO_max - DO_min) + \
                   tf.squeeze(self.do_mean_wgt(h))
