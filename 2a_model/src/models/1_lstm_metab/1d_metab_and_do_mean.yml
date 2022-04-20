@@ -1,0 +1,46 @@
+out_dir: "../../../out/models"
+exp_name: "1d_meatab_and_do_mean.yml"
+
+
+#### for flow modeling, seg_width should be removed from x_vars
+x_vars: ['seg_ccov', 'seg_rain', 'seg_slope', 'seg_tave_air', 'hru_slope', 'hru_aspect', 'hru_elev', 'hru_area', 'hru_percent_imperv', 'covden_sum', 'covden_win', 'soil_moist_max', 'light_ratio']
+
+
+seed: False #random seed for training False==No seed, otherwise specify the seed
+num_replicates: 1
+
+y_vars: ['do_min', 'do_mean', 'do_max', 'GPP', 'ER', 'K600', 'depth', 'temp.water']
+
+lambdas: [0, 1, 0, 1, 1, 1, 1, 1]
+
+trn_offset: 1.0
+tst_val_offset: 1.0
+
+#Define early stopping criteria, setting this to False will turn off early stopping rounds
+early_stopping: False
+
+train_start_date:
+  - '1980-10-01'
+train_end_date:
+  - '2014-10-01'
+val_start_date:
+  - '2014-10-01'
+val_end_date:
+  - '2015-10-01'
+test_start_date:
+  - '2015-10-01'
+test_end_date:
+  - '2022-10-01'
+
+validation_sites: ["01472104", "01473500", "01481500"]
+test_sites: ["01475530", "01475548"]
+
+
+epochs: [100]
+hidden_size: [10]
+
+dropout: 0.2
+recurrent_dropout: 0.2
+pretrain_learning_rate: 0.005
+finetune_learning_rate: 0.01
+
