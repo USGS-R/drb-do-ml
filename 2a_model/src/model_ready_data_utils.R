@@ -61,3 +61,29 @@ subset_and_write_zarr <- function(df, out_zarr, sites_subset = NULL){
   out_zarr <- write_df_to_zarr(df, c("site_id", "date"), out_zarr)
   return(out_zarr)
 }
+
+
+prep_io_data <- function(x_data_file, y_data_file, config_dir, out_file){
+    reticulate::source_python("2a_model/src/models/river-dl/river_dl/preproc_utils.py")
+
+    config = yaml::read_yaml(file.path(config_dir, "config.yml"))
+    
+    prep_all_data(x_data_file=x_data_file,
+                  y_data_file=y_data_file,
+                  x_vars=config$x_vars,
+                  y_vars_finetune=config$y_vars,
+                  spatial_idx_name='site_id',
+                  time_idx_name='date',
+                  train_start_date=config$train_start_date,
+                  train_end_date=config$train_end_date,
+                  val_start_date=config$val_start_date,
+                  val_end_date=config$val_end_date,
+                  test_start_date=config$test_start_date,
+                  test_end_date=config$test_end_date,
+                  out_file=out_file,
+                  trn_offset = config$trn_offset,
+                  tst_val_offset = config$tst_val_offset)
+
+    return(out_file)
+}
+
