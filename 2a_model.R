@@ -107,8 +107,8 @@ p2a_targets_list <- list(
     p2a_prepped,
     {
     dir.create(sprintf("2a_model/out/models/%s", p2a_model_ids), showWarnings = FALSE)
-    prep_io_data(x_data_file = p2a_trn_inputs_zarr,
-                 y_data_file = p2a_trn_targets_zarr,
+    prep_io_data(x_data_file = p2a_well_obs_inputs_zarr,
+                 y_data_file = p2a_well_obs_targets_zarr,
                  config_dir = sprintf("2a_model/src/models/%s", p2a_model_ids),
                  out_file = sprintf("2a_model/out/models/%s/prepped.npz", p2a_model_ids))
     },
