@@ -88,7 +88,7 @@ p2a_targets_list <- list(
     {
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
-          left_join(p2_metab_filtered, by=c("site_id", "date"))
+          full_join(p2_metab_filtered, by=c("site_id", "date"))
       subset_and_write_zarr(do_and_metab, "2a_model/out/well_obs_targets.zarr", p2a_trn_val_sites)
     },
     format="file"
