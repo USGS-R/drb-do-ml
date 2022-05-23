@@ -1,5 +1,5 @@
 out_dir: "../../../out/models"
-exp_name: "3_lstm_metab_flex"
+exp_name: "1_metab_multitask"
 
 
 #### for flow modeling, seg_width should be removed from x_vars
@@ -37,7 +37,7 @@ test_sites: ["01475530", "01475548"]
 
 
 epochs: [100]
-hidden_size: [10]
+hidden_size: [10, 40]
 
 dropout: 0.2
 recurrent_dropout: 0.2

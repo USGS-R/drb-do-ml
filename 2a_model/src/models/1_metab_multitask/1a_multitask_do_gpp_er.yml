@@ -1,5 +1,5 @@
 out_dir: "../../../out/models"
-exp_name: "2_metab_multitask"
+exp_name: "1a_multitask_do_gpp_er"
 
 
 #### for flow modeling, seg_width should be removed from x_vars
@@ -11,7 +11,7 @@ num_replicates: 1
 
 y_vars: ['do_min', 'do_mean', 'do_max', 'GPP', 'ER', 'K600', 'depth', 'temp.water']
 
-lambdas: [1, 1, 1, 1, 1, 1, 1, 1]
+lambdas: [1, 1, 1, 1, 1, 0, 0, 0]
 
 trn_offset: 1.0
 tst_val_offset: 1.0
