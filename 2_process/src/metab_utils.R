@@ -59,8 +59,8 @@ filter_metab_sites <- function(metab_estimates, metab_diagnostics, sites, model_
     # add columns representing daily metabolic fluxes where negative GPP is NA, 
     # and positive ER is NA
     rowwise() %>%
-    mutate(GPP_filtered = if_else(GPP < 0, NA_real_, GPP),
-           ER_filtered = if_else(ER > 0, NA_real_, ER)) %>%
+    mutate(GPP = if_else(GPP < 0, NA_real_, GPP),
+           ER = if_else(ER > 0, NA_real_, ER)) %>%
     ungroup() %>%
     select(-cor.coef)
   
