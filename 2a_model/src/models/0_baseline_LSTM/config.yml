@@ -19,19 +19,19 @@ tst_val_offset: 1.0
 early_stopping: False
 
 train_start_date:
-  - '1980-01-01'
+  - '1980-10-01'
 train_end_date:
-  - '2017-01-01'
+  - '2014-10-01'
 val_start_date:
-  - '2017-01-01'
+  - '2014-10-01'
 val_end_date:
-  - '2019-01-01'
+  - '2015-10-01'
 test_start_date:
-  - '2019-01-01'
+  - '2015-10-01'
 test_end_date:
-  - '2022-01-01'
+  - '2022-10-01'
 
-validation_sites: ["01472104", "01473500"]
+validation_sites: ["01472104", "01473500", "01481500"]
 test_sites: ["01475530", "01475548"]
 
 
