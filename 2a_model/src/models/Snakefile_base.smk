@@ -27,6 +27,33 @@ rule as_run_config:
         asRunConfig(config,output[0])
 
 
+rule prep_io_data:
+    input:
+        "../../../out/well_obs_inputs.zarr",
+        "../../../out/well_obs_targets.zarr",
+    output:
+        "{outdir}/prepped.npz"
+    run:
+        prep_all_data(
+                  x_data_file=input[0],
+                  y_data_file=input[1],
+                  x_vars=config['x_vars'],
+                  y_vars_finetune=config['y_vars'],
+                  spatial_idx_name='site_id',
+                  time_idx_name='date',
+                  train_start_date=config['train_start_date'],
+                  train_end_date=config['train_end_date'],
+                  val_start_date=config['val_start_date'],
+                  val_end_date=config['val_end_date'],
+                  test_start_date=config['test_start_date'],
+                  test_end_date=config['test_end_date'],
+                  out_file=output[0],
+                  normalize_y=False,
+                  trn_offset = config['trn_offset'],
+                  tst_val_offset = config['tst_val_offset'])
+
+
+
 # Finetune/train the model on observations
 rule train:
     input:
