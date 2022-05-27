@@ -88,7 +88,7 @@ p2a_targets_list <- list(
     {
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
-          left_join(p1_metab, by=c("site_id", "date"))
+          full_join(p2_metab_filtered, by=c("site_id", "date"))
       subset_and_write_zarr(do_and_metab, "2a_model/out/well_obs_targets.zarr", p2a_trn_val_sites)
     },
     format="file"
@@ -98,31 +98,14 @@ p2a_targets_list <- list(
   # outputs from a new model
   tar_target(
     p2a_model_ids,
-    c("0_baseline_LSTM")
+    c("0_baseline_LSTM", "1_metab_multitask")
   ),
 
-
-  # write prepped file to .npz
-  tar_target(
-    p2a_prepped,
-    {
-    dir.create(sprintf("2a_model/out/models/%s", p2a_model_ids), showWarnings = FALSE)
-    prep_io_data(x_data_file = p2a_well_obs_inputs_zarr,
-                 y_data_file = p2a_well_obs_targets_zarr,
-                 config_dir = sprintf("2a_model/src/models/%s", p2a_model_ids),
-                 out_file = sprintf("2a_model/out/models/%s/prepped.npz", p2a_model_ids))
-    },
-    format="file",
-    pattern = map(p2a_model_ids)
-  ),
 
   # 'touch' (update modified time) trained model weights so Snakemake doesn't retrain models
   tar_target(
     p2a_wgt_paths,
     {
-    # including the prepped data so that that target is built first 
-    p2a_prepped
-
     # get a list of all of the weight files in the repo
     wgt_files = list.files(sprintf("2a_model/out/models/%s", p2a_model_ids),
                            "train_weights",
@@ -147,7 +130,6 @@ p2a_targets_list <- list(
     {
     # include wgt_paths and prepped
     p2a_wgt_paths
-    p2a_prepped
 
     system(sprintf("snakemake -s 2a_model/src/models/%s/Snakefile -j8", p2a_model_ids))
     sprintf("2a_model/out/models/%s/exp_overall_metrics.csv", p2a_model_ids)

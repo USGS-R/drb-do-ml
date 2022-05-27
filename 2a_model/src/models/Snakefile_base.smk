@@ -10,7 +10,7 @@ sys.path.append(code_dir)
 from river_dl.preproc_utils import asRunConfig
 from river_dl.preproc_utils import prep_all_data
 from river_dl.evaluate import combined_metrics
-from river_dl.postproc_utils import plot_obs, plot_ts
+from river_dl.postproc_utils import plot_obs, plot_ts, prepped_array_to_df
 from river_dl.predict import predict_from_arbitrary_data
 from river_dl.train import train_model
 from river_dl import loss_functions as lf
@@ -25,6 +25,46 @@ rule as_run_config:
         "{outdir}/asRunConfig.yml"
     run:
         asRunConfig(config,output[0])
+
+
+rule prep_io_data:
+    input:
+        "../../../out/well_obs_inputs.zarr",
+        "../../../out/well_obs_targets.zarr",
+    output:
+        "{outdir}/prepped.npz"
+    run:
+        prep_all_data(x_data_file=input[0],
+                      y_data_file=input[1],
+                      x_vars=config['x_vars'],
+                      y_vars_finetune=config['y_vars'],
+                      spatial_idx_name='site_id',
+                      time_idx_name='date',
+                      train_start_date=config['train_start_date'],
+                      train_end_date=config['train_end_date'],
+                      val_start_date=config['val_start_date'],
+                      val_end_date=config['val_end_date'],
+                      test_start_date=config['test_start_date'],
+                      test_end_date=config['test_end_date'],
+                      val_sites=config['validation_sites'],
+                      out_file=output[0],
+                      normalize_y=False,
+                      trn_offset = config['trn_offset'],
+                      tst_val_offset = config['tst_val_offset'])
+
+        # check to make sure there is no validation or testing data
+        # in the training data set
+        data = np.load(output[0], allow_pickle=True)
+        df_trn = prepped_array_to_df(data['y_obs_trn'],
+                                     data['times_trn'],
+                                     data['ids_trn'],
+                                     col_names=data['y_obs_vars'])
+        df_trn_val_sites = df_trn[df_trn.seg_id_nat.isin(config['validation_sites'])]
+        df_trn_tst_sites = df_trn[df_trn.seg_id_nat.isin(config['test_sites'])]
+
+        assert df_trn_val_sites['do_mean'].notna().sum() == 0
+        assert df_trn_tst_sites['do_mean'].notna().sum() == 0
+
 
 
 # Finetune/train the model on observations
