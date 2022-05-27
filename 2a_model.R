@@ -109,7 +109,10 @@ p2a_targets_list <- list(
               config_path = "1_metab_multitask/config.yml"),
          list(model_id = "1a_multitask_do_gpp_er",
               snakefile_dir = "0_baseline_LSTM",
-              config_path = "1_metab_multitask/1a_multitask_do_gpp_er.yml")),
+              config_path = "1_metab_multitask/1a_multitask_do_gpp_er.yml"),
+         list(model_id = "2_multitask_dense",
+              snakefile_dir = "2_multitask_dense",
+              config_path = "2_multitask_dense/config.yml")),
     iteration = "list"
   ),
 
