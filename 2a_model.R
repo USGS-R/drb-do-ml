@@ -98,43 +98,52 @@ p2a_targets_list <- list(
   # outputs from a new model
   tar_target(
     p2a_model_ids,
-    c("0_baseline_LSTM", "1_metab_multitask")
+    # paths are relative to 2a_model/src/models
+    list(list(model_id = "0_baseline_LSTM",
+              snakefile_dir = "0_baseline_LSTM",
+              config_path = "0_baseline_LSTM/config.yml"),
+         # the 1_ models use the same model and therefore
+         # the same Snakefile as the 0_baseline_LSTM run
+         list(model_id = "1_metab_multitask",
+              snakefile_dir = "0_baseline_LSTM",
+              config_path = "1_metab_multitask/config.yml"),
+         list(model_id = "1a_multitask_do_gpp_er",
+              snakefile_dir = "0_baseline_LSTM",
+              config_path = "1_metab_multitask/1a_multitask_do_gpp_er.yml")),
+    iteration = "list"
   ),
 
-
-  # 'touch' (update modified time) trained model weights so Snakemake doesn't retrain models
-  tar_target(
-    p2a_wgt_paths,
-    {
-    # get a list of all of the weight files in the repo
-    wgt_files = list.files(sprintf("2a_model/out/models/%s", p2a_model_ids),
-                           "train_weights",
-                           full.names=TRUE,
-                           recursive = TRUE,
-                           include.dirs = TRUE)
-    wgt_files_joined = paste(wgt_files, collapse=" ")
-    # need to make the paths relative to the Snakefile
-    wgt_files_joined = gsub("2a_model", "../../..", wgt_files_joined)
-
-    # use Snakemake to "touch" each of the files
-    system(sprintf("snakemake %s -s 2a_model/src/models/%s/Snakefile -j4 --touch", wgt_files_joined, p2a_model_ids))
-    wgt_files
-    },
-    pattern = map(p2a_model_ids)
-    ),
-                         
   # produce the final metrics files (and all intermediate files including predictions)
   # of each "model_id" with snakemake
   tar_target(
     p2a_metrics_files,
     {
-    # include wgt_paths and prepped
-    p2a_wgt_paths
+    # we need these to make the prepped data file
+    p2a_well_obs_inputs_zarr
+    p2a_well_obs_targets_zarr
+    
+    base_dir <- "2a_model/src/models"
+    snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
+    config_path <- file.path(base_dir, p2a_model_ids$config_path)
+    # this path is relative to the Snakefile
+    prepped_data_file <- file.path("../../../out/models", p2a_model_ids$model_id, "prepped.npz")
+    
+    # First create the prepped data files if they are not already.
+    # These are needed to make the predictions.
+    system(stringr::str_glue("snakemake {prepped_data_file} -s {snakefile_path} --configfile {config_path} -j"))
 
-    system(sprintf("snakemake -s 2a_model/src/models/%s/Snakefile -j8", p2a_model_ids))
-    sprintf("2a_model/out/models/%s/exp_overall_metrics.csv", p2a_model_ids)
+    # Then touch all of the existing files. This makes the weights "up-to-date"
+    # so snakemake doesn't train the models again
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch"))
+
+    # then run the snakemake pipeline to produce the predictions and metric files
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete"))
+    
+    # print out the metrics file name for the target
+    file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv")
     },
     format="file",
     pattern = map(p2a_model_ids)
   )
 )
+
