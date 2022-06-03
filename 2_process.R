@@ -9,6 +9,7 @@ source("2_process/src/calc_daily_light.R")
 source("2_process/src/metab_utils.R")
 source("1_fetch/src/write_data.R")
 
+# Explicitly attach sf package to handle geometry data when mapping over `p1_reaches_sf`
 library(sf)
 
 p2_targets_list <- list(
@@ -96,7 +97,7 @@ p2_targets_list <- list(
  
  # filter p1_reaches_sf to segments with "well-observed" sites
  tar_target(   
-   p2_well_obs_reaches,
+   p2_well_observed_reaches,
    {
    well_obs_reach_ids <- p2_sites_w_segs %>%
      filter(site_id %in% p2_well_observed_sites) %>% 
@@ -109,9 +110,9 @@ p2_targets_list <- list(
   tar_target(
     p2_daily_max_light,
     { 
-    calc_seg_light_ratio(p2_well_obs_reaches, start_date = earliest_date, end_date = dummy_date)
+    calc_seg_light_ratio(p2_well_observed_reaches, start_date = earliest_date, end_date = dummy_date)
     },
-    pattern = map(p2_well_obs_reaches)
+    pattern = map(p2_well_observed_reaches)
   ),
 
  # Filter daily metabolism estimates based on model diagnostics
