@@ -9,6 +9,9 @@ source("2_process/src/calc_daily_light.R")
 source("2_process/src/metab_utils.R")
 source("1_fetch/src/write_data.R")
 
+# Explicitly attach sf package to handle geometry data when mapping over `p1_reaches_sf`
+library(sf)
+
 p2_targets_list <- list(
   
   # Filter harmonized WQP data for DO data
@@ -85,13 +88,6 @@ p2_targets_list <- list(
     write_to_csv(p2_daily_with_seg_ids, "2_process/out/daily_do_data.csv"),
     format = "file"
   ),
-  
-  # Estimate daily (normalized) max-light
-  tar_target(
-    p2_daily_max_light,
-    calc_seg_light_ratio(p1_reaches_sf, start_date = earliest_date, end_date = dummy_date),
-    pattern = map(p1_reaches_sf)
-  ),
 
   # make list of "well-observed" sites
   tar_target(
@@ -99,6 +95,26 @@ p2_targets_list <- list(
    p2_sites_w_segs %>% filter(count_days_total > 300) %>% pull(site_id)
  ),
  
+ # filter p1_reaches_sf to segments with "well-observed" sites
+ tar_target(   
+   p2_well_observed_reaches,
+   {
+   well_obs_reach_ids <- p2_sites_w_segs %>%
+     filter(site_id %in% p2_well_observed_sites) %>% 
+     pull(segidnat)
+   p1_reaches_sf %>% filter(segidnat %in% well_obs_reach_ids)
+   }
+ ),
+  
+  # Estimate daily (normalized) max-light
+  tar_target(
+    p2_daily_max_light,
+    { 
+    calc_seg_light_ratio(p2_well_observed_reaches, start_date = earliest_date, end_date = dummy_date)
+    },
+    pattern = map(p2_well_observed_reaches)
+  ),
+
  # Filter daily metabolism estimates based on model diagnostics
  tar_target(
    p2_metab_filtered,
