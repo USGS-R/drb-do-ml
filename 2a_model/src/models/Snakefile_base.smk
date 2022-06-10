@@ -29,13 +29,12 @@ rule as_run_config:
 
 rule prep_io_data:
     input:
-        "../../../out/well_obs_inputs.zarr",
-        "../../../out/well_obs_targets.zarr",
+        "../../../out/well_obs_io.zarr",
     output:
         "{outdir}/prepped.npz"
     run:
         prep_all_data(x_data_file=input[0],
-                      y_data_file=input[1],
+                      y_data_file=input[0],
                       x_vars=config['x_vars'],
                       y_vars_finetune=config['y_vars'],
                       spatial_idx_name='site_id',
@@ -101,7 +100,7 @@ rule make_predictions:
     input:
         "{outdir}/prepped.npz",
         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
-        "../../../out/well_obs_inputs.zarr",
+        "../../../out/well_obs_io.zarr",
     output:
         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather",
     run:
@@ -175,7 +174,7 @@ def get_grp_arg(wildcards):
  
 rule combine_metrics:
      input:
-          "../../../out/well_obs_targets.zarr",
+          "../../../out/well_obs_io.zarr",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/trn_preds.feather",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_preds.feather",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_times_preds.feather"

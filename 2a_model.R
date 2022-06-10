@@ -64,32 +64,26 @@ p2a_targets_list <- list(
 
 
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
-  # write trn met and seg attribute data to zarr
-  # note - I have to subset before passing to subset_and_write_zarr or else I
+  # write met and seg attribute data for trn/val sites to zarr
+  # note - I have to subset inputs to only include the train/val sites before passing to subset_and_write_zarr or else I
   # get a memory error on the join
-  # write trn and val met and seg attribute data to zarr
-  # note - I have to subset before passing to subset_and_write_zarr or else I
-  # get a memory error on the join
-  tar_target(
-    p2a_well_obs_inputs_zarr,
-    { 
-      trn_input <- p2a_met_data_w_sites %>%
-        filter(site_id %in% p2a_trn_val_sites) %>%
-        inner_join(p2a_seg_attr_w_sites, by = "site_id")
-      subset_and_write_zarr(trn_input, "2a_model/out/well_obs_inputs.zarr")
-    },
-    format="file"
-  ),
 
-
-  # write trn and val do and metab data to zarr
+  # write trn and val input and output data to zarr
   tar_target(
-    p2a_well_obs_targets_zarr,
+    p2a_well_obs_data,
     {
+      inputs <- p2a_met_data_w_sites %>%
+        filter(site_id %in% p2a_trn_val_sites) %>%
+        inner_join(p2a_seg_attr_w_sites, by = c("site_id", "seg_id_nat"))
+
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
           full_join(p2_metab_filtered, by=c("site_id", "date"))
-      subset_and_write_zarr(do_and_metab, "2a_model/out/well_obs_targets.zarr", p2a_trn_val_sites)
+
+      inputs_and_outputs <- inputs %>%
+          left_join(do_and_metab, by=c("site_id", "date"))
+      
+      write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
     },
     format="file"
   ),
@@ -119,8 +113,7 @@ p2a_targets_list <- list(
     p2a_metrics_files,
     {
     # we need these to make the prepped data file
-    p2a_well_obs_inputs_zarr
-    p2a_well_obs_targets_zarr
+    p2a_well_obs_data
     
     base_dir <- "2a_model/src/models"
     snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
