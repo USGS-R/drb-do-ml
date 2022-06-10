@@ -64,8 +64,8 @@ p2a_targets_list <- list(
 
 
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
-  # write trn met and seg attribute data to zarr
-  # note - I have to subset inputs before passing to subset_and_write_zarr or else I
+  # write met and seg attribute data for trn/val sites to zarr
+  # note - I have to subset inputs to only include the train/val sites before passing to subset_and_write_zarr or else I
   # get a memory error on the join
 
   # write trn and val input and output data to zarr
@@ -74,7 +74,7 @@ p2a_targets_list <- list(
     {
       inputs <- p2a_met_data_w_sites %>%
         filter(site_id %in% p2a_trn_val_sites) %>%
-        inner_join(p2a_seg_attr_w_sites, by = "site_id")
+        inner_join(p2a_seg_attr_w_sites, by = c("site_id", "seg_id_nat"))
 
       # need to join the metab data with the DO observations. 
       do_and_metab <- p2_daily_with_seg_ids %>%
