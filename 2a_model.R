@@ -83,7 +83,7 @@ p2a_targets_list <- list(
       inputs_and_outputs <- inputs %>%
           left_join(do_and_metab, by=c("site_id", "date"))
       
-      subset_and_write_zarr(inputs_and_outputs, "2a_model/out/well_obs_io.zarr")
+      write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
     },
     format="file"
   ),
