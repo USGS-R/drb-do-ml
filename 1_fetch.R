@@ -4,7 +4,7 @@ source("1_fetch/src/get_daily_nwis_data.R")
 source("1_fetch/src/get_inst_nwis_data.R")
 source("1_fetch/src/write_data.R")
 source("1_fetch/src/summarize_timeseries.R")
-
+source("1_fetch/src/download_nhdplus_flowlines.R")
 
 p1_targets_list <- list(
   
@@ -142,6 +142,12 @@ p1_targets_list <- list(
   tar_target(
     p1_reaches_sf,
     st_read(p1_reaches_shp)
+  ),
+  
+  # Fetch NHDv2 flowline reaches for the area of interest
+  tar_target(
+    p1_nhd_reaches_sf,
+    download_nhdplus_flowlines(huc8 = drb_huc8s)
   ),
 
   # fetch prms met data
