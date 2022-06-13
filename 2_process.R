@@ -92,7 +92,9 @@ p2_targets_list <- list(
   # make list of "well-observed" sites
   tar_target(
    p2_well_observed_sites,
-   p2_sites_w_segs %>% filter(count_days_total > 300) %>% pull(site_id)
+   p2_sites_w_segs %>% 
+     filter(count_days_total > 300) %>% 
+     pull(site_id)
  ),
  
  # filter p1_reaches_sf to segments with "well-observed" sites
@@ -105,15 +107,34 @@ p2_targets_list <- list(
    p1_reaches_sf %>% filter(segidnat %in% well_obs_reach_ids)
    }
  ),
-  
-  # Estimate daily (normalized) max-light
-  tar_target(
-    p2_daily_max_light,
-    { 
-    calc_seg_light_ratio(p2_well_observed_reaches, start_date = earliest_date, end_date = dummy_date)
-    },
-    pattern = map(p2_well_observed_reaches)
-  ),
+ 
+ # make list of "moderately-observed" sites
+ tar_target(
+   p2_med_observed_sites,
+   p2_sites_w_segs %>%
+     filter(count_days_nwis >= 100) %>%
+     pull(site_id)
+ ),
+ 
+ # filter p1_reaches_sf to segments with "well-observed" sites
+ tar_target(   
+   p2_med_observed_reaches,
+   {
+     med_obs_reach_ids <- p2_sites_w_segs %>%
+       filter(site_id %in% p2_med_observed_sites) %>% 
+       pull(segidnat)
+     p1_reaches_sf %>% filter(segidnat %in% med_obs_reach_ids)
+   }
+ ),
+ 
+ # Estimate daily (normalized) max-light
+ tar_target(
+   p2_daily_max_light,
+   { 
+     calc_seg_light_ratio(p2_med_observed_reaches, start_date = earliest_date, end_date = dummy_date)
+   },
+   pattern = map(p2_med_observed_reaches)
+ ),
 
  # Filter daily metabolism estimates based on model diagnostics
  tar_target(

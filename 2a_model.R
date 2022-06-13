@@ -28,6 +28,13 @@ p2a_targets_list <- list(
     p2a_seg_attr_w_sites,
     match_site_ids_to_segs(p1_seg_attr_data, p2_sites_w_segs)
   ),
+  
+  # join the metab data with the DO observations
+  tar_target(
+    p2a_do_and_metab,
+    p2_daily_with_seg_ids %>%
+      full_join(p2_metab_filtered, by = c("site_id", "date"))
+  ),
 
   ## SPLIT SITES INTO (train) and (train and validation) ##
   # char vector of well-observed train sites
@@ -76,12 +83,8 @@ p2a_targets_list <- list(
         filter(site_id %in% p2a_trn_val_sites) %>%
         inner_join(p2a_seg_attr_w_sites, by = c("site_id", "seg_id_nat"))
 
-      # need to join the metab data with the DO observations. 
-      do_and_metab <- p2_daily_with_seg_ids %>%
-          full_join(p2_metab_filtered, by=c("site_id", "date"))
-
       inputs_and_outputs <- inputs %>%
-          left_join(do_and_metab, by=c("site_id", "date"))
+          left_join(p2a_do_and_metab, by=c("site_id", "date"))
       
       write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
     },
@@ -140,6 +143,28 @@ p2a_targets_list <- list(
     },
     format="file",
     pattern = map(p2a_model_ids)
+  ),
+  
+  
+  ## CREATE EQUIVALENT TARGETS FOR "MODERATELY-OBSERVED SITES" ##
+  # write input/output data to zarr for the medium-observed sites
+  tar_target(
+    p2a_med_obs_data,
+    {
+      inputs_med_obs <- p2a_met_data_w_sites %>%
+        # include all med-obs sites not in testing sites
+        filter(site_id %in% p2_med_observed_sites, 
+               !site_id %in% tst_sites) %>%
+        inner_join(p2a_seg_attr_w_sites, by = c("site_id","seg_id_nat"))
+      
+      inputs_and_outputs_med_obs <- inputs_med_obs %>%
+        left_join(p2a_do_and_metab, by = c("site_id", "date"))
+      
+      write_df_to_zarr(inputs_and_outputs_med_obs, c("site_id","date"),
+                       "2a_model/out/med_obs_io.zarr")
+    },
+    format = "file"
   )
+  
 )
 

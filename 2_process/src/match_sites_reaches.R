@@ -31,10 +31,12 @@ get_site_flowlines <- function(reach_sf, sites, sites_crs, max_matches = 1, sear
     # get_flowline_index are in meters rather than degrees
     st_transform(5070)
   
-  sites_sf <- sites %>% rowwise() %>%
-    filter(across(c(lon, lat), ~ !is.na(.x))) %>%
+  sites_sf <- sites %>% 
+    rowwise() %>%
+    filter(!is.na(lon), !is.na(lat)) %>%
     mutate(Shape = list(st_point(c(lon, lat), dim = "XY"))) %>%
-    st_as_sf() %>% st_set_crs(sites_crs) %>%
+    st_as_sf() %>% 
+    st_set_crs(sites_crs) %>%
     st_transform(st_crs(reaches_nhd_fields)) %>%
     st_geometry()
   
