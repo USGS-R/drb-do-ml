@@ -28,6 +28,13 @@ p2a_targets_list <- list(
     p2a_seg_attr_w_sites,
     match_site_ids_to_segs(p1_seg_attr_data, p2_sites_w_segs)
   ),
+  
+  # join the metab data with the DO observations
+  tar_target(
+    p2a_do_and_metab,
+    p2_daily_with_seg_ids %>%
+      full_join(p2_metab_filtered, by = c("site_id", "date"))
+  ),
 
   ## SPLIT SITES INTO (train) and (train and validation) ##
   # char vector of well-observed train sites
@@ -76,12 +83,8 @@ p2a_targets_list <- list(
         filter(site_id %in% p2a_trn_val_sites) %>%
         inner_join(p2a_seg_attr_w_sites, by = c("site_id", "seg_id_nat"))
 
-      # need to join the metab data with the DO observations. 
-      do_and_metab <- p2_daily_with_seg_ids %>%
-          full_join(p2_metab_filtered, by=c("site_id", "date"))
-
       inputs_and_outputs <- inputs %>%
-          left_join(do_and_metab, by=c("site_id", "date"))
+          left_join(p2a_do_and_metab, by=c("site_id", "date"))
       
       write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
     },
@@ -141,80 +144,24 @@ p2a_targets_list <- list(
   
   
   ## CREATE EQUIVALENT TARGETS FOR "MODERATELY-OBSERVED SITES" ##
-  # char vector of moderately-observed train sites
+  # write input/output data to zarr for the medium-observed sites
   tar_target(
-    p2a_trn_sites_medobs,
-    p2_med_observed_sites[!(p2_med_observed_sites %in% val_sites) & !(p2_med_observed_sites %in% tst_sites)]
-  ),
-  
-  # char vector of moderately-observed val and training sites
-  tar_target(
-    p2a_trn_val_sites_medobs,
-    p2_med_observed_sites[(p2_med_observed_sites %in% p2a_trn_sites_medobs) | (p2_med_observed_sites %in% val_sites)]
-  ),
-  
-  # get moderately-observed sites that we use for trning, but also have data in the val time period
-  tar_target(
-    p2a_trn_sites_w_val_data_medobs,
-    p2_daily_with_seg_ids  %>%
-      filter(site_id %in% p2a_trn_val_sites_medobs,
-             !site_id %in% val_sites,
-             date >= val_start_date,
-             date < val_end_date) %>%
-      group_by(site_id) %>%
-      summarise(val_count = sum(!is.na(do_mean))) %>%
-      filter(val_count > 0) %>%
-      pull(site_id)
-  ),
-  
-  # moderately-observed sites that are trning sites but do not have data in val period
-  tar_target(
-    p2a_trn_only_medobs,
-    p2a_trn_sites_medobs[!p2a_trn_sites_medobs %in% p2a_trn_sites_w_val_data_medobs]
-  ),
-  
-  
-  ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
-  # write trn met and seg attribute data to zarr
-  # note - I have to subset before passing to subset_and_write_zarr or else I
-  # get a memory error on the join
-  tar_target(
-    p2a_trn_inputs_medobs_zarr,
-    { 
-      trn_input <- p2a_met_data_w_sites %>%
-        filter(site_id %in% p2a_trn_sites_medobs) %>%
-        inner_join(p2a_seg_attr_w_sites, by = "site_id")
-      subset_and_write_zarr(trn_input, "2a_model/out/med_observed_trn_inputs.zarr")
+    p2a_med_obs_data,
+    {
+      inputs_med_obs <- p2a_met_data_w_sites %>%
+        # include all med-obs sites not in testing sites
+        filter(site_id %in% p2_med_observed_sites, 
+               !site_id %in% tst_sites) %>%
+        inner_join(p2a_seg_attr_w_sites, by = c("site_id","seg_id_nat"))
+      
+      inputs_and_outputs_med_obs <- inputs_med_obs %>%
+        left_join(p2a_do_and_metab, by = c("site_id", "date"))
+      
+      write_df_to_zarr(inputs_and_outputs_med_obs, c("site_id","date"),
+                       "2a_model/out/med_obs_io.zarr")
     },
-    format="file"
-  ),
-  
-  # write trn and val met and seg attribute data to zarr
-  # note - I have to subset before passing to subset_and_write_zarr or else I
-  # get a memory error on the join
-  tar_target(
-    p2a_trn_val_inputs_medobs_zarr,
-    { 
-      trn_input <- p2a_met_data_w_sites %>%
-        filter(site_id %in% p2a_trn_val_sites_medobs) %>%
-        inner_join(p2a_seg_attr_w_sites, by = "site_id")
-      subset_and_write_zarr(trn_input, "2a_model/out/med_observed_trn_inputs.zarr")
-    },
-    format="file"
-  ),
-  
-  # write trn do data to zarr
-  tar_target(
-    p2a_trn_do_medobs_zarr,
-    subset_and_write_zarr(p2_daily_with_seg_ids, "2a_model/out/med_observed_trn_do.zarr", p2a_trn_sites_medobs),
-    format="file"
-  ),
-  
-  # write trn and val do data to zarr
-  tar_target(
-    p2a_trn_val_do_medobs_zarr,
-    subset_and_write_zarr(p2_daily_with_seg_ids, "2a_model/out/med_observed_trn_do.zarr", p2a_trn_val_sites_medobs),
-    format="file"
+    format = "file"
   )
+  
 )
 
