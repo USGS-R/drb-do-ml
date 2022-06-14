@@ -53,13 +53,34 @@ p2_targets_list <- list(
     summarize_site_list(p2_site_list,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
     format = "file"),
 
-  # Match PRMS stream segments to observation site ids and return subset of sites within 
-  # the distance specified by search_radius (in meters)
+  # Match PRMS stream segments to observation site ids and return subset of sites 
+  # within the distance specified by search_radius (in meters)
   tar_target(
     p2_sites_w_segs,
     get_site_flowlines(p1_reaches_sf, p2_site_list, sites_crs = 4269,
                        max_matches = 1, search_radius = 500)
   ),
+  
+  # Match NHDPlusv2 flowlines to observation site ids and return subset of sites 
+  # within the distance specified by search_radius (in meters)
+  tar_target(
+    p2_sites_w_nhd_segs,
+    {
+    sites_w_segs <- get_site_nhd_flowlines(p1_nhd_reaches_sf, p2_site_list, 
+                                           sites_crs = 4269, max_matches = 1, 
+                                           search_radius = 500)
+    
+    # update site to reach matches based on p1_ref_gages_manual
+    sites_w_segs_QC <- sites_w_segs %>%
+      left_join(y = p1_ref_gages_manual[,c("id","COMID_QC")], 
+                by = c("site_id" = "id")) %>%
+      mutate(COMID_updated = ifelse(site_id %in% p1_ref_gages_manual$id,
+                                    COMID_QC, COMID)) %>%
+      filter(!is.na(COMID_updated)) %>% 
+      select(-c(COMID, bird_dist_to_comid_m, COMID_QC)) %>%
+      rename(COMID = COMID_updated)
+    }
+    ),
   
   # Write the table with matched PRMS segment and observation sites to a csv file
   tar_target(
