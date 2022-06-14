@@ -53,13 +53,21 @@ p2_targets_list <- list(
     summarize_site_list(p2_site_list,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
     format = "file"),
 
-  # Match PRMS stream segments to observation site ids and return subset of sites within 
-  # the distance specified by search_radius (in meters)
+  # Match PRMS stream segments to observation site ids and return subset of sites 
+  # within the distance specified by search_radius (in meters)
   tar_target(
     p2_sites_w_segs,
     get_site_flowlines(p1_reaches_sf, p2_site_list, sites_crs = 4269,
                        max_matches = 1, search_radius = 500)
   ),
+  
+  # Match NHDPlusv2 flowlines to observation site ids and return subset of sites 
+  # within the distance specified by search_radius (in meters)
+  tar_target(
+    p2_sites_w_nhd_segs,
+    get_site_nhd_flowlines(p1_nhd_reaches_sf, p2_site_list, sites_crs = 4269,
+                           max_matches = 1, search_radius = 500)
+    ),
   
   # Write the table with matched PRMS segment and observation sites to a csv file
   tar_target(
