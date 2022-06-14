@@ -5,6 +5,7 @@ source("1_fetch/src/get_inst_nwis_data.R")
 source("1_fetch/src/write_data.R")
 source("1_fetch/src/summarize_timeseries.R")
 source("1_fetch/src/download_nhdplus_flowlines.R")
+source("1_fetch/src/fetch_nhdv2_attributes_from_sb.R")
 
 p1_targets_list <- list(
   
@@ -182,8 +183,42 @@ p1_targets_list <- list(
     p1_seg_attr_data,
     arrow::read_feather("1_fetch/in/seg_attr_drb.feather")
   ),
+  
+  # Read in csv file containing the segment/catchment attributes that we want
+  # to download from ScienceBase:
+  tar_target(
+    p1_sb_attributes_csv,
+    '1_fetch/in/target_sciencebase_attributes.csv',
+    format = 'file'
+  ),
+  
+  # Read in and format segment/catchment attribute datasets from ScienceBase 
+  # note: use tar_group to define row groups based on ScienceBase ID; 
+  # row groups facilitate branching over subsets of the sb_attributes 
+  # table in downstream targets
+  tar_target(
+    p1_sb_attributes,
+    read_csv(p1_sb_attributes_csv, show_col_types = FALSE) %>%
+      # parse sb_id from https link 
+      mutate(sb_id = str_extract(SB_link,"[^/]*$")) %>%
+      group_by(sb_id) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+  
+  # Map over desired attribute datasets to download NHDv2 attribute data 
+  tar_target(
+    p1_sb_attributes_downloaded_csvs,
+    fetch_nhdv2_attributes_from_sb(vars_item = p1_sb_attributes, 
+                                   save_dir = "1_fetch/out", 
+                                   comids = p1_nhd_reaches_sf$COMID, 
+                                   delete_local_copies = TRUE),
+    pattern = map(p1_sb_attributes),
+    format = "file"
+  ),
 
-  # Download and unzip metabolism estimates from https://www.sciencebase.gov/catalog/item/59eb9c0ae4b0026a55ffe389
+  # Download and unzip metabolism estimates from Appling et al. 2018:
+  # https://www.sciencebase.gov/catalog/item/59eb9c0ae4b0026a55ffe389
   tar_target(
     p1_metab_tsv,
     {
