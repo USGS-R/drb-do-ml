@@ -93,7 +93,7 @@ p2a_targets_list <- list(
   ),
 
   # gather model ids - add to this list when you want to reproduce
-  # outputs from a new model
+  # outputs from a new model #add medium observed sites
   tar_target(
     p2a_model_ids,
     # paths are relative to 2a_model/src/models
