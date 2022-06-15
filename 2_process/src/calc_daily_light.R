@@ -114,8 +114,7 @@ calc_seg_light_ratio <- function(segment, start_date, end_date){
   
   # Format columns
   daily_light_out <- daily_light %>%
-    mutate(subsegid = unique(segment$subsegid),
-           seg_id_nat = unique(segment$segidnat))
+    mutate(COMID = unique(segment$COMID))
   
   return(daily_light_out)
   

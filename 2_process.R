@@ -50,21 +50,14 @@ p2_targets_list <- list(
   # Create and save log file containing data availability summary
   tar_target(
     p2_sitelist_summary_csv,
-    summarize_site_list(p2_site_list,p1_daily_data,p1_inst_data,fileout = "2_process/log/sitelist_summary.csv"),
+    summarize_site_list(p2_site_list, p1_daily_data, p1_inst_data,
+                        fileout = "2_process/log/sitelist_summary.csv"),
     format = "file"),
 
-  # Match PRMS stream segments to observation site ids and return subset of sites 
-  # within the distance specified by search_radius (in meters)
-  tar_target(
-    p2_sites_w_segs,
-    get_site_flowlines(p1_reaches_sf, p2_site_list, sites_crs = 4269,
-                       max_matches = 1, search_radius = 500)
-  ),
-  
   # Match NHDPlusv2 flowlines to observation site ids and return subset of sites 
   # within the distance specified by search_radius (in meters)
   tar_target(
-    p2_sites_w_nhd_segs,
+    p2_sites_w_segs,
     {
     sites_w_segs <- get_site_nhd_flowlines(p1_nhd_reaches_sf, p2_site_list, 
                                            sites_crs = 4269, max_matches = 1, 
@@ -81,19 +74,16 @@ p2_targets_list <- list(
       rename(COMID = COMID_updated)
     }
     ),
-  
-  # Write the table with matched PRMS segment and observation sites to a csv file
-  tar_target(
-    p2_sites_w_segs_csv,
-    write_to_csv(p2_sites_w_segs, "2_process/out/site_w_seg_ids.csv")
-  ),
-  
+
   # Add the segment ids as a new column to the daily combined data
   tar_target(
     p2_daily_with_seg_ids,
     {
-      seg_and_site_ids <- p2_sites_w_segs %>% select(site_id, segidnat)
-      left_join(p2_daily_combined, seg_and_site_ids, by=c("site_no" = "site_id")) %>%
+      seg_and_site_ids <- p2_sites_w_segs %>% 
+        select(site_id, COMID)
+      
+      left_join(p2_daily_combined, seg_and_site_ids, 
+                by=c("site_no" = "site_id")) %>%
       rename(site_id = site_no,
              date = Date,
              do_mean = Value,
@@ -124,8 +114,8 @@ p2_targets_list <- list(
    {
    well_obs_reach_ids <- p2_sites_w_segs %>%
      filter(site_id %in% p2_well_observed_sites) %>% 
-     pull(segidnat)
-   p1_reaches_sf %>% filter(segidnat %in% well_obs_reach_ids)
+     pull(COMID)
+   p1_nhd_reaches_sf %>% filter(COMID %in% well_obs_reach_ids)
    }
  ),
  
@@ -143,8 +133,8 @@ p2_targets_list <- list(
    {
      med_obs_reach_ids <- p2_sites_w_segs %>%
        filter(site_id %in% p2_med_observed_sites) %>% 
-       pull(segidnat)
-     p1_reaches_sf %>% filter(segidnat %in% med_obs_reach_ids)
+       pull(COMID)
+     p1_nhd_reaches_sf %>% filter(COMID %in% med_obs_reach_ids)
    }
  ),
  
