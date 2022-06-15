@@ -1,0 +1,7 @@
+SB_dataset_name,attribute_name,attribute_description,attribute_units,SB_link
+BASIN_CHAR,BASIN_AREA,NHDPlusV2 flowline catchment area in square kilometers. -9999 denotes a flowline which has no catchment.,square kilometers,https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890
+BASIN_CHAR,BASIN_SLOPE,NHDPlusV2 flowline catchment's average slope in percent. -9999 denotes a flowline which has no catchment.,"percent (percent rise, also referred to as the percent slope)",https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890
+BASIN_CHAR,ELEV_MEAN,NHDPlusV2 flowline catchment's mean elevation in meters. -9999 denotes a flowline which has no catchment.,meters,https://www.sciencebase.gov/catalog/item/57976a0ce4b021cadec97890
+TWI,TWI,"Topographic wetness index, ln(a/S); where ln is the natural log, a is the upslope area per unit contour length and S is the slope at that point.  See http://ks.water.usgs.gov/Kansas/pubs/reports/wrir.99-4242.html and Wolock and McCabe, 1995 for more detail",ln(m),https://www.sciencebase.gov/catalog/item/56f97be4e4b0a6037df06b70
+IMPERVIOUS_COVER_2011,IMPV11,NLCD 2011 percent imperviousness ,percent,https://www.sciencebase.gov/catalog/item/57057a9be4b0d4e2b7571fbb
+RIP_TREE_CANOPY_2011,CNPY11_BUFF100,NLCD 2011 percent tree canopy in 100 meter riparian buffer ,percent,https://www.sciencebase.gov/catalog/item/570572e2e4b0d4e2b75718bc
