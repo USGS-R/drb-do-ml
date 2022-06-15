@@ -22,8 +22,8 @@ p1_targets_list <- list(
   tar_target(
     p1_wqp_data,
     {
-      unzip(zipfile=p1_wqp_data_file,exdir = "1_fetch/out",overwrite=TRUE)
-      readRDS(paste("1_fetch/out","/Water-Quality Data/DRB.WQdata.rds",sep=""))
+      unzip(zipfile = p1_wqp_data_file, exdir = "1_fetch/out", overwrite = TRUE)
+      readRDS(paste("1_fetch/out","/Water-Quality Data/DRB.WQdata.rds", sep = ""))
     }
   ),
   
@@ -32,7 +32,7 @@ p1_targets_list <- list(
     p1_nwis_sites,
     {
       dummy <- dummy_date
-      get_nwis_sites(drb_huc8s,pcode_select,site_tp_select,stat_cd_select)
+      get_nwis_sites(drb_huc8s, pcode_select, site_tp_select, stat_cd_select)
     }
   ),
   
@@ -40,16 +40,26 @@ p1_targets_list <- list(
   tar_target(
     p1_nwis_sites_daily,
     p1_nwis_sites %>%
-      # retain "dv" sites that contain data records after user-specified {earliest_date}
-      filter(data_type_cd=="dv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
+      # retain "dv" sites that contain data records after user-specified `earliest_date`
+      filter(data_type_cd == "dv",
+             !(site_no %in% omit_nwis_sites), 
+             end_date > earliest_date) %>%
       # for sites with multiple time series (ts_id), retain the most recent time series for site_info
-      group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)),
+      group_by(site_no) %>% 
+      arrange(desc(end_date)) %>% 
+      slice(1)
+    ),
   
   # Download NWIS daily data
   tar_target(
     p1_daily_data,
-    get_daily_nwis_data(p1_nwis_sites_daily,pcode_select,stat_cd_select,start_date=earliest_date,end_date=dummy_date),
-    pattern = map(p1_nwis_sites_daily)),
+    get_daily_nwis_data(site_info = p1_nwis_sites_daily,
+                        parameter = pcode_select,
+                        stat_cd_select = stat_cd_select,
+                        start_date = earliest_date,
+                        end_date = dummy_date),
+    pattern = map(p1_nwis_sites_daily)
+  ),
 
 
   # Download NWIS daily data for other parameters (flow, temperature, SC) (see codes below)
@@ -57,19 +67,21 @@ p1_targets_list <- list(
     p1_daily_aux_data,
     dataRetrieval::readNWISdv(
                               siteNumbers = p1_nwis_sites_daily$site_no,
-                              parameterCd=c("00060", "00010", "00095"),
-                              statCd=stat_cd_select,
-                              startDate=earliest_date,
-                              endDate=dummy_date) %>%
+                              parameterCd = c("00060", "00010", "00095"),
+                              statCd = stat_cd_select,
+                              startDate = earliest_date,
+                              endDate = dummy_date) %>%
     dataRetrieval::renameNWISColumns() %>%
     select(!starts_with("..2..")),
-    pattern = map(p1_nwis_sites_daily)),
+    pattern = map(p1_nwis_sites_daily)
+  ),
 
   # Save daily aux data to csv
   tar_target(
     p1_daily_aux_csv,
     write_to_csv(p1_daily_aux_data, outfile="1_fetch/out/daily_aux_data.csv"),
-    format = "file"),
+    format = "file"
+  ),
   
   # Subset NWIS sites with instantaneous (sub-daily) data
   tar_target(
@@ -77,29 +89,37 @@ p1_targets_list <- list(
     p1_nwis_sites %>%
       # retain "uv" sites that contain data records after user-specified {earliest_date} and
       # before user-specified {dummy_date}
-      filter(data_type_cd=="uv",
+      filter(data_type_cd == "uv",
              !(site_no %in% omit_nwis_sites),
              end_date > earliest_date,
              begin_date < dummy_date) %>%
       # for sites with multiple time series (ts_id), retain the most recent time series for site_info
-      group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)),
+      group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)
+  ),
   
   # Download NWIS instantaneous data
   tar_target(
     p1_inst_data,
-    get_inst_nwis_data(p1_nwis_sites_inst,pcode_select,start_date=earliest_date,end_date=dummy_date),
-    pattern = map(p1_nwis_sites_inst)),
+    get_inst_nwis_data(site_info =p1_nwis_sites_inst,
+                       parameter = pcode_select,
+                       start_date = earliest_date,
+                       end_date = dummy_date),
+    pattern = map(p1_nwis_sites_inst)
+  ),
   
   # Create log file to track sites with multiple time series
   tar_target(
     p1_nwis_sites_inst_multipleTS_csv,
     p1_nwis_sites %>%
       # retain "uv" sites that contain data records after user-specified {earliest_date}
-      filter(data_type_cd=="uv",!(site_no %in% omit_nwis_sites),end_date > earliest_date) %>%
+      filter(data_type_cd == "uv",
+             !(site_no %in% omit_nwis_sites),
+             end_date > earliest_date) %>%
       # save record of sites with multiple time series
       group_by(site_no) %>% mutate(count_ts = length(unique(ts_id))) %>%
       filter(count_ts > 1) %>%
-      readr::write_csv(.,"1_fetch/log/summary_multiple_inst_ts.csv")),
+      readr::write_csv(.,"1_fetch/log/summary_multiple_inst_ts.csv")
+  ),
   
   # Create and save summary log file for NWIS daily data
   tar_target(
@@ -131,11 +151,13 @@ p1_targets_list <- list(
   # Unzip zipped shapefile
   tar_target(
     p1_reaches_shp,
-    {shapedir = "1_fetch/out/study_stream_reaches"
-    # `shp_files` is a vector of all files ('dbf', 'prj', 'shp', 'shx')
-    shp_files <- unzip(p1_reaches_shp_zip, exdir = shapedir)
-    # return just the .shp file
-    grep(".shp", shp_files, value = TRUE)},
+    {
+      shapedir = "1_fetch/out/study_stream_reaches"
+      # `shp_files` is a vector of all files ('dbf', 'prj', 'shp', 'shx')
+      shp_files <- unzip(p1_reaches_shp_zip, exdir = shapedir)
+      # return just the .shp file
+      grep(".shp", shp_files, value = TRUE)
+    },
     format = "file"
   ),
   
@@ -164,7 +186,7 @@ p1_targets_list <- list(
   tar_target(
     p1_prms_met_data_csv,
     {
-    unzip(zipfile=p1_prms_met_data_zip,exdir = dirname(p1_prms_met_data_zip),overwrite=TRUE)
+    unzip(zipfile = p1_prms_met_data_zip,exdir = dirname(p1_prms_met_data_zip), overwrite=TRUE)
     file.path(dirname(p1_prms_met_data_zip), "sntemp_inputs_outputs_drb.csv")
     },
     format = "file"
