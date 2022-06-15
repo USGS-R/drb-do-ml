@@ -180,7 +180,7 @@ p2_targets_list <- list(
  ),
  
  # Loop through the catchment attribute list and join individual data frames by 
- # COMID. Combine catchment attributes with NHDPlusv2 value-added attributes
+ # COMID. Combine catchment attributes with NHDPlusv2 value-added attributes (vaa)
  # and subset the data frame to the COMIDs included in the site list.
  tar_target(
    p2_seg_attr_data,
