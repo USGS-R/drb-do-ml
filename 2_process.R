@@ -7,6 +7,7 @@ source("2_process/src/save_target_ind_files.R")
 source("2_process/src/match_sites_reaches.R")
 source("2_process/src/calc_daily_light.R")
 source("2_process/src/metab_utils.R")
+source("2_process/src/combine_nhdv2_attributes.R")
 source("1_fetch/src/write_data.R")
 
 # Explicitly attach sf package to handle geometry data when mapping over `p1_reaches_sf`
@@ -152,7 +153,9 @@ p2_targets_list <- list(
  tar_target(
    p2_daily_max_light,
    { 
-     calc_seg_light_ratio(p2_med_observed_reaches, start_date = earliest_date, end_date = dummy_date)
+     calc_seg_light_ratio(p2_med_observed_reaches, 
+                          start_date = earliest_date, 
+                          end_date = dummy_date)
    },
    pattern = map(p2_med_observed_reaches)
  ),
@@ -164,6 +167,27 @@ p2_targets_list <- list(
                       sites = p2_daily_with_seg_ids$site_id,
                       model_conf_vals = c("H"),
                       cutoff_ER_K_corr = 0.4)
+ ),
+ 
+ # Read in the individual catchment attribute tables, replace any -9999 values
+ # with NA, and combine into a list.
+ tar_target(
+   p2_cat_attr_list,
+   process_attr_tables(p1_sb_attributes_downloaded_csvs,
+                     cols = c("CAT")),
+   pattern = map(p1_sb_attributes_downloaded_csvs),
+   iteration = "list"
+ ),
+ 
+ # Loop through the catchment attribute list and join individual data frames by 
+ # COMID. Combine catchment attributes with NHDPlusv2 value-added attributes
+ # and subset the data frame to the COMIDs included in the site list.
+ tar_target(
+   p2_seg_attr_data,
+   combine_attr_data(nhd_lines = p1_nhd_reaches_sf, 
+                     cat_attr_list = p2_cat_attr_list,
+                     vaa_cols = c("SLOPE"),
+                     sites_w_segs = p2_sites_w_nhd_segs)
  )
 
 )
