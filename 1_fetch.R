@@ -57,7 +57,7 @@ p1_targets_list <- list(
                         parameter = pcode_select,
                         stat_cd_select = stat_cd_select,
                         start_date = earliest_date,
-                        end_date = dummy_date),
+                        end_date = latest_date),
     pattern = map(p1_nwis_sites_daily)
   ),
 
@@ -70,7 +70,7 @@ p1_targets_list <- list(
                               parameterCd = c("00060", "00010", "00095"),
                               statCd = stat_cd_select,
                               startDate = earliest_date,
-                              endDate = dummy_date) %>%
+                              endDate = latest_date) %>%
     dataRetrieval::renameNWISColumns() %>%
     select(!starts_with("..2..")),
     pattern = map(p1_nwis_sites_daily)
@@ -87,12 +87,12 @@ p1_targets_list <- list(
   tar_target(
     p1_nwis_sites_inst,
     p1_nwis_sites %>%
-      # retain "uv" sites that contain data records after user-specified {earliest_date} and
-      # before user-specified {dummy_date}
+      # retain "uv" sites that contain data records after user-specified `earliest_date` and
+      # before user-specified `latest_date`
       filter(data_type_cd == "uv",
              !(site_no %in% omit_nwis_sites),
              end_date > earliest_date,
-             begin_date < dummy_date) %>%
+             begin_date < latest_date) %>%
       # for sites with multiple time series (ts_id), retain the most recent time series for site_info
       group_by(site_no) %>% arrange(desc(end_date)) %>% slice(1)
   ),
@@ -103,7 +103,7 @@ p1_targets_list <- list(
     get_inst_nwis_data(site_info =p1_nwis_sites_inst,
                        parameter = pcode_select,
                        start_date = earliest_date,
-                       end_date = dummy_date),
+                       end_date = latest_date),
     pattern = map(p1_nwis_sites_inst)
   ),
   
@@ -111,7 +111,7 @@ p1_targets_list <- list(
   tar_target(
     p1_nwis_sites_inst_multipleTS_csv,
     p1_nwis_sites %>%
-      # retain "uv" sites that contain data records after user-specified {earliest_date}
+      # retain "uv" sites that contain data records after user-specified `earliest_date`
       filter(data_type_cd == "uv",
              !(site_no %in% omit_nwis_sites),
              end_date > earliest_date) %>%
