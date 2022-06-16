@@ -278,6 +278,14 @@ p1_targets_list <- list(
     read_csv(p1_ref_gages_manual_csv, col_types = cols(.default = "c")) %>%
       mutate(id = str_replace(provider_id, "USGS-","")) %>%
       relocate(id, .after = provider_id)
+  ),
+
+  #
+  tar_target(
+    p1_drb_nhd_gridmet,
+    "1_fetch/in/drb_climate_2022_06_14.nc",
+    format = "file",
+    repository = "aws"
   )
 
 )  

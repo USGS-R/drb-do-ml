@@ -1,9 +1,16 @@
 library(targets)
 
+Sys.setenv(
+           AWS_PROFILE = "default",
+           AWS_REGION = 'us-west-2'
+               )
+
 options(tidyverse.quiet = TRUE)
 tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval",
                             "knitr","leaflet","sf","sbtools","ggplot2",
-                            "streamMetabolizer")) 
+                            "streamMetabolizer"),
+               resources = tar_resources(
+                             aws = tar_resources_aws(bucket = "drb-do")))
 
 source("1_fetch.R")
 source("2_process.R")

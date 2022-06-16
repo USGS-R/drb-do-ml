@@ -178,6 +178,16 @@ p2_targets_list <- list(
                      cat_attr_list = p2_cat_attr_list,
                      vaa_cols = c("SLOPE"),
                      sites_w_segs = p2_sites_w_nhd_segs)
+ ),
+
+
+ tar_target(
+   p2_met_data_at_obs_sites,
+   {
+     reticulate::source_python("2_process/src/subset_nc_to_comid.py")
+     subset_nc_to_comids(p1_drb_nhd_gridmet, p2_sites_w_segs$COMID)
+   }
  )
+
 
 )
