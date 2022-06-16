@@ -145,7 +145,7 @@ p2_targets_list <- list(
    { 
      calc_seg_light_ratio(p2_med_observed_reaches, 
                           start_date = earliest_date, 
-                          end_date = dummy_date)
+                          end_date = latest_date)
    },
    pattern = map(p2_med_observed_reaches)
  ),
