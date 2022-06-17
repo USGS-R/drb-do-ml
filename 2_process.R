@@ -208,7 +208,7 @@ p2_targets_list <- list(
      reticulate::source_python("2_process/src/subset_nc_to_comid.py")
      subset_nc_to_comids(p1_drb_nhd_gridmet, p2_med_observed_reaches$COMID) %>%
        as_tibble() %>%
-       relocate(COMID, .before = "tmmx")
+       relocate(c(COMID,time), .before = "tmmx")
    }
  )
 
