@@ -91,7 +91,8 @@ p2a_targets_list <- list(
     },
     format="file"
   ),
-
+  
+ 
   # gather model ids - add to this list when you want to reproduce
   # outputs from a new model #add medium observed sites
   tar_target(
@@ -110,7 +111,10 @@ p2a_targets_list <- list(
               config_path = "1_metab_multitask/1a_multitask_do_gpp_er.yml"),
          list(model_id = "2_multitask_dense",
               snakefile_dir = "2_multitask_dense",
-              config_path = "2_multitask_dense/config.yml")),
+              config_path = "2_multitask_dense/config.yml"),
+         list(model_id = "3_baseline_med_obs",
+              snakefile_dir = "0_baseline_LSTM",
+              config_path = "3_baseline_med_obs/config.yml")),
     iteration = "list"
   ),
 
@@ -121,6 +125,9 @@ p2a_targets_list <- list(
     {
     # we need these to make the prepped data file
     p2a_well_obs_data
+    
+    #add in the medium observed data
+    p2a_med_obs_data
     
     base_dir <- "2a_model/src/models"
     snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
