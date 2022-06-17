@@ -73,19 +73,26 @@ p2_targets_list <- list(
   tar_target(
     p2_sites_w_segs,
     {
-    sites_w_segs <- get_site_nhd_flowlines(p1_nhd_reaches_sf, p2_site_list, 
-                                           sites_crs = 4269, max_matches = 1, 
-                                           search_radius = 500)
-    
-    # update site to reach matches based on p1_ref_gages_manual
-    sites_w_segs_QC <- sites_w_segs %>%
-      left_join(y = p1_ref_gages_manual[,c("id","COMID_QC")], 
-                by = c("site_id" = "id")) %>%
-      mutate(COMID_updated = ifelse(site_id %in% p1_ref_gages_manual$id,
-                                    COMID_QC, COMID)) %>%
-      filter(!is.na(COMID_updated)) %>% 
-      select(-c(COMID, bird_dist_to_comid_m, COMID_QC)) %>%
-      rename(COMID = COMID_updated)
+      
+    # Flowlines with no catchments do not have any associated climate driver data, 
+    # so omit any flowlines where AREASQKM == 0 before matching sites to reaches.
+      nhd_reaches_w_cats <- p1_nhd_reaches_sf %>%
+        filter(AREASQKM > 0)
+      sites_w_segs <- get_site_nhd_flowlines(nhd_lines = nhd_reaches_w_cats, 
+                                             sites = p2_site_list, 
+                                             sites_crs = 4269, 
+                                             max_matches = 1,
+                                             search_radius = 500)
+      
+      # update site to reach matches based on p1_ref_gages_manual
+      sites_w_segs_QC <- sites_w_segs %>%
+        left_join(y = p1_ref_gages_manual[,c("id","COMID_QC")], 
+                  by = c("site_id" = "id")) %>%
+        mutate(COMID_updated = ifelse(site_id %in% p1_ref_gages_manual$id,
+                                      COMID_QC, COMID)) %>%
+        filter(!is.na(COMID_updated)) %>% 
+        select(-c(COMID, bird_dist_to_comid_m, COMID_QC)) %>%
+        rename(COMID = COMID_updated)
     }
     ),
 
