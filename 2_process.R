@@ -18,34 +18,46 @@ p2_targets_list <- list(
   # Filter harmonized WQP data for DO data
   tar_target(
     p2_filtered_wqp_data,
-    filter_wqp_data(p1_wqp_data,params_select,units_select,wqp_vars_select,omit_wqp_events)),
+    filter_wqp_data(p1_wqp_data, params_select, units_select, wqp_vars_select, omit_wqp_events)
+  ),
   
   # Subset harmonized WQP data to lower DRB
   tar_target(
     p2_filtered_wqp_data_subset,
-    subset_wqp_sites(p2_filtered_wqp_data,drb_huc8s)),
+    subset_wqp_sites(p2_filtered_wqp_data, drb_huc8s)
+  ),
   
   # Create and save indicator file for WQP data
   tar_target(
     p2_wqp_ind_csv,
     command = save_target_ind_files("2_process/log/wqp_data_ind.csv","p2_wqp_data_subset"),
-    format = "file"),
+    format = "file"
+  ),
   
   # Aggregate instantaneous DO data to daily min/mean/maxs
   tar_target(
     p2_inst_data_daily,
-    aggregate_data_to_daily(p1_inst_data,p1_daily_data, min_daily_coverage=0.5, output_tz="America/New_York")),
+    aggregate_data_to_daily(inst_data = p1_inst_data,
+                            daily_data = p1_daily_data, 
+                            min_daily_coverage = 0.5, 
+                            output_tz = "America/New_York")
+  ),
 
   # Combine 1) daily DO data and 2) instantaneous DO data that has been aggregated to daily 
   tar_target(
     p2_daily_combined,
-    bind_rows(p1_daily_data, p2_inst_data_daily)),
+    bind_rows(p1_daily_data, p2_inst_data_daily)
+  ),
   
   # Create a list of unique site locations containing DO data  
   tar_target(
     p2_site_list,
-    create_site_list(p2_filtered_wqp_data_subset,p1_nwis_sites,p1_daily_data,p1_inst_data,
-                       hucs=drb_huc8s,crs_out="NAD83")
+    create_site_list(wqp_data = p2_filtered_wqp_data_subset,
+                     nwis_sites = p1_nwis_sites,
+                     nwis_daily_data = p1_daily_data,
+                     nwis_inst_data = p1_inst_data,
+                     hucs = drb_huc8s,
+                     crs_out="NAD83")
   ), 
 
   # Create and save log file containing data availability summary
@@ -53,26 +65,34 @@ p2_targets_list <- list(
     p2_sitelist_summary_csv,
     summarize_site_list(p2_site_list, p1_daily_data, p1_inst_data,
                         fileout = "2_process/log/sitelist_summary.csv"),
-    format = "file"),
+    format = "file"
+  ),
 
   # Match NHDPlusv2 flowlines to observation site ids and return subset of sites 
   # within the distance specified by search_radius (in meters)
   tar_target(
     p2_sites_w_segs,
     {
-    sites_w_segs <- get_site_nhd_flowlines(p1_nhd_reaches_sf, p2_site_list, 
-                                           sites_crs = 4269, max_matches = 1, 
-                                           search_radius = 500)
-    
-    # update site to reach matches based on p1_ref_gages_manual
-    sites_w_segs_QC <- sites_w_segs %>%
-      left_join(y = p1_ref_gages_manual[,c("id","COMID_QC")], 
-                by = c("site_id" = "id")) %>%
-      mutate(COMID_updated = ifelse(site_id %in% p1_ref_gages_manual$id,
-                                    COMID_QC, COMID)) %>%
-      filter(!is.na(COMID_updated)) %>% 
-      select(-c(COMID, bird_dist_to_comid_m, COMID_QC)) %>%
-      rename(COMID = COMID_updated)
+      
+    # Flowlines with no catchments do not have any associated climate driver data, 
+    # so omit any flowlines where AREASQKM == 0 before matching sites to reaches.
+      nhd_reaches_w_cats <- p1_nhd_reaches_sf %>%
+        filter(AREASQKM > 0)
+      sites_w_segs <- get_site_nhd_flowlines(nhd_lines = nhd_reaches_w_cats, 
+                                             sites = p2_site_list, 
+                                             sites_crs = 4269, 
+                                             max_matches = 1,
+                                             search_radius = 500)
+      
+      # update site to reach matches based on p1_ref_gages_manual
+      sites_w_segs_QC <- sites_w_segs %>%
+        left_join(y = p1_ref_gages_manual[,c("id","COMID_QC")], 
+                  by = c("site_id" = "id")) %>%
+        mutate(COMID_updated = ifelse(site_id %in% p1_ref_gages_manual$id,
+                                      COMID_QC, COMID)) %>%
+        filter(!is.na(COMID_updated)) %>% 
+        select(-c(COMID, bird_dist_to_comid_m, COMID_QC)) %>%
+        rename(COMID = COMID_updated)
     }
     ),
 
