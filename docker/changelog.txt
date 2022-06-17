@@ -1,0 +1,3 @@
+v0.2 I think this is when I added streamMetabolizer
+v0.3 This is updating R to 4.2 and targets to 0.12, but streamMetabolizer is 0.9.3 which does not have the `calc_solar_time` function that is needed
+v0.4 Keeping R 4.2 and targets 0.12, but streamMetabolizer 0.11.4 

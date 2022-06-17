@@ -2,10 +2,10 @@
 #Dockerfile references are here:
 #https://github.com/rocker-org/rocker-versioned2/tree/master/dockerfiles
 #includes Ubuntu 20.04 LTS (stable release)
-#includes R version 4.1.2
+#includes R version 4.2
 #includes all packages and Linux libraries in the Dockerfile for verse, 
 #which is based on tidyverse, which is based on rstudio, which is based on r-ver.
-FROM rocker/geospatial:4.1.2
+FROM rocker/geospatial:4.2
 
 
 #If needed, install Linux libraries and remove cache
@@ -45,7 +45,7 @@ RUN install2.r --error \
   # place a space and backslash after the package name
 
 RUN R -e 'remotes::install_github("appling/unitted")'
-RUN R -e 'remotes::install_github("appling/streamMetabolizer")'
+RUN R -e 'devtools::install_github("USGS-R/streamMetabolizer@v0.11.4")'
 
 # Need this if running python in the project directory
 RUN /rocker_scripts/install_python.sh
@@ -53,11 +53,13 @@ RUN /rocker_scripts/install_python.sh
 #add additional Python packages to install:
 RUN pip install \
     dask \
+    fsspec \
     jupyterlab \
     matplotlib \
     netCDF4 \
     pandas \
     pyarrow \
+    s3fs \
     scikit-learn \
     scipy \
     seaborn \
