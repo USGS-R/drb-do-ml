@@ -300,6 +300,17 @@ p1_targets_list <- list(
     read_csv(p1_ref_gages_manual_csv, col_types = cols(.default = "c")) %>%
       mutate(id = str_replace(provider_id, "USGS-","")) %>%
       relocate(id, .after = provider_id)
+  ),
+  
+  # Read in meteorological data aggregated to NHDPlusV2 catchments for the 
+  # DRB (prepped in https://github.com/USGS-R/drb_gridmet_tools). Note that
+  # the DRB met data file must be stored in 1_fetch/in. If working outside
+  # of tallgrass/caldera, this file will need to be downloaded from the project
+  # S3 bucket and manually placed in 1_fetch/in.
+  tar_target(
+    p1_drb_nhd_gridmet,
+    "1_fetch/in/drb_climate_2022_06_14.nc",
+    format = "file"
   )
 
 )  
