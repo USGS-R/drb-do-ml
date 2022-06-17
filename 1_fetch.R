@@ -283,7 +283,7 @@ p1_targets_list <- list(
   #
   tar_target(
     p1_drb_nhd_gridmet,
-    "1_fetch/in/drb_climate_2022_06_14.nc",
+    "1_fetch/in/med_obs_drb_climate_2022_06_14.nc",
     format = "file",
     repository = "aws"
   )

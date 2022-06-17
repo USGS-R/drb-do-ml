@@ -185,7 +185,7 @@ p2_targets_list <- list(
    p2_met_data_at_obs_sites,
    {
      reticulate::source_python("2_process/src/subset_nc_to_comid.py")
-     as_tibble(subset_nc_to_comids(p1_drb_nhd_gridmet, p2_sites_w_segs$COMID))
+     as_tibble(subset_nc_to_comids(p1_drb_nhd_gridmet, p2_med_observed_sites$COMID))
    }
  )
 
