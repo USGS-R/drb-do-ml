@@ -11,6 +11,9 @@
 #Targets directry
 _targets
 
+# Certain input files
+1_fetch/in/drb_climate_2022_06_14.nc
+
 # Output
 */out/*
 
