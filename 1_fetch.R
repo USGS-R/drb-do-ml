@@ -165,14 +165,6 @@ p1_targets_list <- list(
     p1_prms_met_data,
     read_csv(p1_prms_met_data_csv, show_col_types = FALSE)
   ),
-
-  # read in prms met data
-  # [Jeff] I'm including these in the "in" folder because they are unpublished
-  # They are built in the delaware_model_prep pipeline (1_network/out/seg_attr_drb.feather)
-  tar_target(
-    p1_seg_attr_data,
-    arrow::read_feather("1_fetch/in/seg_attr_drb.feather")
-  ),
   
   # Read in csv file containing the segment/catchment attributes that we want
   # to download from ScienceBase:
