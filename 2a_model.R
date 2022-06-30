@@ -6,18 +6,19 @@ p2a_targets_list <- list(
   # join met data with light input data
   tar_target(
     p2a_met_light_data,
-    p1_prms_met_data %>%
-      left_join(p2_daily_max_light %>%
-                  # omit subseg's not included in met data
-                  filter(!subsegid %in% c("3_1","8_1","51_1")) %>%
-                  select(seg_id_nat, date_localtime, frac_light) %>%
+    p2_met_data_at_obs_sites %>%
+      mutate(date = as.Date(time, tz = 'Etc/GMT+5')) %>%
+      left_join(y = p2_daily_max_light %>%
+                  select(COMID, date_localtime, frac_light) %>%
                   # format column names
                   rename(light_ratio = frac_light,
                          date = date_localtime),
-                by = c("seg_id_nat", "date"))
+                by = c("COMID", "date")) %>%
+      select(-time) %>%
+      relocate(date, .after = COMID)
   ),
   
-  # match to site_ids to seg_ids
+  # match site_ids to seg_ids
   tar_target(
     p2a_met_data_w_sites,
     match_site_ids_to_segs(p2a_met_light_data, p2_sites_w_segs)
@@ -26,7 +27,7 @@ p2a_targets_list <- list(
   # match seg attributes with site_ids
   tar_target(
     p2a_seg_attr_w_sites,
-    match_site_ids_to_segs(p1_seg_attr_data, p2_sites_w_segs)
+    match_site_ids_to_segs(p2_seg_attr_data, p2_sites_w_segs)
   ),
   
   # join the metab data with the DO observations
@@ -72,8 +73,8 @@ p2a_targets_list <- list(
 
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
   # write met and seg attribute data for trn/val sites to zarr
-  # note - I have to subset inputs to only include the train/val sites before passing to subset_and_write_zarr or else I
-  # get a memory error on the join
+  # note - I have to subset inputs to only include the train/val sites before 
+  # passing to subset_and_write_zarr or else I get a memory error on the join
 
   # write trn and val input and output data to zarr
   tar_target(
@@ -81,7 +82,7 @@ p2a_targets_list <- list(
     {
       inputs <- p2a_met_data_w_sites %>%
         filter(site_id %in% p2a_trn_val_sites) %>%
-        inner_join(p2a_seg_attr_w_sites, by = c("site_id", "seg_id_nat"))
+        inner_join(p2a_seg_attr_w_sites, by = c("site_id", "COMID"))
 
       inputs_and_outputs <- inputs %>%
           left_join(p2a_do_and_metab, by=c("site_id", "date"))
@@ -155,7 +156,7 @@ p2a_targets_list <- list(
         # include all med-obs sites not in testing sites
         filter(site_id %in% p2_med_observed_sites, 
                !site_id %in% tst_sites) %>%
-        inner_join(p2a_seg_attr_w_sites, by = c("site_id","seg_id_nat"))
+        inner_join(p2a_seg_attr_w_sites, by = c("site_id","COMID"))
       
       inputs_and_outputs_med_obs <- inputs_med_obs %>%
         left_join(p2a_do_and_metab, by = c("site_id", "date"))

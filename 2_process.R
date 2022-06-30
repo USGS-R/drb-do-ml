@@ -197,7 +197,7 @@ p2_targets_list <- list(
    combine_attr_data(nhd_lines = p1_nhd_reaches_sf, 
                      cat_attr_list = p2_cat_attr_list,
                      vaa_cols = c("SLOPE"),
-                     sites_w_segs = p2_sites_w_nhd_segs)
+                     sites_w_segs = p2_sites_w_segs)
  ),
  
  # Subset the DRB meteorological data to only include the NHDPlusv2 catchments (COMID)

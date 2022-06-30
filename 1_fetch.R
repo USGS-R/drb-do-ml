@@ -135,75 +135,10 @@ p1_targets_list <- list(
     format = "file"
   ),
   
-  # Download zipped shapefile of DRB PRMS reaches
-  tar_target(
-    p1_reaches_shp_zip,
-    # [Jeff] I downloaded this manually from science base: 
-    # https://www.sciencebase.gov/catalog/item/5f6a285d82ce38aaa244912e
-    # Because it's a shapefile, it's not easily downloaded using sbtools
-    # like other files are (see https://github.com/USGS-R/sbtools/issues/277).
-    # Because of that and since it's small (<700 Kb) I figured it'd be fine to
-    # just include in the repo and have it loosely referenced to the sb item ^
-    "1_fetch/in/study_stream_reaches.zip",
-    format = "file"
-  ),
-  
-  # Unzip zipped shapefile
-  tar_target(
-    p1_reaches_shp,
-    {
-      shapedir = "1_fetch/out/study_stream_reaches"
-      # `shp_files` is a vector of all files ('dbf', 'prj', 'shp', 'shx')
-      shp_files <- unzip(p1_reaches_shp_zip, exdir = shapedir)
-      # return just the .shp file
-      grep(".shp", shp_files, value = TRUE)
-    },
-    format = "file"
-  ),
-  
-  # read shapefile into sf object
-  tar_target(
-    p1_reaches_sf,
-    st_read(p1_reaches_shp)
-  ),
-  
   # Fetch NHDv2 flowline reaches for the area of interest
   tar_target(
     p1_nhd_reaches_sf,
     download_nhdplus_flowlines(huc8 = drb_huc8s)
-  ),
-
-  # fetch prms met data
-  tar_target(
-    p1_prms_met_data_zip,
-    download_sb_file(sb_id = "5f6a289982ce38aaa2449135",
-                     file_name = "sntemp_inputs_outputs_drb.zip",
-                     out_dir = "1_fetch/out"),
-    format = "file"
-  ),
-
-  # unzip prms met data
-  tar_target(
-    p1_prms_met_data_csv,
-    {
-    unzip(zipfile = p1_prms_met_data_zip,exdir = dirname(p1_prms_met_data_zip), overwrite=TRUE)
-    file.path(dirname(p1_prms_met_data_zip), "sntemp_inputs_outputs_drb.csv")
-    },
-    format = "file"
-  ),
-
-  # read in prms met data
-  tar_target(
-    p1_prms_met_data,
-    read_csv(p1_prms_met_data_csv, show_col_types = FALSE)
-  ),
-
-  # read in prms met data
-  # [Jeff] I'm including these in the "in" folder because they are unpublished
-  # They are built in the delaware_model_prep pipeline (1_network/out/seg_attr_drb.feather)
-  tar_target(
-    p1_seg_attr_data,
-    arrow::read_feather("1_fetch/in/seg_attr_drb.feather")
   ),
   
   # Read in csv file containing the segment/catchment attributes that we want

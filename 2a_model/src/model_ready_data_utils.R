@@ -4,15 +4,26 @@ match_site_ids_to_segs <-
     #'
     #' @description match site ids to segment data (e.g., met or attributes) 
     #'
-    #' @param seg_data a data frame of meterological data with column 'seg_id_nat'
-    #' @param sites_w_segs a dataframe with both segment ids ('segidnat') and site ids ('site_id')
+    #' @param seg_data a data frame of meterological data with either column 
+    #' seg_id_nat' or 'COMID'
+    #' @param sites_w_segs a dataframe with both segment ids ('segidnat' or 'COMID') 
+    #' and site ids ('site_id')
     #'
     #' @value A data frame of seg data with site ids 
     
-    seg_data <- seg_data %>%
-      left_join(sites_w_segs[,c("site_id","segidnat")],
-                by=c("seg_id_nat" = "segidnat"))
-    return(seg_data)
+    if(any(grepl('COMID', names(seg_data)))){
+      seg_data_out <- seg_data %>%
+        mutate(COMID = as.character(COMID)) %>%
+        left_join(y = sites_w_segs[,c("site_id","COMID")],
+                  by = "COMID") %>%
+        arrange(site_id)
+    } else {
+      seg_data_out <- seg_data %>%
+        left_join(sites_w_segs[,c("site_id","segidnat")],
+                  by=c("seg_id_nat" = "segidnat"))
+    }
+    
+    return(seg_data_out)
   }
 
 write_df_to_zarr <- function(df, index_cols, out_zarr) {
