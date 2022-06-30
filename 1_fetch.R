@@ -140,31 +140,6 @@ p1_targets_list <- list(
     p1_nhd_reaches_sf,
     download_nhdplus_flowlines(huc8 = drb_huc8s)
   ),
-
-  # fetch prms met data
-  tar_target(
-    p1_prms_met_data_zip,
-    download_sb_file(sb_id = "5f6a289982ce38aaa2449135",
-                     file_name = "sntemp_inputs_outputs_drb.zip",
-                     out_dir = "1_fetch/out"),
-    format = "file"
-  ),
-
-  # unzip prms met data
-  tar_target(
-    p1_prms_met_data_csv,
-    {
-    unzip(zipfile = p1_prms_met_data_zip,exdir = dirname(p1_prms_met_data_zip), overwrite=TRUE)
-    file.path(dirname(p1_prms_met_data_zip), "sntemp_inputs_outputs_drb.csv")
-    },
-    format = "file"
-  ),
-
-  # read in prms met data
-  tar_target(
-    p1_prms_met_data,
-    read_csv(p1_prms_met_data_csv, show_col_types = FALSE)
-  ),
   
   # Read in csv file containing the segment/catchment attributes that we want
   # to download from ScienceBase:
