@@ -37,9 +37,7 @@ calc_daily_light <- function(start_date, end_date, longitude, latitude){
            date_localtime = lubridate::date(dateTime_local))
   
   # Calculate mean solar time where the solar zenith corresponds to almost exactly noon
-  # I'm getting a warning that google time zone lookup now requires
-  # an API, but solar time values are still returned. Is this a problem?
-  light_dat$solar_time <- streamMetabolizer::calc_solar_time(light_dat$dateTime_utc, longitude = longitude)
+  light_dat$solar_time <- streamMetabolizer::calc_solar_time(light_dat$dateTime_local, longitude = longitude)
   
   # Calculate PAR for given date-times and site coordinates
   light_dat$light <- streamMetabolizer::calc_light(light_dat$solar_time, latitude, longitude)
