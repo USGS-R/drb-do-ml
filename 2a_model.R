@@ -75,6 +75,11 @@ p2a_targets_list <- list(
   # write met and seg attribute data for trn/val sites to zarr
   # note - I have to subset inputs to only include the train/val sites before 
   # passing to subset_and_write_zarr or else I get a memory error on the join
+  
+  ## CHANGING X VARIABLES ##
+  #To change x variables for the model, they have to be added to the 
+  #model specific config.yml file which can be found in 
+  #2a_model/src/model/{model ID}/config.yml
 
   # write trn and val input and output data to zarr
   tar_target(
@@ -93,6 +98,7 @@ p2a_targets_list <- list(
   ),
   
  
+  
   # gather model ids - add to this list when you want to reproduce
   # outputs from a new model #add medium observed sites
   tar_target(
