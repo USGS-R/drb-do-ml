@@ -1,6 +1,8 @@
 exp_name: "1b_multitask_do_gpp"
 
-x_vars: ['seg_ccov', 'seg_rain', 'seg_slope', 'seg_tave_air', 'seginc_swrad', 'hru_slope', 'hru_aspect', 'hru_elev', 'hru_area', 'hru_percent_imperv', 'covden_sum', 'covden_win', 'soil_moist_max']
+site_set: "well_obs"
+
+x_vars: ['pr','SLOPE','tmmx','srad','CAT_BASIN_SLOPE','CAT_ELEV_MEAN','CAT_BASIN_AREA','CAT_IMPV11', 'CAT_CNPY11_BUFF100','CAT_TWI']
 
 y_vars: ['do_min', 'do_mean', 'do_max', 'GPP', 'ER', 'K600', 'depth', 'temp.water']
 

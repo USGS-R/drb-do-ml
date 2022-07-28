@@ -17,6 +17,7 @@ from river_dl import loss_functions as lf
 
 out_dir = os.path.join(config['out_dir'], config['exp_name'])
 loss_function = lf.multitask_rmse(config['lambdas'])
+site_set = config['site_set']
 
 include: "visualize_models.smk"
 
@@ -29,7 +30,7 @@ rule as_run_config:
 
 rule prep_io_data:
     input:
-        "../../../out/well_obs_io.zarr",
+        "../../../out/"+site_set+"_io.zarr",
     output:
         "{outdir}/prepped.npz"
     run:
@@ -100,7 +101,7 @@ rule make_predictions:
     input:
         "{outdir}/prepped.npz",
         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
-        "../../../out/well_obs_io.zarr",
+        "../../../out/"+site_set+"_io.zarr",
     output:
         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather",
     run:
@@ -174,7 +175,7 @@ def get_grp_arg(wildcards):
  
 rule combine_metrics:
      input:
-          "../../../out/well_obs_io.zarr",
+          "../../../out/"+site_set+"_io.zarr",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/trn_preds.feather",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_preds.feather",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_times_preds.feather"
