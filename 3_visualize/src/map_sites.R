@@ -1,9 +1,18 @@
-map_sites <- function(site_list) {
-  #' 
-  #' @description Function to map the unique site id's within the area of interest.
-  #'
-  #' @param site_list data frame containing the list of sites
-  #' The site list file should contain the columns "datum", "data_src_combined", and "count_days_total"
+#' @title Create leaflet map of site locations
+
+#' @description 
+#' Function to map unique site id's within the area of interest.
+#'
+#' @param site_list data frame containing the site locations. The site 
+#' list file should contain the columns "datum", "data_src_combined", 
+#' and "count_days_total".
+#' 
+#' @returns 
+#' returns a leaflet map containing the site locations colored by
+#' the data source (i.e., discrete grab samples, instantaneous NWIS
+#' data, or daily NWIS data).
+#' 
+map_sites_leaflet <- function(site_list) {
 
   # check for required columns in the site list
   req_cols <- c("datum", "data_src_combined","count_days_total")
