@@ -1,15 +1,15 @@
+#' 
+#' @description Function to summarize data availability info and save log file 
+#'
+#' @param site_list data frame of site list
+#' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
+#' @param nwis_inst_data data frame containing instantaneous data for all NWIS instantaneous sites
+#' @param fileout file path and name for output data, including the file extension
+#'
+#' @value A data frame containing the total number of observation days (discrete observations + NWIS days), the number of unique lat/lon locations, and the number of sites broken down by data source
+#' @example summarize_site_list(site_list= p2_site_list, nwis_daily_data = daily_df,nwis_inst_data = inst_df)
+#'
 summarize_site_list <- function(site_list,nwis_daily_data,nwis_inst_data,fileout){
-  #' 
-  #' @description Function to summarize data availability info and save log file 
-  #'
-  #' @param site_list data frame of site list
-  #' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
-  #' @param nwis_inst_data data frame containing instantaneous data for all NWIS instantaneous sites
-  #' @param fileout file path and name for output data, including the file extension
-  #'
-  #' @value A data frame containing the total number of observation days (discrete observations + NWIS days), the number of unique lat/lon locations, and the number of sites broken down by data source
-  #' @example summarize_site_list(site_list= p2_site_list, nwis_daily_data = daily_df,nwis_inst_data = inst_df)
-  #' 
 
   # Summarize data availability
   site_summary <- site_list %>%
@@ -27,7 +27,9 @@ summarize_site_list <- function(site_list,nwis_daily_data,nwis_inst_data,fileout
       # tally number of unique NWIS sites that contribute continuous data (daily or inst)
       n_unique_nwis_sites = as.numeric(tally(filter(.,grepl("NWIS",.$data_src_combined,ignore.case=TRUE)))),
       # tally number of site id's that have observations from both NWIS and WQP
-      n_sites_intersect_WQPNWIS = as.numeric(tally(filter(.,.$data_src_combined %in% c("NWIS_daily/Harmonized_WQP_data","NWIS_instantaneous/Harmonized_WQP_data")))),
+      n_sites_intersect_WQPNWIS = as.numeric(tally(filter(.,.$data_src_combined %in% 
+                                                            c("NWIS_daily/Harmonized_WQP_data",
+                                                              "NWIS_instantaneous/Harmonized_WQP_data")))),
       # tally total number of observation-days across data sources
       n_obsdays_total = sum(count_days_total,na.rm=TRUE),
       # tally number of observation-days from NWIS
