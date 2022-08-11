@@ -69,6 +69,18 @@ p2a_targets_list <- list(
     p2a_trn_only,
     p2a_trn_sites[!p2a_trn_sites %in% p2a_trn_sites_w_val_data]
   ),
+  
+  # Summarize site splits/groups based on the above 4 targets
+  tar_target(
+    p2a_site_splits,
+    sites <- p2_sites_w_segs %>%
+      filter(site_id %in% c(p2a_trn_sites, val_sites, tst_sites)) %>%
+      mutate(site_type = case_when(
+        site_id %in% p2a_trn_sites ~ "train",
+        site_id %in% val_sites ~ "validation",
+        site_id %in% tst_sites ~ "test",
+        TRUE ~ NA_character_))
+  ),
 
 
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
