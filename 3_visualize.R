@@ -1,4 +1,5 @@
-# [Lauren] plot_daily_data and plot_inst_data not currently used to build targets, but leaving the functions here for reference
+# [Lauren] plot_daily_data and plot_inst_data are not currently used to build 
+# any targets, leaving the functions here for reference
 source("3_visualize/src/plot_daily_data.R")
 source("3_visualize/src/plot_inst_data.R")
 source("3_visualize/src/do_overview_plots.R")
@@ -10,6 +11,14 @@ p3_targets_list <- list(
   tarchetypes::tar_render(p3_wqp_report, 
                           path = "3_visualize/src/report-do-inventory.Rmd",
                           output_dir = "3_visualize/out"),
+  
+  # Save map of site locations
+  tar_target(
+    p3_site_map_png,
+    map_sites(flowlines = p1_nhd_reaches_sf,
+              matched_sites = p2a_site_splits,
+              out_file = "3_visualize/out/do_site_map.png")
+  ),
   
   # Generate summary plots (all daily and inst data)
   tar_target(
