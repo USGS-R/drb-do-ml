@@ -12,14 +12,6 @@ p3_targets_list <- list(
                           path = "3_visualize/src/report-do-inventory.Rmd",
                           output_dir = "3_visualize/out"),
   
-  # Save map of site locations
-  tar_target(
-    p3_site_map_png,
-    map_sites(flowlines = p1_nhd_reaches_sf,
-              matched_sites = p2a_site_splits,
-              out_file = "3_visualize/out/do_site_map.png")
-  ),
-  
   # Generate summary plots (all daily and inst data)
   tar_target(
     p3_daily_summary_plot_png,
@@ -58,6 +50,16 @@ p3_targets_list <- list(
     format = "file"
   ),
 
+  
+  # Save png map of site locations
+  tar_target(
+    p3_site_map_png,
+    map_sites(flowlines = p1_nhd_reaches_sf,
+              matched_sites = p2a_site_splits,
+              out_file = "3_visualize/out/do_site_map.png")
+  ),
+  
+  # Save json map of site locations
   tar_target(
     p3_well_observed_site_data_json,
     {

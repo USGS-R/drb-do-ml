@@ -6,9 +6,9 @@
 #' 
 #' @param flowlines sf object containing the river flowlines. Must contain
 #' columns "REACHCODE" and "STREAMORDE".
-#' @param matched_sites data frame containing site locations and the flowline
+#' @param matched_sites sf object containing site locations and the flowline
 #' reach identifier ("COMID") that the site has been matched to. Must contain
-#' columns "lon", "lat", "datum", and "COMID".
+#' columns "COMID" and "geometry".
 #' @param out_file character string indicating the name of the saved file, 
 #' including file path and extension.
 #' @param huc6_select vector of character string(s) indicating the HUC6 basins that
@@ -43,20 +43,9 @@ map_sites <- function(flowlines,
                       epsg_out = 3857, 
                       lat_breaks = seq(from = 39.6, to = 41, by = 0.4),
                       lon_breaks = seq(from = -74.5, to = -76.5, by = -0.5),
-                      site_type_colors = c("#E69F00","#56B4E9","#009E73"),
+                      site_type_colors = c("#E69F00","#56B4E9","#0072B2","#009E73"),
+                      site_type_names = c("train","validation","train/val","test"),
                       fig_width_inches = 7.8, fig_height_inches = 6.5){
-  
-  # Fetch EPSG code of matched_sites; assume unknown crs (datum equals "UNKNWN", "OTHER") 
-  # correspond with WGS84
-  epsg_in <- case_when(unique(matched_sites$datum) == "NAD83" ~ 4269,
-                       unique(matched_sites$datum) == "WGS84" ~ 4326,
-                       unique(matched_sites$datum) == "NAD27" ~ 4267,
-                       unique(matched_sites$datum) == "UNKWN" ~ 4326,
-                       unique(matched_sites$datum) == "OTHER" ~ 4326)
-  
-  # Create sf object containing site locations
-  sites <- matched_sites %>%
-    sf::st_as_sf(., coords = c("lon","lat"), crs = epsg_in)
   
   # Create bbox/spatial extent of sites used in the model
   subset_bbox <-  sf::st_bbox(basin_bbox) %>%
@@ -73,7 +62,7 @@ map_sites <- function(flowlines,
     sf::st_union() %>%
     sf::st_as_sf() %>%
     sf::st_transform(crs = epsg_out) %>%
-    # crop the watershed to the sites bounding box
+    # crop the watershed to the matched_sites bounding box
     sf::st_crop(subset_bbox) 
 
   # Subset the flowlines that should be mapped within the basin boundary
@@ -82,7 +71,7 @@ map_sites <- function(flowlines,
            huc6 = str_sub(REACHCODE,0,6)) %>%
     filter(huc6 == huc6_select) %>%
     sf::st_transform(crs = epsg_out) %>%
-    # crop the flowlines to the sites bounding box
+    # crop the flowlines to the matched_sites bounding box
     sf::st_crop(subset_bbox) %>% 
     # ignore warnings about attribute variables assumed spatially constant
     suppressWarnings() %>%
@@ -96,14 +85,14 @@ map_sites <- function(flowlines,
     geom_sf(data = flowlines_in_basin, aes(size = STREAMORDE/5), color = "slategray4") +
     # scale_size_identity needed to provide line width as an aesthetic
     scale_size_identity() +
-    geom_sf(data = sites, aes(color = site_type), size = 3.5) +
+    geom_sf(data = matched_sites, aes(color = site_type), size = 3.5) +
     scale_fill_identity() +
     coord_sf() +
     scale_y_continuous(breaks = lat_breaks) +
     scale_x_continuous(breaks = lon_breaks) + 
-    scale_color_manual(breaks = c("train","validation","test"), 
+    scale_color_manual(breaks = site_type_names, 
                        values = site_type_colors,
-                       name = "site type")+
+                       name = "Site type")+
     theme_bw() +
     theme(panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
@@ -120,7 +109,7 @@ map_sites <- function(flowlines,
     ggspatial::annotation_scale(bar_cols = c("gray70","white"))
   
   # create inset map
-  inset_map <- map_drb_watershed(sites)
+  inset_map <- map_drb_watershed(matched_sites)
   
   # grab legend 
   legend <- cowplot::get_legend(sites_map)
