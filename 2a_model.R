@@ -64,7 +64,7 @@ p2a_targets_list <- list(
       pull(site_id)
   ),
   
-  # Summarize site splits/groups based on the above 4 targets
+  # Summarize site splits/groups based on the above 3 targets
   tar_target(
     p2a_site_splits,
     p2_sites_w_segs %>%
