@@ -73,16 +73,26 @@ p2a_targets_list <- list(
   # Summarize site splits/groups based on the above 4 targets
   tar_target(
     p2a_site_splits,
-    sites <- p2_sites_w_segs %>%
+    p2_sites_w_segs %>%
       filter(site_id %in% c(p2a_trn_sites, val_sites, tst_sites)) %>%
       mutate(site_type = case_when(
-        site_id %in% p2a_trn_sites ~ "train",
+        site_id %in% p2a_trn_sites & 
+          !site_id %in% p2a_trn_sites_w_val_data ~ "train",
+        site_id %in% p2a_trn_sites_w_val_data ~ "train/val",
         site_id %in% val_sites ~ "validation",
         site_id %in% tst_sites ~ "test",
-        TRUE ~ NA_character_))
+        TRUE ~ NA_character_),
+        # assign epsg codes based on "datum" column and convert
+        # data frame to sf object
+        epsg = case_when(datum == "NAD83" ~ 4269,
+                         datum == "WGS84" ~ 4326,
+                         datum == "NAD27" ~ 4267,
+                         datum == "UNKWN" ~ 4326,
+                         datum == "OTHER" ~ 4326)) %>%
+      sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
   ),
 
-
+  
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
   # write met and seg attribute data for trn/val sites to zarr
   # note - I have to subset inputs to only include the train/val sites before 
