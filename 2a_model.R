@@ -75,6 +75,11 @@ p2a_targets_list <- list(
   # write met and seg attribute data for trn/val sites to zarr
   # note - I have to subset inputs to only include the train/val sites before 
   # passing to subset_and_write_zarr or else I get a memory error on the join
+  
+  ## CHANGING X VARIABLES ##
+  #To change x variables for the model, they have to be added to the 
+  #model specific config.yml file which can be found in 
+  #2a_model/src/model/{model ID}/config.yml
 
   # write trn and val input and output data to zarr
   tar_target(
@@ -91,17 +96,19 @@ p2a_targets_list <- list(
     },
     format="file"
   ),
-
+  
+ 
+  
   # gather model ids - add to this list when you want to reproduce
-  # outputs from a new model
+  # outputs from a new model #add medium observed sites
   tar_target(
     p2a_model_ids,
     # paths are relative to 2a_model/src/models
-    list(list(model_id = "0_baseline_LSTM",
-              snakefile_dir = "0_baseline_LSTM",
-              config_path = "0_baseline_LSTM/config.yml"),
-         # the 1_ models use the same model and therefore
-         # the same Snakefile as the 0_baseline_LSTM run
+      list(list(model_id = "0_baseline_LSTM",
+                  snakefile_dir = "0_baseline_LSTM",
+                  config_path = "0_baseline_LSTM/config.yml"),
+         #the 1_ models use the same model and therefore
+         #the same Snakefile as the 0_baseline_LSTM run
          list(model_id = "1_metab_multitask",
               snakefile_dir = "0_baseline_LSTM",
               config_path = "1_metab_multitask/config.yml"),
@@ -111,7 +118,7 @@ p2a_targets_list <- list(
          list(model_id = "2_multitask_dense",
               snakefile_dir = "2_multitask_dense",
               config_path = "2_multitask_dense/config.yml")),
-    iteration = "list"
+          iteration = "list"
   ),
 
   # produce the final metrics files (and all intermediate files including predictions)
@@ -119,15 +126,18 @@ p2a_targets_list <- list(
   tar_target(
     p2a_metrics_files,
     {
-    # we need these to make the prepped data file
+    #we need these to make the prepped data file
     p2a_well_obs_data
+    
+    #add in the medium observed data
+    p2a_med_obs_data
     
     base_dir <- "2a_model/src/models"
     snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
     config_path <- file.path(base_dir, p2a_model_ids$config_path)
     # this path is relative to the Snakefile
-    prepped_data_file <- file.path("../../../out/models", p2a_model_ids$model_id, "prepped.npz")
-    
+    prepped_data_file <- file.path("../../../out/models",p2a_model_ids$model_id, "prepped.npz")
+
     # First create the prepped data files if they are not already.
     # These are needed to make the predictions.
     system(stringr::str_glue("snakemake {prepped_data_file} -s {snakefile_path} --configfile {config_path} -j"))
