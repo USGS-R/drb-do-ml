@@ -104,24 +104,21 @@ p2a_targets_list <- list(
   tar_target(
     p2a_model_ids,
     # paths are relative to 2a_model/src/models
-    list(list(model_id = "0_baseline_LSTM",
-               snakefile_dir = "0_baseline_LSTM",
-               config_path = "0_baseline_LSTM/config.yml"),
-         # the 1_ models use the same model and therefore
-         # the same Snakefile as the 0_baseline_LSTM run
-         # list(model_id = "1_metab_multitask",
-         #      snakefile_dir = "0_baseline_LSTM",
-         #      config_path = "1_metab_multitask/config.yml"),
-         # list(model_id = "1a_multitask_do_gpp_er",
-         #      snakefile_dir = "0_baseline_LSTM",
-         #      config_path = "1_metab_multitask/1a_multitask_do_gpp_er.yml"),
-         # list(model_id = "2_multitask_dense",
-         #      snakefile_dir = "2_multitask_dense",
-         #      config_path = "2_multitask_dense/config.yml"),
-         list(model_id = "3_baseline_med_obs",
+      list(list(model_id = "0_baseline_LSTM",
+                  snakefile_dir = "0_baseline_LSTM",
+                  config_path = "0_baseline_LSTM/config.yml"),
+         #the 1_ models use the same model and therefore
+         #the same Snakefile as the 0_baseline_LSTM run
+         list(model_id = "1_metab_multitask",
               snakefile_dir = "0_baseline_LSTM",
-              config_path = "3_baseline_med_obs/config.yml")),
-    iteration = "list"
+              config_path = "1_metab_multitask/config.yml"),
+         list(model_id = "1a_multitask_do_gpp_er",
+              snakefile_dir = "0_baseline_LSTM",
+              config_path = "1_metab_multitask/1a_multitask_do_gpp_er.yml"),
+         list(model_id = "2_multitask_dense",
+              snakefile_dir = "2_multitask_dense",
+              config_path = "2_multitask_dense/config.yml")),
+          iteration = "list"
   ),
 
   # produce the final metrics files (and all intermediate files including predictions)
@@ -140,23 +137,17 @@ p2a_targets_list <- list(
     config_path <- file.path(base_dir, p2a_model_ids$config_path)
     # this path is relative to the Snakefile
     prepped_data_file <- file.path("../../../out/models",p2a_model_ids$model_id, "prepped.npz")
-    weights_trained_file <- file.path("../../../out/models",p2a_model_ids$model_id,"nstates_10/nep_100/rep_0/train_weights")
-    output_feather_file <- file.path("../../../out/models",p2a_model_ids$model_id,"nstates_10/nep_100/rep_0/preds.feather")
-    
+
     # First create the prepped data files if they are not already.
     # These are needed to make the predictions.
-    system(stringr::str_glue("snakemake {prepped_data_file} -s {snakefile_path} --configfile {config_path} -j -f"))
+    system(stringr::str_glue("snakemake {prepped_data_file} -s {snakefile_path} --configfile {config_path} -j"))
 
-    system(stringr::str_glue("snakemake {weights_trained_file} -s {snakefile_path} --configfile {config_path} -j -f"))
-    
-    system(stringr::str_glue("snakemake {output_feather_file} -s {snakefile_path} --configfile {config_path} -j -f"))
-    
     # Then touch all of the existing files. This makes the weights "up-to-date"
     # so snakemake doesn't train the models again
-    #system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch"))
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch"))
 
     # then run the snakemake pipeline to produce the predictions and metric files
-    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j -f"))
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete"))
     
     # print out the metrics file name for the target
     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv")

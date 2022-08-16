@@ -1,6 +1,6 @@
 exp_name: "1a_multitask_do_gpp_er"
 
-site_set: "well_obs"
+site_set: "med_obs"
 
 x_vars: ['pr','SLOPE','tmmx','srad','CAT_BASIN_SLOPE','CAT_ELEV_MEAN','CAT_BASIN_AREA','CAT_IMPV11', 'CAT_CNPY11_BUFF100','CAT_TWI']
 
