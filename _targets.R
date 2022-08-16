@@ -37,7 +37,7 @@ params_select = c("Dissolved oxygen","Dissolved oxygen saturation",
                   "Dissolved oxygen saturation, field", "Dissolved oxygen, field",
                   "Dissolved oxygen, field, mean")
 
-# Define DO units of interestin WQP data
+# Define DO units of interest in WQP data
 units_select = c("mg/l")
 
 # Define hydrologic event types in harmonized WQP data to exclude

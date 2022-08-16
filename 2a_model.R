@@ -50,7 +50,7 @@ p2a_targets_list <- list(
     p2_well_observed_sites[(p2_well_observed_sites %in% p2a_trn_sites) | (p2_well_observed_sites %in% val_sites)]
   ),
 
-  # get sites that we use for trning, but also have data in the val time period
+  # get sites that we use for training, but also have data in the val time period
   tar_target(
     p2a_trn_sites_w_val_data,
     p2_daily_with_seg_ids  %>%
@@ -62,12 +62,6 @@ p2a_targets_list <- list(
       summarise(val_count = sum(!is.na(do_mean))) %>%
       filter(val_count > 0) %>%
       pull(site_id)
-  ),
-  
-  # sites that are trning sites but do not have data in val period
-  tar_target(
-    p2a_trn_only,
-    p2a_trn_sites[!p2a_trn_sites %in% p2a_trn_sites_w_val_data]
   ),
   
   # Summarize site splits/groups based on the above 4 targets
