@@ -12,7 +12,7 @@
 #' @param out_file character string indicating the name of the saved file, 
 #' including file path and extension.
 #' @param huc6_select vector of character string(s) indicating the HUC6 basins that
-#' should be displayed on the map. Defautls to "020402" to map the lower
+#' should be displayed on the map. Defaults to "020402" to map the lower
 #' Delaware River Basin.
 #' @param basin_bbox vector indicating xmin, ymin, xmax, and ymax to use for defining
 #' the basin for plotting.
@@ -42,7 +42,7 @@ map_sites <- function(flowlines,
                       basin_bbox = c(xmin = -76.39556, ymin = 39.5, xmax = -74.37121, ymax = 40.89106),
                       epsg_out = 3857, 
                       lat_breaks = seq(from = 39.6, to = 41, by = 0.4),
-                      lon_breaks = seq(from = -74.5, to = -76, by = -0.5),
+                      lon_breaks = seq(from = -74.5, to = -76.5, by = -0.5),
                       site_type_colors = c("#E69F00","#56B4E9","#009E73"),
                       fig_width_inches = 7.8, fig_height_inches = 6.5){
   
@@ -70,7 +70,6 @@ map_sites <- function(flowlines,
   basin_boundary <- nhdplusTools::get_huc12(AOI = subset_bbox) %>%
     mutate(huc6 = str_sub(huc12,0,6)) %>%
     filter(huc6 == huc6_select) %>%
-    sf::st_buffer(0) %>%
     sf::st_union() %>%
     sf::st_as_sf() %>%
     sf::st_transform(crs = epsg_out) %>%
