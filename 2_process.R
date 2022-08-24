@@ -140,34 +140,15 @@ p2_targets_list <- list(
    }
  ),
  
- # make list of "moderately-observed" sites
- tar_target(
-   p2_med_observed_sites,
-   p2_sites_w_segs %>%
-     filter(count_days_nwis >= 100) %>%
-     pull(site_id)
- ),
- 
- # filter p1_reaches_sf to segments with "well-observed" sites
- tar_target(   
-   p2_med_observed_reaches,
-   {
-     med_obs_reach_ids <- p2_sites_w_segs %>%
-       filter(site_id %in% p2_med_observed_sites) %>% 
-       pull(COMID)
-     p1_nhd_reaches_sf %>% filter(COMID %in% med_obs_reach_ids)
-   }
- ),
- 
  # Estimate daily (normalized) max-light
  tar_target(
    p2_daily_max_light,
    { 
-     calc_seg_light_ratio(p2_med_observed_reaches, 
+     calc_seg_light_ratio(p2_well_observed_reaches, 
                           start_date = earliest_date, 
                           end_date = latest_date)
    },
-   pattern = map(p2_med_observed_reaches)
+   pattern = map(p2_well_observed_reaches)
  ),
 
  # Filter daily metabolism estimates based on model diagnostics
@@ -206,7 +187,7 @@ p2_targets_list <- list(
    p2_met_data_at_obs_sites,
    {
      reticulate::source_python("2_process/src/subset_nc_to_comid.py")
-     subset_nc_to_comids(p1_drb_nhd_gridmet, p2_med_observed_reaches$COMID) %>%
+     subset_nc_to_comids(p1_drb_nhd_gridmet, p2_well_observed_reaches$COMID) %>%
        as_tibble() %>%
        relocate(c(COMID,time), .before = "tmmx")
    }
