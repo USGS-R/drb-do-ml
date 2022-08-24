@@ -122,10 +122,11 @@ p2_targets_list <- list(
   ),
 
   # make list of "well-observed" sites
+  # for now only considering NWIS sites
   tar_target(
    p2_well_observed_sites,
    p2_sites_w_segs %>% 
-     filter(count_days_total >= min_obs_days) %>% 
+     filter(count_days_nwis >= min_obs_days) %>% 
      pull(site_id)
  ),
  
