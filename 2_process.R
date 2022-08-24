@@ -125,7 +125,7 @@ p2_targets_list <- list(
   tar_target(
    p2_well_observed_sites,
    p2_sites_w_segs %>% 
-     filter(count_days_total > 300) %>% 
+     filter(count_days_total >= min_obs_days) %>% 
      pull(site_id)
  ),
  
