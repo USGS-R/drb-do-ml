@@ -1,4 +1,5 @@
-# [Lauren] plot_daily_data and plot_inst_data not currently used to build targets, but leaving the functions here for reference
+# [Lauren] plot_daily_data and plot_inst_data are not currently used to build 
+# any targets, leaving the functions here for reference
 source("3_visualize/src/plot_daily_data.R")
 source("3_visualize/src/plot_inst_data.R")
 source("3_visualize/src/do_overview_plots.R")
@@ -7,7 +8,9 @@ source("3_visualize/src/map_sites.R")
 p3_targets_list <- list(
   
   # Render data summary report (report target has format = "file")
-  tarchetypes::tar_render(p3_wqp_spC_report, "3_visualize/src/report-do-inventory.Rmd",output_dir = "3_visualize/out"),
+  tarchetypes::tar_render(p3_wqp_report, 
+                          path = "3_visualize/src/report-do-inventory.Rmd",
+                          output_dir = "3_visualize/out"),
   
   # Generate summary plots (all daily and inst data)
   tar_target(
@@ -46,26 +49,23 @@ p3_targets_list <- list(
                     min_count = 300, fig_cols = 1, fig_width = 4, fig_height = 10),
     format = "file"
   ),
-  
-  
-  tar_target(
-    p3_well_observed_site_data,
-    {
-      p2_sites_w_segs %>%
-        mutate(partition = case_when(site_id %in% val_sites ~ "val",
-                                     site_id %in% tst_sites ~ "test",
-                                     site_id %in% p2a_trn_only ~ "train",
-                                     site_id %in% p2a_trn_sites_w_val_data ~ "train/val")) %>%
-        filter(!is.na(partition)) %>%
-        st_as_sf(., coords = c("lon", "lat"), crs = 4326)
-    }
-  ),
 
+  
+  # Save png map of site locations
+  tar_target(
+    p3_site_map_png,
+    map_sites(flowlines = p1_nhd_reaches_sf,
+              matched_sites = p2a_site_splits,
+              out_file = "3_visualize/out/do_site_map.png")
+  ),
+  
+  # Save json map of site locations
   tar_target(
     p3_well_observed_site_data_json,
     {
       filename = "3_visualize/out/well_observed_trn_val_test.geojson"
-      st_write(p3_well_observed_site_data, filename, append = FALSE, delete_dsn = TRUE, driver = "GeoJSON", quiet = TRUE)
+      sf::st_write(p2a_site_splits, filename, append = FALSE, delete_dsn = TRUE,
+                   driver = "GeoJSON", quiet = TRUE)
       filename
     },
     format = "file"

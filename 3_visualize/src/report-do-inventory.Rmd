@@ -92,7 +92,7 @@ Combining the harmonized WQP dataset with data from NWIS (which includes data fr
 
 ```{r,echo=FALSE}
 
-site_list_map <- map_sites(site_list)
+site_list_map <- map_sites_leaflet(site_list)
 site_list_map
 
 ```

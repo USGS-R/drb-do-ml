@@ -1,9 +1,10 @@
 library(targets)
 
 options(tidyverse.quiet = TRUE)
-tar_option_set(packages = c("tidyverse", "lubridate","rmarkdown","dataRetrieval",
-                            "knitr","leaflet","sf","sbtools","ggplot2",
-                            "streamMetabolizer")) 
+tar_option_set(packages = c("tidyverse", "lubridate", "rmarkdown", "knitr",
+                            "dataRetrieval", "nhdplusTools", "sbtools",
+                            "leaflet", "sf", "USAboundaries", "cowplot",
+                            "ggspatial", "streamMetabolizer", "reticulate"))
 
 source("1_fetch.R")
 source("2_process.R")
@@ -19,40 +20,47 @@ dir.create("3_visualize/out/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
 
 # Define columns of interest from harmonized WQP data
-wqp_vars_select <- c("MonitoringLocationIdentifier","MonitoringLocationName","LongitudeMeasure","LatitudeMeasure",
-                     "MonitoringLocationTypeName","OrganizationIdentifier","ActivityStartDate","ActivityStartTime.Time",
-                     "ActivityEndDate","CharacteristicName","param_group","param","USGSPCode","ActivityMediaName",
-                     "ResultSampleFractionText","HydrologicCondition","HydrologicEvent","resultVal2","resultUnits2",
-                     "ResultDetectionConditionText","ResultTemperatureBasisText","PrecisionValue","ResultStatusIdentifier",
-                     "final")
+wqp_vars_select <- c("MonitoringLocationIdentifier", "MonitoringLocationName",
+                     "LongitudeMeasure","LatitudeMeasure","MonitoringLocationTypeName",
+                     "OrganizationIdentifier","ActivityStartDate","ActivityStartTime.Time",
+                     "ActivityEndDate","CharacteristicName","param_group","param",
+                     "USGSPCode","ActivityMediaName","ResultSampleFractionText",
+                     "HydrologicCondition","HydrologicEvent","resultVal2","resultUnits2",
+                     "ResultDetectionConditionText","ResultTemperatureBasisText",
+                     "PrecisionValue","ResultStatusIdentifier","final")
 
 # Define WQP CharacteristicNames of interest
-# others: "Dissolved oxygen saturation, field, max","Dissolved oxygen saturation, field, min","Dissolved oxygen, field, max","Dissolved oxygen, field, min")
+# others: "Dissolved oxygen saturation, field, max", "Dissolved oxygen saturation, field, min", 
+# "Dissolved oxygen, field, max", and "Dissolved oxygen, field, min")
 CharNames_select = c("Dissolved oxygen (DO)","Dissolved oxygen saturation")
-params_select = c("Dissolved oxygen","Dissolved oxygen saturation","Dissolved oxygen saturation, field",
-                  "Dissolved oxygen, field","Dissolved oxygen, field, mean")
+params_select = c("Dissolved oxygen","Dissolved oxygen saturation",
+                  "Dissolved oxygen saturation, field", "Dissolved oxygen, field",
+                  "Dissolved oxygen, field, mean")
 
-# Define DO units of interest
+# Define DO units of interest in WQP data
 units_select = c("mg/l")
 
 # Define hydrologic event types in harmonized WQP data to exclude
 omit_wqp_events <- c("Spill","Volcanic action")
 
-# Define USGS parameter codes
+# Define USGS parameter codes of interest
+# 00300 = "dissolved oxygen, in milligrams per liter"
 pcode_select <- c("00300") 
 
 # Define minor HUCs (hydrologic unit codes) that make up the DRB
 # Lower Delaware: 020402 accounting code 
 drb_huc8s <- c("02040201","02040202","02040203","02040204","02040205","02040206","02040207")
 
-# Define USGS site types for which to download NWIS data (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
+# Define USGS site types for which to download NWIS data 
+# (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
 site_tp_select <- c("ST","ST-CA","SP") 
 
 # Omit undesired sites
 # sites 01412350, 01484272 coded as site type "ST" but appear to be tidally-influenced
 omit_nwis_sites <- c("01412350","01484272", "01477050", "01467200", "014670261", "01464600")
 
-# Define USGS stat codes for continuous sites that only report daily statistics (https://help.waterdata.usgs.gov/stat_code) 
+# Define USGS stat codes for continuous sites that only report daily statistics 
+# (https://help.waterdata.usgs.gov/stat_code) 
 stat_cd_select <- c("00001","00002","00003")
 
 # Define earliest startDate and latest endDate for NWIS data retrievals

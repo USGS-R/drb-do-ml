@@ -50,7 +50,7 @@ p2a_targets_list <- list(
     p2_well_observed_sites[(p2_well_observed_sites %in% p2a_trn_sites) | (p2_well_observed_sites %in% val_sites)]
   ),
 
-  # get sites that we use for trning, but also have data in the val time period
+  # get sites that we use for training, but also have data in the val time period
   tar_target(
     p2a_trn_sites_w_val_data,
     p2_daily_with_seg_ids  %>%
@@ -64,13 +64,29 @@ p2a_targets_list <- list(
       pull(site_id)
   ),
   
-  # sites that are trning sites but do not have data in val period
+  # Summarize site splits/groups based on the above 3 targets
   tar_target(
-    p2a_trn_only,
-    p2a_trn_sites[!p2a_trn_sites %in% p2a_trn_sites_w_val_data]
+    p2a_site_splits,
+    p2_sites_w_segs %>%
+      filter(site_id %in% c(p2a_trn_sites, val_sites, tst_sites)) %>%
+      mutate(site_type = case_when(
+        site_id %in% p2a_trn_sites & 
+          !site_id %in% p2a_trn_sites_w_val_data ~ "train",
+        site_id %in% p2a_trn_sites_w_val_data ~ "train/val",
+        site_id %in% val_sites ~ "validation",
+        site_id %in% tst_sites ~ "test",
+        TRUE ~ NA_character_),
+        # assign epsg codes based on "datum" column and convert
+        # data frame to sf object
+        epsg = case_when(datum == "NAD83" ~ 4269,
+                         datum == "WGS84" ~ 4326,
+                         datum == "NAD27" ~ 4267,
+                         datum == "UNKWN" ~ 4326,
+                         datum == "OTHER" ~ 4326)) %>%
+      sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
   ),
 
-
+  
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
   # write met and seg attribute data for trn/val sites to zarr
   # note - I have to subset inputs to only include the train/val sites before 
