@@ -104,9 +104,9 @@ p2a_targets_list <- list(
   tar_target(
     p2a_model_ids,
     # paths are relative to 2a_model/src/models
-      list(list(model_id = "0_baseline_LSTM",
-                  snakefile_dir = "0_baseline_LSTM",
-                  config_path = "0_baseline_LSTM/config.yml"),
+      list(#list(model_id = "0_baseline_LSTM",
+            #      snakefile_dir = "0_baseline_LSTM",
+             #     config_path = "0_baseline_LSTM/config.yml"),
          #the 1_ models use the same model and therefore
          #the same Snakefile as the 0_baseline_LSTM run
          list(model_id = "1_metab_multitask",
