@@ -119,4 +119,24 @@ ax3.text(5,0.005, "Optimal\nfunctional\nperformance", size = 10, color = 'lightg
 
 plt.show()
 
+#%% barplot of rmse
 
+colors = ['#1982c4','#ff595e']
+
+g = sns.FacetGrid(two_models, col = 'metric', height = 6, col_wrap=  3)
+g.map(sns.barplot, 'site_no','rmse','model', hue_order = np.unique(two_models['model']), order = np.unique(two_models['site_no']), palette = sns.color_palette(colors))
+plt.legend(title = "Model", bbox_to_anchor=(1.02, 0.55), loc='upper left', borderaxespad=0)
+ax1, ax2, ax3 = g.axes
+
+ax1.set_title('DO min')
+ax2.set_title('DO mean')
+ax3.set_title('DO max')
+
+#ax1.set_xticklabels(ax1.get_xticklabels(), rotation=90)
+
+for axes in g.axes.flat:
+    _ = axes.set_xticklabels(axes.get_xticklabels(), rotation=90)
+    
+
+plt.tight_layout()
+plt.show()
