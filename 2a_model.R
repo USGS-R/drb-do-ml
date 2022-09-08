@@ -163,7 +163,7 @@ p2a_targets_list <- list(
     system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch"))
 
     # then run the snakemake pipeline to produce the predictions and metric files
-    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete"))
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete --rerun-triggers mtime"))
     
     # print out the metrics file name for the target
     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv")
