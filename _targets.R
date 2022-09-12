@@ -51,6 +51,14 @@ pcode_select <- c("00300")
 # Lower Delaware: 020402 accounting code 
 drb_huc8s <- c("02040201","02040202","02040203","02040204","02040205","02040206","02040207")
 
+# Define the url for the NHGFv1-NHDv2 crosswalk table. Note that there are
+# multiple versions of the crosswalk table in USGS-R/drb-network-prep. Read
+# in the NHM-NHDv2 crosswalk file that contains all NHDPlusv2 COMIDs in the
+# DRB (including divergent reaches and reaches without NHDv2 catchments).
+GFv1_NHDv2_xwalk_url <- paste0("https://raw.githubusercontent.com/USGS-R/drb-network-prep/",
+                               "3637931f5a17469a4234eaed3d20ed44ba45958d",
+                               "/2_process/out/GFv1_NHDv2_xwalk.csv")
+
 # Define USGS site types for which to download NWIS data 
 # (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
 site_tp_select <- c("ST","ST-CA","SP") 

@@ -39,7 +39,9 @@ download_nhdplus_flowlines <- function(comid = NULL, huc8 = NULL){
         flines_sub_out <- flines_sub %>%
           mutate(across(c(lakefract, surfarea, rareahload,hwnodesqkm), as.character))
         }) %>%
-      bind_rows()
+      bind_rows() %>%
+      # Reformat variable names to uppercase
+      rename_with(.,toupper,id:enabled)
     
   } else {
     
