@@ -1,7 +1,5 @@
 exp_name: "2_multitask_dense"
 
-site_set: "med_obs"
-
 x_vars: ['pr','SLOPE','tmmx','tmmn','srad','CAT_BASIN_SLOPE','CAT_ELEV_MEAN','CAT_BASIN_AREA','CAT_IMPV11', 'CAT_CNPY11_BUFF100','CAT_TWI']
 
 y_vars: ['do_min', 'do_mean', 'do_max', 'GPP', 'ER', 'K600', 'depth', 'temp.water']

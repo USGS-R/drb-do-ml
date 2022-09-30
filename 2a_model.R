@@ -108,15 +108,16 @@ p2a_targets_list <- list(
       inputs_and_outputs <- inputs %>%
           left_join(p2a_do_and_metab, by=c("site_id", "date"))
       
+      # note that if the name of well_obs_io.zarr is changed below, this change must
+      # also be made in 2a_model/src/Snakefile_base.smk (lines 32, 103, and 177) and
+      # in 2a_model/src/visualize_models.smk (line 6). 
       write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
     },
     format="file"
   ),
   
- 
-  
   # gather model ids - add to this list when you want to reproduce
-  # outputs from a new model #add medium observed sites
+  # outputs from a new model 
   tar_target(
     p2a_model_ids,
     # paths are relative to 2a_model/src/models
@@ -144,10 +145,7 @@ p2a_targets_list <- list(
     {
     #we need these to make the prepped data file
     p2a_well_obs_data
-    
-    #add in the medium observed data
-    p2a_med_obs_data
-    
+
     base_dir <- "2a_model/src/models"
     snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
     config_path <- file.path(base_dir, p2a_model_ids$config_path)
@@ -170,27 +168,6 @@ p2a_targets_list <- list(
     },
     format="file",
     pattern = map(p2a_model_ids)
-  ),
-  
-  
-  ## CREATE EQUIVALENT TARGETS FOR "MODERATELY-OBSERVED SITES" ##
-  # write input/output data to zarr for the medium-observed sites
-  tar_target(
-    p2a_med_obs_data,
-    {
-      inputs_med_obs <- p2a_met_data_w_sites %>%
-        # include all med-obs sites not in testing sites
-        filter(site_id %in% p2_med_observed_sites, 
-               !site_id %in% tst_sites) %>%
-        inner_join(p2a_seg_attr_w_sites, by = c("site_id","COMID"))
-      
-      inputs_and_outputs_med_obs <- inputs_med_obs %>%
-        left_join(p2a_do_and_metab, by = c("site_id", "date"))
-      
-      write_df_to_zarr(inputs_and_outputs_med_obs, c("site_id","date"),
-                       "2a_model/out/med_obs_io.zarr")
-    },
-    format = "file"
   )
   
 )

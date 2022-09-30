@@ -67,6 +67,12 @@ stat_cd_select <- c("00001","00002","00003")
 earliest_date <- "1979-10-01"
 latest_date <- "2021-12-31"
 
+# What is the minimum number of unique observation-days a site should have
+# to be considered "well-observed" and therefore, included in the model?
+# Note that if min_obs_days is changed from 100 below, you may want to 
+# reconsider the train/test model splits. 
+min_obs_days <- 100
+
 # Change dummy date to force re-build of NWIS DO sites and data download
 dummy_date <- "2022-06-15"
 
