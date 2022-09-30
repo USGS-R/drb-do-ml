@@ -109,7 +109,8 @@ p2a_targets_list <- list(
           left_join(p2a_do_and_metab, by=c("site_id", "date"))
       
       # note that if the name of well_obs_io.zarr is changed below, this change must
-      # also be made in 2a_model/src/Snakefile_base.smk (lines 32, 103, and 177).
+      # also be made in 2a_model/src/Snakefile_base.smk (lines 32, 103, and 177) and
+      # in 2a_model/src/visualize_models.smk (line 6). 
       write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
     },
     format="file"
