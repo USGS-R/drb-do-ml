@@ -123,6 +123,8 @@ p2_targets_list <- list(
 
   # make list of "well-observed" sites
   # for now only considering NWIS sites
+  # only sites with observations above `min_obs_days` are kept
+  # where `min_obs_days` is defined in _targets.R
   tar_target(
    p2_well_observed_sites,
    p2_sites_w_segs %>% 
