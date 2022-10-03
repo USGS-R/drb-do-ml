@@ -134,27 +134,26 @@ p1_targets_list <- list(
     command = target_summary_stats(p1_inst_data,"Value_Inst","1_fetch/log/inst_timeseries_summary.csv"),
     format = "file"
   ),
-  
-  # Fetch NHM-NHDv2 crosswalk table from USGS-R/drb-network-prep.
+
+  # Create sf polygon that represents the area of interest (AOI) based 
+  # on the HUC8 identifiers defined in _targets.R
   tar_target(
-    p1_GFv1_NHDv2_xwalk,
-    read_csv(GFv1_NHDv2_xwalk_url, col_types = cols(.default = "c"))
-  ),
-  
-  # Reshape crosswalk table to return all NHDPlusv2 COMIDs in the DRB.
-  tar_target(
-    p1_drb_comids_all_tribs,
-    p1_GFv1_NHDv2_xwalk %>%
-      select(PRMS_segid, segidnat, comid_cat) %>%
-      tidyr::separate_rows(comid_cat, sep = ";") %>%
-      rename(COMID = comid_cat)
+    p1_lower_drb_aoi,
+    drb_huc8s %>%
+      lapply(.,function(x){
+        # download huc8 basin polygon
+        nhdplusTools::get_huc8(id = x)
+      }) %>%
+      bind_rows() %>%
+      sf::st_bbox() %>%
+      sf::st_as_sfc()
   ),
   
   # Fetch NHDv2 flowline reaches for the full DRB, and then subset data frame
   # to only include flowlines within the lower DRB. 
   tar_target(
     p1_nhd_reaches_sf,
-    download_nhdplus_flowlines(comid = p1_drb_comids_all_tribs$COMID) %>%
+    download_nhdplus_flowlines(aoi = p1_lower_drb_aoi) %>%
       mutate(huc8 = stringr::str_sub(REACHCODE, start = 1, end = 8)) %>%
       filter(huc8 %in% drb_huc8s)
   ),
