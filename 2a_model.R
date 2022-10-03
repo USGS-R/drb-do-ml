@@ -1,4 +1,5 @@
 source("2a_model/src/model_ready_data_utils.R")
+source("2a_model/src/write_model_config_files.R")
 
 p2a_targets_list <- list(
 
@@ -85,7 +86,32 @@ p2a_targets_list <- list(
                          datum == "OTHER" ~ 4326)) %>%
       sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
   ),
-
+  
+  # Write baseline model config file
+  tar_target(
+    p2a_config_base_yml,
+    write_base_config_file(fileout = "2a_model/src/models/config_base_test.yml", 
+                           model_save_dir = "../../../out/models", 
+                           seed = seed, 
+                           n_reps = n_model_reps, 
+                           trn_offset = trn_offset, 
+                           tst_val_offset = tst_val_offset, 
+                           early_stopping = early_stopping, 
+                           epochs = epochs, 
+                           hidden_size = hidden_size, 
+                           dropout = dropout,
+                           recurrent_dropout = recurrent_dropout, 
+                           finetune_learning_rate = finetune_learning_rate,
+                           val_sites = val_sites, 
+                           test_sites = tst_sites,
+                           train_start_date = train_start_date, 
+                           train_end_date = train_end_date, 
+                           val_start_date = val_start_date, 
+                           val_end_date = val_end_date,
+                           test_start_date = test_start_date, 
+                           test_end_date = test_end_date),
+    format = "file"
+  ),
   
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
   # write met and seg attribute data for trn/val sites to zarr

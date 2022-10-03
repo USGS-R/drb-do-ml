@@ -5,7 +5,7 @@ tar_option_set(packages = c("tidyverse", "lubridate", "rmarkdown", "knitr",
                             "dataRetrieval", "nhdplusTools", "sbtools",
                             "leaflet", "sf", "USAboundaries", "cowplot",
                             "ggspatial", "patchwork", "streamMetabolizer", 
-                            "reticulate"))
+                            "reticulate", "yaml"))
 
 source("1_fetch.R")
 source("2_process.R")
@@ -20,6 +20,8 @@ dir.create("2_process/log/", showWarnings = FALSE)
 dir.create("3_visualize/out/", showWarnings = FALSE)
 dir.create("3_visualize/out/nhdv2_attr_png/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
+
+# 1) Configure data pipeline inputs/variables
 
 # Define columns of interest from harmonized WQP data
 wqp_vars_select <- c("MonitoringLocationIdentifier", "MonitoringLocationName",
@@ -78,16 +80,32 @@ min_obs_days <- 100
 # Change dummy date to force re-build of NWIS DO sites and data download
 dummy_date <- "2022-06-15"
 
-# test and validation sites
+
+#2) Configure model inputs/variables 
+
+# Define test and validation sites
 val_sites <- c("01472104", "01473500", "01481500")
 tst_sites <- c("01475530", "01475548")
 
 train_start_date <- '1980-01-01'
-train_end_date <- '2017-01-01'
-val_start_date <- '2017-01-01'
-val_end_date <- '2019-01-01'
-test_start_date <- '2019-01-01'
-test_end_date <- '2022-01-01'
+train_end_date <- '2014-10-01'
+val_start_date <- '2014-10-01'
+val_end_date <- '2015-10-01'
+test_start_date <- '2015-10-01'
+test_end_date <- '2022-10-01'
+
+# Define model parameters
+n_model_reps <- 1
+trn_offset <- 1
+tst_val_offset <- 1
+epochs <- 100
+hidden_size <- 10
+dropout <- 0.2
+recurrent_dropout <- 0.2
+finetune_learning_rate <- 0.01
+# random seed for training False==No seed, otherwise specify the seed
+seed <- FALSE
+early_stopping <- FALSE
 
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
