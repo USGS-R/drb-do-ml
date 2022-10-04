@@ -16,7 +16,7 @@ from joblib import Parallel, delayed
 import math
 import numpy as np
 import os
-from scipy.stats.stats import pearsonr
+from scipy.stats import pearsonr
 
 #%%
 class pre_proc_func:

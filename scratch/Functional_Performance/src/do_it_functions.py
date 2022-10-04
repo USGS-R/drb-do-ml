@@ -5,15 +5,19 @@ Created on Fri May 27 10:00:43 2022
 @author: ggorski
 """
 import pandas as pd
-import it_functions
+#import sys
+#sys.path.insert(0, 'C:\\Users\\ggorski\\OneDrive - DOI\\USGS_ML\\DO\\drb-do-ml\\scratch\\Functional_Performance')
+import it_functions as it_functions
 import numpy as np
 import math
-import pickle
+import xarray as xr
 
-def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform):
+def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform, models, replicate, base_file_path):
     '''
     Parameters
     ----------
+    inputs_df : pandas dataframe
+        observed io data from zarr file
     source : str
         source for calculations (srad, tmmx, tmmn)
     sink : list
@@ -22,10 +26,16 @@ def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform):
         site number
     log_transform : boolean
         should the source variable be log10 transformed, should only be log10 transformed for discharge
+    models: iterable (list or tuple)
+        the models for which you want do the calcs (e.g., ['0_baseline_LSTM','2_multitask_dense'])
+    replicate: int
+        which replicate you want to do the calcs for
+    base_file_path: str
+        filepath where the model results are
         
     Returns
     -------
-    None.
+    Information theory metric results (transfer entropy) as a nested dictionary
 
     '''
     
@@ -36,36 +46,25 @@ def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform):
            'site_min_confidence', 'site_name', 'sph', 'srad', 'temp.water', 'tmmn',
            'tmmx', 'velocity', 'vs']]
     targets_site = inputs_df.loc[site][['do_min','do_mean','do_max']]
-    targets_site['do_range'] = targets_site['do_max']-targets_site['do_min']
     
-    #0 baseline LSTM
-    v0_bl = pd.read_feather('scratch/4_func_perf/in/results_tmmx_tmmn/models/0_baseline_LSTM/nstates_10/nep_100/rep_0/preds.feather')
-    bl = v0_bl[v0_bl['site_id'] == site].set_index('date')[['do_min','do_mean','do_max']]
-    bl['do_range'] = bl['do_max']-bl['do_min']
-
-    #1 metab 
-    v1_multi = pd.read_feather('scratch/4_func_perf/in/results_tmmx_tmmn/models/1_metab_multitask/nstates_10/nep_100/rep_0/preds.feather')
-    multi = v1_multi[v1_multi['site_id'] == site].set_index('date')[['do_min','do_mean','do_max']]
-    multi['do_range'] = multi['do_max']-multi['do_min']
-
-    #2 multi-task
-    v1a_metab = pd.read_feather('scratch/4_func_perf/in/results_tmmx_tmmn/models/1a_multitask_do_gpp_er/nstates_10/nep_100/rep_0/preds.feather')
-    metab = v1a_metab[v1a_metab['site_id'] == site].set_index('date')[['do_min','do_mean','do_max']]
-    metab['do_range'] = metab['do_max']-metab['do_min']
-    
-    #3 multi-task dense
-    v2_metab_dense = pd.read_feather('scratch/4_func_perf/in/results_tmmx_tmmn/models/2_multitask_dense/nstates_10/nep_100/rep_0/preds.feather')
-    metab_dense = v2_metab_dense[v2_metab_dense['site_id'] == site].set_index('date')[['do_min','do_mean','do_max']]
-    metab_dense['do_range'] = metab_dense['do_max']-metab_dense['do_min']
-
-    #create targets dictionary
-    tar_dict = {'observed':targets_site, 'baseline':bl,
-                'multitask':multi, 'metab':metab, 'metab_dense':metab_dense}
+    if 'do_range' in sink:
+        targets_site['do_range'] = targets_site['do_max']-targets_site['do_min']
+        
+    tar_dict = {}
+    for m in models:
+        file_path = f'{base_file_path}/{m}/nstates_10/nep_100/rep_{replicate}/preds.feather'
+        model_preds = pd.read_feather(file_path)
+        model_preds = model_preds[model_preds['site_id'] == site].set_index('date')[['do_min','do_mean','do_max']]
+        model_preds['do_range'] = model_preds['do_max']-model_preds['do_min']
+        #create targets dictionary
+        tar_dict[m] = model_preds
+    tar_dict['observed'] = targets_site
 
 
     
     #create dictionary to store calculations in
-    max_it = {'do_min': {}, 'do_mean': {}, 'do_max':{}, 'do_range':{}}
+    #max_it = {'do_min': {}, 'do_mean': {}, 'do_max':{}, 'do_range':{}}
+    max_it = {s: {} for s in sink}
     #create a nested dictionary for each DO variable to store it calcs
     #TE0 = Transfer Entropy at a time lag of 0, MI = mututal information,
     #TEmax is the maximum TE, TEmaxT is the time lag of the maximum TE,
@@ -131,7 +130,7 @@ def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform):
             M_xy_bound = np.delete(M_x_bound, np.where((M_x_bound[:,1] < y_bounds[0]*1.1) | (M_x_bound[:,1] > y_bounds[1]*1.1)), axis = 0)
 
             #calc it metrics and store in the dictionary it_dict
-            it_dict[snk] = it_functions.calc_it_metrics(M_xy_bound, Mswap, n_lags, nbins, calc_swap = False, alpha = 0.05, ncores = 8)
+            it_dict[snk] = it_functions.calc_it_metrics(M_xy_bound, Mswap, n_lags, nbins, calc_swap = False, alpha = 0.05, ncores = 7)
         
         
         print('Storing it metrics '+model+' '+site)
@@ -154,7 +153,6 @@ def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform):
                 MImaxcrit = True
             else:
                 MImaxcrit = False
-            print(snk, MImax)
             #do min
             max_it[snk]['model'].append(model)
             mse = np.square(np.subtract(obs_pred[snk+'_pred'],obs_pred[snk])).mean()
@@ -198,16 +196,86 @@ def diff_from_obs(df):
     diff_df['model'] = df['model']
     return diff_df.iloc[1:5,:]
 
-def site_it_metrics(inputs_df, source, sink, sites, out_file):
-    #function for calculating the it metrics for each site
+def site_it_metrics(inputs_df, source, sink, sites, models, replicate, base_file_path):
+    #wrapper function for calculating the it metrics for each site
     max_it_site = {}
-    for site in sites:
-        if site == '014721254' or site == '014721259':
-            continue
-        max_it = calc_it_metrics_sites(inputs_df, source, sink, site, log_transform=False)
+    for i,site in enumerate(sites):
+
+        print('----------------\n', site,' ', i+1, ' of ', len(sites),' sites')        
+
+        max_it = calc_it_metrics_sites(inputs_df, source, sink, site, log_transform=False,
+                                       models = models, replicate = replicate, base_file_path = base_file_path)
         
         max_it_site[site] = max_it
+
+    return max_it_site        
+
+
+def get_max_it_df(input_file, models, base_file_path, output_file, replicate, sink,
+                  source='srad', sites = "all"):
+    '''
+    This function returns the functional performance (Transfer Entropy (TE) and 
+    Mutual Information (MI)) for all models specified, all sinks specified, for
+    the specified source, and for _one_ replicate. 
+    Parameters
+    ----------
+    inputs_file : str
+        path to input zarr file
+    models : iterable (list or tuple)
+        the models for which you want to do the calcs (e.g., ['0_baseline_LSTM', '2_multitask_dense'])
+    base_file_path: str
+        filepath where the model results are (e.g., "2a_model/out/models/")
+    output_file: str
+        filepath where the results should be written, should be .csv
+    replicate : int
+        which replicate you want to do the calcs for
+    sink : list
+        sinks ['do_min', 'do_mean', 'do_max']
+    source : str
+        source for calculations (srad, tmmx, tmmn)
+    sites : chr or list
+        if "all" then it metrics are calculated for all sites, if a list is given then 
+        calcs are made only for those sites
         
-    it_metrics_file = open(out_file, "wb")
-    pickle.dump(max_it_site, it_metrics_file)
-    it_metrics_file.close()
+    Returns
+    -------
+    a Pandas DataFrame with columns:
+        `model,rmse,TE{0-8,max,maxt,maxcrit},MI{0-8,max,maxt,maxcrit},metric,site,rep_id`
+    '''
+    inputs = xr.open_zarr(input_file,consolidated=False)
+    inputs_df = inputs.to_dataframe()
+    
+    if isinstance(sites, str):
+        assert sites=='all','sites can either be "all" for all sites or a list'
+        sites = inputs_df.index.unique('site_id')
+        sites = sites.drop(['014721254', '014721259'])
+    else:
+        assert isinstance(sites,list),'sites can either be "all" for all sites or a list'
+         
+    
+    max_it_site = site_it_metrics(inputs_df, source, sink, sites, models,
+                              replicate, base_file_path)
+
+    do_all_sites_list = []
+    #do_diff_all_sites_list = []
+    
+    for i,site in enumerate(sites):
+    
+        max_it = max_it_site[site]
+        sink_dfs = []
+        for s in sink:
+            do_sink_df = pd.DataFrame(max_it[s])
+            do_sink_df['metric'] = s
+            sink_dfs.append(do_sink_df)
+        do_df = pd.concat(sink_dfs)
+        do_df['site'] = site
+    
+        do_all_sites_list.append(do_df)
+        
+    do_all_sites = pd.concat(do_all_sites_list)
+    
+    do_all_sites.to_csv(output_file)
+    
+
+
+
