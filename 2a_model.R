@@ -132,6 +132,15 @@ p2a_targets_list <- list(
     format = "file"
   ),
   
+  # Write model config file for 2_multitask_dense
+  tar_target(
+    p2a_config_multitask_dense_yml,
+    write_config_file(cfg_options = multitask_dense_config_options,
+                      fileout = "2a_model/src/models/2_multitask_dense/config.yml",
+                      exp_name = "2_multitask_dense"),
+    format = "file"
+  ),
+  
   ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
   # write met and seg attribute data for trn/val sites to zarr
   # note - I have to subset inputs to only include the train/val sites before 

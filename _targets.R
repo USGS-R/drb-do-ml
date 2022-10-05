@@ -152,6 +152,13 @@ metab_1b_multitask_config_options <- list(
   lambdas = c(1, 1, 1, 1, 0, 0, 0, 0)
 )
 
+# Model 2: Create a list that contains inputs for the metab_dense model
+multitask_dense_config_options <- list(
+  x_vars = x_vars_global,
+  y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
+  lambdas = c(1, 1, 1, 1, 1, 1, 1, 1)
+)
+
 
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
