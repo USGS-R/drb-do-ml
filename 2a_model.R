@@ -87,29 +87,13 @@ p2a_targets_list <- list(
       sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
   ),
   
-  # Write baseline model config file
+  ## WRITE MODEL CONFIG FILES ##
+  # Write baseline model config file using inputs and parameters defined 
+  # in the _targets.R file.
   tar_target(
     p2a_config_base_yml,
-    write_base_config_file(fileout = "2a_model/src/models/config_base_test.yml", 
-                           model_save_dir = "../../../out/models", 
-                           seed = seed, 
-                           n_reps = n_model_reps, 
-                           trn_offset = trn_offset, 
-                           tst_val_offset = tst_val_offset, 
-                           early_stopping = early_stopping, 
-                           epochs = epochs, 
-                           hidden_size = hidden_size, 
-                           dropout = dropout,
-                           recurrent_dropout = recurrent_dropout, 
-                           finetune_learning_rate = finetune_learning_rate,
-                           val_sites = val_sites, 
-                           test_sites = tst_sites,
-                           train_start_date = train_start_date, 
-                           train_end_date = train_end_date, 
-                           val_start_date = val_start_date, 
-                           val_end_date = val_end_date,
-                           test_start_date = test_start_date, 
-                           test_end_date = test_end_date),
+    write_config_file(cfg_options = base_config_options,
+                      fileout = "2a_model/src/models/config_base.yml"),
     format = "file"
   ),
   

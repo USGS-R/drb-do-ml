@@ -94,18 +94,32 @@ val_end_date <- '2015-10-01'
 test_start_date <- '2015-10-01'
 test_end_date <- '2022-10-01'
 
-# Define model parameters
-n_model_reps <- 1
-trn_offset <- 1
-tst_val_offset <- 1
-epochs <- 100
-hidden_size <- 10
-dropout <- 0.2
-recurrent_dropout <- 0.2
-finetune_learning_rate <- 0.01
-# random seed for training False==No seed, otherwise specify the seed
-seed <- FALSE
-early_stopping <- FALSE
+# Define model parameters and combine within a list that gets
+# used to write a model config file that gets passed to the 
+# snakemake modeling workflow.
+base_config_options <- list(
+  out_dir = "../../../out/models",
+  # random seed for training; If FALSE, no seed. Otherwise, specify the seed:
+  seed = FALSE,
+  num_replicates = 1,
+  trn_offset = 1,
+  tst_val_offset = 1,
+  epochs = 100,
+  hidden_size = 10,
+  dropout = 0.2,
+  recurrent_dropout = 0.2,
+  finetune_learning_rate = 0.01,
+  early_stopping = FALSE,
+  # train/val/test split information is defined above:
+  val_sites = val_sites, 
+  test_sites = tst_sites,
+  train_start_date = train_start_date, 
+  train_end_date = train_end_date, 
+  val_start_date = val_start_date, 
+  val_end_date = val_end_date,
+  test_start_date = test_start_date, 
+  test_end_date = test_end_date
+  )
 
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
