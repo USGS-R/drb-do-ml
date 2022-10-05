@@ -121,6 +121,13 @@ base_config_options <- list(
   test_end_date = test_end_date
   )
 
+model_config_options <- list(
+  x_vars = c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
+             "CAT_BASIN_AREA","CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI"),
+  y_vars = c("do_min","do_mean","do_max"),
+  lambdas = c(1,1,1)
+)
+
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)
 

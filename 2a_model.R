@@ -87,13 +87,22 @@ p2a_targets_list <- list(
       sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
   ),
   
-  ## WRITE MODEL CONFIG FILES ##
+  ## WRITE MODEL CONFIGURATION FILES ##
   # Write baseline model config file using inputs and parameters defined 
   # in the _targets.R file.
   tar_target(
     p2a_config_base_yml,
     write_config_file(cfg_options = base_config_options,
                       fileout = "2a_model/src/models/config_base.yml"),
+    format = "file"
+  ),
+  
+  # Write model config file for 0_baseline_LSTM
+  tar_target(
+    p2a_config_baseline_LSTM_yml,
+    write_config_file(cfg_options = model_config_options,
+                      fileout = "2a_model/src/models/0_baseline_LSTM/config.yml",
+                      exp_name = "0_baseline_LSTM"),
     format = "file"
   ),
   
