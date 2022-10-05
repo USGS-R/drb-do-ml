@@ -1,3 +1,4 @@
+exp_name: "0_baseline_LSTM"
 x_vars:
   - "pr"
   - "SLOPE"
@@ -18,5 +19,4 @@ lambdas:
   - 1
   - 1
   - 1
-exp_name: "0_baseline_LSTM"
  

@@ -94,9 +94,8 @@ val_end_date <- '2015-10-01'
 test_start_date <- '2015-10-01'
 test_end_date <- '2022-10-01'
 
-# Define model parameters and combine within a list that gets
-# used to write a model config file that gets passed to the 
-# snakemake modeling workflow.
+# Define model parameters and combine within a list that gets used to
+# write a base model config file for the snakemake modeling workflow.
 base_config_options <- list(
   out_dir = "../../../out/models",
   # random seed for training; If FALSE, no seed. Otherwise, specify the seed:
@@ -121,12 +120,38 @@ base_config_options <- list(
   test_end_date = test_end_date
   )
 
+# Define global model parameters for the "baseline" deep learning model
+x_vars_global <- c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
+                   "CAT_BASIN_AREA","CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI")
+
+# Model 0: Create a list that contains inputs for the "baseline" deep learning model
 model_config_options <- list(
-  x_vars = c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
-             "CAT_BASIN_AREA","CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI"),
+  x_vars = x_vars_global,
   y_vars = c("do_min","do_mean","do_max"),
   lambdas = c(1,1,1)
 )
+
+# Model 1: Create a list that contains inputs for the metab_multitask model
+metab_multitask_config_options <- list(
+  x_vars = x_vars_global,
+  y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
+  lambdas = c(1, 1, 1, 1, 1, 1, 1, 1)
+)
+
+# Model 1a: Create a list that contains inputs for the 1a_metab_multitask model
+metab_1a_multitask_config_options <- list(
+  x_vars = x_vars_global,
+  y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
+  lambdas = c(1, 1, 1, 1, 1, 0, 0, 0)
+)
+
+# Model 1b: Create a list that contains inputs for the 1b_metab_multitask model
+metab_1b_multitask_config_options <- list(
+  x_vars = x_vars_global,
+  y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
+  lambdas = c(1, 1, 1, 1, 0, 0, 0, 0)
+)
+
 
 # Return the complete list of targets
 c(p1_targets_list, p2_targets_list, p2a_targets_list, p3_targets_list)

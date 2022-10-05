@@ -88,8 +88,7 @@ p2a_targets_list <- list(
   ),
   
   ## WRITE MODEL CONFIGURATION FILES ##
-  # Write baseline model config file using inputs and parameters defined 
-  # in the _targets.R file.
+  # Write base config file using inputs and parameters defined in _targets.R
   tar_target(
     p2a_config_base_yml,
     write_config_file(cfg_options = base_config_options,
@@ -103,6 +102,33 @@ p2a_targets_list <- list(
     write_config_file(cfg_options = model_config_options,
                       fileout = "2a_model/src/models/0_baseline_LSTM/config.yml",
                       exp_name = "0_baseline_LSTM"),
+    format = "file"
+  ),
+  
+  # Write model config file for 1_metab_multitask
+  tar_target(
+    p2a_config_metab_multitask_yml,
+    write_config_file(cfg_options = metab_multitask_config_options,
+                      fileout = "2a_model/src/models/1_metab_multitask/config.yml",
+                      exp_name = "1_metab_multitask"),
+    format = "file"
+  ),
+  
+  # Write model config file for 1a_multitask_do_gpp_er
+  tar_target(
+    p2a_config_1a_metab_multitask_yml,
+    write_config_file(cfg_options = metab_1a_multitask_config_options,
+                      fileout = "2a_model/src/models/1_metab_multitask/1a_multitask_do_gpp_er.yml",
+                      exp_name = "1a_multitask_do_gpp_er"),
+    format = "file"
+  ),
+  
+  # Write model config file for 1b_multitask_do_gpp
+  tar_target(
+    p2a_config_1b_metab_multitask_yml,
+    write_config_file(cfg_options = metab_1b_multitask_config_options,
+                      fileout = "2a_model/src/models/1_metab_multitask/1b_multitask_do_gpp.yml",
+                      exp_name = "1b_multitask_do_gpp"),
     format = "file"
   ),
   

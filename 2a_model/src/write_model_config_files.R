@@ -8,7 +8,7 @@
 #' @param fileout character string indicating the name of the saved yml file, 
 #' including file path and .yml extension.
 #' @param ... optional; additional parameters can be passed as inputs to the 
-#' model config file.
+#' model config file such as the experiment name.
 #' 
 #' @return 
 #' Returns a saved yml file that contains all of the model inputs/parameters 
@@ -16,7 +16,7 @@
 #' 
 write_config_file <- function(cfg_options, fileout, ...){
   
-  cfg_options_all <- c(cfg_options, list(...))
+  cfg_options_all <- c(list(...), cfg_options)
   
   # Format select inputs/variables if they are included in cfg_options. This
   # is a little clunky, but we need to assign a non-null attribute to ensure
