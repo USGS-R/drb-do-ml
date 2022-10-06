@@ -1,5 +1,5 @@
 import sys
-sys.path.append('src')
+sys.path.insert(0, 'C:\\Users\\ggorski\\OneDrive - DOI\\USGS_ML\\DO\\drb-do-ml\\scratch\\Functional_Performance\\src')
 from do_it_functions import get_max_it_df
 
 
@@ -7,7 +7,7 @@ models = ['0_baseline_LSTM','2_multitask_dense']
 replicate = 0
 sink = ['do_min', 'do_mean', 'do_max']
 source = 'srad'
-sites = ['01466500', '01472104']
+sites = 'all'
 
 rule calc_it_metrics_single_rep:
     input:
@@ -16,7 +16,7 @@ rule calc_it_metrics_single_rep:
         #base file path to models
         "../../../scratch/4_func_perf/in/results_tmmx_tmmn/models"
     output:
-        "out/it_metrics_rep_0.csv"
+        "out/it_metrics_srad_all_sites_0.csv"
     run:
         get_max_it_df(input_file = input[0], 
                     models = models, 

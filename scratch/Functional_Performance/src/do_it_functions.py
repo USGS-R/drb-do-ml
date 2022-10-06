@@ -5,8 +5,8 @@ Created on Fri May 27 10:00:43 2022
 @author: ggorski
 """
 import pandas as pd
-#import sys
-#sys.path.insert(0, 'C:\\Users\\ggorski\\OneDrive - DOI\\USGS_ML\\DO\\drb-do-ml\\scratch\\Functional_Performance')
+import sys
+#sys.path.insert(0, 'C:\\Users\\ggorski\\OneDrive - DOI\\USGS_ML\\DO\\drb-do-ml\\scratch\\Functional_Performance\\src')
 import it_functions as it_functions
 import numpy as np
 import math
@@ -160,29 +160,14 @@ def calc_it_metrics_sites(inputs_df, source, sink, site, log_transform, models, 
             max_it[snk]['rmse'].append(math.sqrt(mse))
             
             max_it[snk]['TEmax'].append(TEmax)
-            max_it[snk]['TE0'].append(it_dict[snk]['TE'][0])
-            max_it[snk]['TE1'].append(it_dict[snk]['TE'][1])
-            max_it[snk]['TE2'].append(it_dict[snk]['TE'][2])
-            max_it[snk]['TE3'].append(it_dict[snk]['TE'][3])
-            max_it[snk]['TE4'].append(it_dict[snk]['TE'][4])
-            max_it[snk]['TE5'].append(it_dict[snk]['TE'][5])
-            max_it[snk]['TE6'].append(it_dict[snk]['TE'][6])
-            max_it[snk]['TE7'].append(it_dict[snk]['TE'][7])
-            max_it[snk]['TE8'].append(it_dict[snk]['TE'][8])
-        
+            for i in range(9):
+                max_it[snk][f'TE{i}'].append(it_dict[snk]['TE'][i])
             max_it[snk]['TEmaxt'].append(TEmaxt)
             max_it[snk]['TEmaxcrit'].append(TEmaxcrit)
             
             max_it[snk]['MImax'].append(MImax)
-            max_it[snk]['MI0'].append(it_dict[snk]['MI'][0])
-            max_it[snk]['MI1'].append(it_dict[snk]['MI'][1])
-            max_it[snk]['MI2'].append(it_dict[snk]['MI'][2])
-            max_it[snk]['MI3'].append(it_dict[snk]['MI'][3])
-            max_it[snk]['MI4'].append(it_dict[snk]['MI'][4])
-            max_it[snk]['MI5'].append(it_dict[snk]['MI'][5])
-            max_it[snk]['MI6'].append(it_dict[snk]['MI'][6])
-            max_it[snk]['MI7'].append(it_dict[snk]['MI'][7])
-            max_it[snk]['MI8'].append(it_dict[snk]['MI'][8])
+            for i in range(9):
+                max_it[snk][f'MI{i}'].append(it_dict[snk]['MI'][i])
             max_it[snk]['MImaxt'].append(MImaxt)
             max_it[snk]['MImaxcrit'].append(MImaxcrit)
              
@@ -217,6 +202,8 @@ def get_max_it_df(input_file, models, base_file_path, output_file, replicate, si
     This function returns the functional performance (Transfer Entropy (TE) and 
     Mutual Information (MI)) for all models specified, all sinks specified, for
     the specified source, and for _one_ replicate. 
+    Writes a Pandas DataFrame to the output_file with columns:
+     `model,rmse,TE{0-8,max,maxt,maxcrit},MI{0-8,max,maxt,maxcrit},metric,site,rep_id`
     Parameters
     ----------
     inputs_file : str
@@ -239,8 +226,7 @@ def get_max_it_df(input_file, models, base_file_path, output_file, replicate, si
         
     Returns
     -------
-    a Pandas DataFrame with columns:
-        `model,rmse,TE{0-8,max,maxt,maxcrit},MI{0-8,max,maxt,maxcrit},metric,site,rep_id`
+    nothing
     '''
     inputs = xr.open_zarr(input_file,consolidated=False)
     inputs_df = inputs.to_dataframe()
@@ -257,9 +243,8 @@ def get_max_it_df(input_file, models, base_file_path, output_file, replicate, si
                               replicate, base_file_path)
 
     do_all_sites_list = []
-    #do_diff_all_sites_list = []
     
-    for i,site in enumerate(sites):
+    for site in sites:
     
         max_it = max_it_site[site]
         sink_dfs = []
@@ -273,7 +258,7 @@ def get_max_it_df(input_file, models, base_file_path, output_file, replicate, si
         do_all_sites_list.append(do_df)
         
     do_all_sites = pd.concat(do_all_sites_list)
-    
+
     do_all_sites.to_csv(output_file)
     
 
