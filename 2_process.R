@@ -7,7 +7,7 @@ source("2_process/src/save_target_ind_files.R")
 source("2_process/src/match_sites_reaches.R")
 source("2_process/src/calc_daily_light.R")
 source("2_process/src/metab_utils.R")
-source("2_process/src/combine_nhdv2_attributes.R")
+source("2_process/src/process_nhdv2_attributes.R")
 source("1_fetch/src/write_data.R")
 
 # Explicitly attach sf package to handle geometry data when mapping over `p1_reaches_sf`
