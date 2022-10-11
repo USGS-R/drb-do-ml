@@ -163,8 +163,8 @@ p2_targets_list <- list(
                       cutoff_ER_K_corr = 0.4)
  ),
  
- # Read in the individual catchment attribute tables, replace any -9999 values
- # with NA, and combine into a list.
+ # Read in the individual catchment attribute tables, replace any missing values
+ # (-9999 or -9998) with NA, and combine into a list.
  tar_target(
    p2_cat_attr_list,
    process_attr_tables(p1_sb_attributes_downloaded_csvs,
@@ -173,15 +173,23 @@ p2_targets_list <- list(
    iteration = "list"
  ),
  
+ # Subset NHDPlusv2 value-added attributes (VAA) table and replace any missing
+ # values (-9999 or -9998) with NA. 
+ tar_target(
+   p2_nhdv2_vaa_attr,
+   process_nhdv2_vaa(nhd_lines = p1_nhd_reaches_sf,
+                     vaa_cols = c("SLOPE","TOTDASQKM"))
+ ),
+ 
  # Loop through the catchment attribute list and join individual data frames by 
  # COMID. Combine catchment attributes with NHDPlusv2 value-added attributes (vaa)
  # and subset the data frame to the COMIDs included in the site list.
  tar_target(
    p2_seg_attr_data,
-   combine_attr_data(nhd_lines = p1_nhd_reaches_sf, 
-                     cat_attr_list = p2_cat_attr_list,
-                     vaa_cols = c("SLOPE"),
-                     sites_w_segs = p2_sites_w_segs)
+   combine_nhdv2_attr(nhd_vaa = p2_nhdv2_vaa_attr, 
+                      cat_attr_list = p2_cat_attr_list,
+                      sites_w_segs = p2_sites_w_segs %>%
+                        filter(COMID %in% p2_well_observed_reaches$COMID))
  ),
  
  # Subset the DRB meteorological data to only include the NHDPlusv2 catchments (COMID)
