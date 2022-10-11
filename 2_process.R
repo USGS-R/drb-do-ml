@@ -168,7 +168,8 @@ p2_targets_list <- list(
  tar_target(
    p2_cat_attr_list,
    process_attr_tables(p1_sb_attributes_downloaded_csvs,
-                     cols = c("CAT")),
+                       cols = c("CAT"),
+                       nlcd_reclass_table = p1_nlcd_reclassification_table),
    pattern = map(p1_sb_attributes_downloaded_csvs),
    iteration = "list"
  ),

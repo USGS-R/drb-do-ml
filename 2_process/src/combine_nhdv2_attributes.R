@@ -13,8 +13,11 @@
 #' file name and extension
 #' @param cols character string indicating which columns to retain from downloaded 
 #' attribute data; cols can take values "CAT", "ACC", or "TOT". Defaults to "CAT".
+#' @param nlcd_reclass_table data frame containing the integer land cover values
+#' used by NLCD as well as the preferred classifications. Must contain columns 
+#' "nlcd_value" and "reclassified_group_name".
 #'
-process_attr_tables <- function(file_path, cols = c("CAT")){
+process_attr_tables <- function(file_path, cols = c("CAT"), nlcd_reclass_table){
  
   # Read in downloaded data 
   # only specify col_type for COMID since cols will differ for each downloaded file
@@ -36,9 +39,35 @@ process_attr_tables <- function(file_path, cols = c("CAT")){
   }
   
   # For columns with undesired flag values, replace -9999 with NA, else use existing value
-  dat_proc_out <- dat_proc %>%
+  dat_proc_clean <- dat_proc %>%
     mutate(across(all_of(flag_cols), ~case_when(. == -9999 ~ NA_real_, 
                                                 TRUE ~ as.numeric(.))))
+  
+  # Apply special handling for NLCD land cover data by reclassifying land cover categories.
+  # Ignore the processing steps below for NLCD impervious cover or for NLCD forest
+  # cover within 100 m riparian buffer datasets.
+  if(all(grepl("NLCD", file_path), 
+         !grepl("BUFF100", names(select(dat_proc_clean,-COMID))), 
+         !grepl("IMPV", names(select(dat_proc_clean,-COMID))))){
+
+    dat_proc_out <- dat_proc_clean %>%
+      # Format table to "long format" so that reclassified groups can be summarized:
+      pivot_longer(!COMID, names_to = "old_class", values_to = "proportion") %>%
+      mutate(nlcd_value = as.numeric(stringr::str_extract(old_class, "\\d+$"))) %>%
+      # join data table with nlcd reclassification crosswalk table:
+      left_join(y = nlcd_reclass_table[,c("nlcd_value","reclassified_group_name")], 
+                by = "nlcd_value") %>%
+      # replace integer value describing NLCD land cover class with name of reclassified group:
+      mutate(new_class = stringr::str_replace(string = old_class, "\\d+$", reclassified_group_name)) %>%
+      group_by(COMID, new_class) %>%
+      # sum the proportion land cover for each COMID and reclassified group:
+      summarize(proportion_reclassified = sum(proportion, na.rm = TRUE),
+                .groups = "drop") %>%
+      pivot_wider(names_from = new_class, values_from = proportion_reclassified)
+    
+  } else {
+    dat_proc_out <- dat_proc_clean
+  }
 
   return(dat_proc_out)
   
