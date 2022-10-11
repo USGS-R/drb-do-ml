@@ -1,12 +1,19 @@
+#' @title Download files from ScienceBase
+#'
+#' @description 
+#' Function to download file from ScienceBase.
+#'
+#' @param sb_id character string representing the id of the science base item.
+#' @param file_name character string indicating the name of the file within 
+#' the science base item to download.
+#' @param out_dir character string indicating the file directory where
+#' the file should be downloaded to.
+#'
+#' @returns 
+#' character string representing the name of the output file, including file path and
+#' extension.
+#' 
 download_sb_file <- function(sb_id, file_name, out_dir){
-  #'
-  #' @description Function to download file from ScienceBase 
-  #'
-  #' @param sb_id string - the id of the science base item
-  #' @param file_name string - the name of the file in the science base item to download
-  #' @param out_dir string - the directory where you want the file downloaded to
-  #'
-  #' @value string the out_path
 
   out_path = file.path(out_dir, file_name)
   # Get the data from ScienceBase:
