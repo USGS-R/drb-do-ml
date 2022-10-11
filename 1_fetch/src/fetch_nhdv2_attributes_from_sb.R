@@ -42,10 +42,17 @@ fetch_nhdv2_attributes_from_sb <- function(vars_item, save_dir, comids,
     do.call("c",.) %>%
     unique()
   
+  # Reformat column names for certain datasets
+  # National Inventory of Dams data:
+  if(unique(vars_item$sb_id) == "58c301f2e4b0f37a93ed915a"){
+    years <- stringr::str_extract(out_file,"\\d{2,}")
+    col_names <- format_col_names_years(col_names,years,yr_pattern = "YYYY")
+  }
+  
+  # 4) Unzip out_files, filter to COMIDs of interest, and return combined data frame
   message(sprintf("Subsetting %s data to requested COMID's...",
                   unique(vars_item$SB_dataset_name)))
   
-  # 4) Unzip out_files, filter to COMIDs of interest, and return combined data frame
   data_out <- lapply(out_file, unzip_and_clip_sb_data,
                      col_names = col_names,
                      comids = comids,
@@ -112,5 +119,35 @@ unzip_and_clip_sb_data <- function(out_file, col_names, comids, save_dir,
   }
   
   return(dat)
+}
+
+
+
+#' @title Format column names containing years
+#'
+#' @description 
+#' This function takes column names that are formatted with a generic suffix
+#' and returns column names as they are within the downloaded data from ScienceBase.
+#' 
+#' @param col_names vector of character strings containing the column names
+#' as given in the 1_fetch/in/target_sciencebase_attributes table.
+#' @param years integer; years for which to gather corresponding columns
+#' @param yr_pattern character string pattern used to indicate year placeholder
+#' within target_sciencebase_attributes table. Examples include "YYYY" and "XX".
+#' 
+format_col_names_years <- function(col_names,years,yr_pattern){
+  
+  # Identify which col_names have yr_pattern as as a suffix (e.g. colYYYY)
+  col_names_to_trim <- which(str_detect(col_names,pattern=yr_pattern)=="TRUE")
+  
+  # Remove year suffix from column names
+  col_names[c(col_names_to_trim)] <- str_sub(col_names[c(col_names_to_trim)],start = 1,end=-(nchar(yr_pattern)+1))
+  
+  # Rename columns with specific years in place of yr_pattern suffix (e.g. col2015)
+  col_names_all_years <- lapply(years,function(x) paste0(col_names[c(col_names_to_trim)],x)) %>% 
+    do.call("c",.)
+  col_names_out <- c("COMID",col_names_all_years)
+  
+  return(col_names_out)
 }
 
