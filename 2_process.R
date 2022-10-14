@@ -168,7 +168,7 @@ p2_targets_list <- list(
  tar_target(
    p2_cat_attr_list,
    process_attr_tables(p1_sb_attributes_downloaded_csvs,
-                       cols = c("CAT"),
+                       cols = c("CAT","TOT"),
                        nlcd_reclass_table = p1_nlcd_reclassification_table),
    pattern = map(p1_sb_attributes_downloaded_csvs),
    iteration = "list"
@@ -189,8 +189,9 @@ p2_targets_list <- list(
    p2_seg_attr_data,
    combine_nhdv2_attr(nhd_vaa = p2_nhdv2_vaa_attr, 
                       cat_attr_list = p2_cat_attr_list,
-                      sites_w_segs = p2_sites_w_segs %>%
-                        filter(COMID %in% p2_well_observed_reaches$COMID))
+                      sites_w_segs = filter(p2_sites_w_segs,
+                                            COMID %in% p2_well_observed_reaches$COMID)
+                      )
  ),
  
  # Subset the DRB meteorological data to only include the NHDPlusv2 catchments (COMID)
