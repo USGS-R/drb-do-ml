@@ -7,7 +7,7 @@ source("2_process/src/save_target_ind_files.R")
 source("2_process/src/match_sites_reaches.R")
 source("2_process/src/calc_daily_light.R")
 source("2_process/src/metab_utils.R")
-source("2_process/src/combine_nhdv2_attributes.R")
+source("2_process/src/process_nhdv2_attributes.R")
 source("1_fetch/src/write_data.R")
 
 # Explicitly attach sf package to handle geometry data when mapping over `p1_reaches_sf`
@@ -163,14 +163,23 @@ p2_targets_list <- list(
                       cutoff_ER_K_corr = 0.4)
  ),
  
- # Read in the individual catchment attribute tables, replace any -9999 values
- # with NA, and combine into a list.
+ # Read in the individual catchment attribute tables, replace any missing values
+ # (-9999 or -9998) with NA, and combine into a list.
  tar_target(
    p2_cat_attr_list,
    process_attr_tables(p1_sb_attributes_downloaded_csvs,
-                     cols = c("CAT")),
+                       cols = c("CAT","TOT"),
+                       nlcd_reclass_table = p1_nlcd_reclassification_table),
    pattern = map(p1_sb_attributes_downloaded_csvs),
    iteration = "list"
+ ),
+ 
+ # Subset NHDPlusv2 value-added attributes (VAA) table and replace any missing
+ # values (-9999 or -9998) with NA. 
+ tar_target(
+   p2_nhdv2_vaa_attr,
+   process_nhdv2_vaa(nhd_lines = p1_nhd_reaches_sf,
+                     vaa_cols = c("SLOPE","TOTDASQKM"))
  ),
  
  # Loop through the catchment attribute list and join individual data frames by 
@@ -178,10 +187,11 @@ p2_targets_list <- list(
  # and subset the data frame to the COMIDs included in the site list.
  tar_target(
    p2_seg_attr_data,
-   combine_attr_data(nhd_lines = p1_nhd_reaches_sf, 
-                     cat_attr_list = p2_cat_attr_list,
-                     vaa_cols = c("SLOPE"),
-                     sites_w_segs = p2_sites_w_segs)
+   combine_nhdv2_attr(nhd_vaa = p2_nhdv2_vaa_attr, 
+                      cat_attr_list = p2_cat_attr_list,
+                      sites_w_segs = filter(p2_sites_w_segs,
+                                            COMID %in% p2_well_observed_reaches$COMID)
+                      )
  ),
  
  # Subset the DRB meteorological data to only include the NHDPlusv2 catchments (COMID)

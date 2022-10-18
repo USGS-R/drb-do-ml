@@ -190,6 +190,20 @@ p1_targets_list <- list(
     pattern = map(p1_sb_attributes),
     format = "file"
   ),
+  
+  # Track crosswalk table that maps NLCD land cover classifications to 
+  # preferred land cover groupings. 
+  tar_target(
+    p1_nlcd_reclassification_table_csv,
+    "1_fetch/in/nlcd_landcover_reclassification.csv",
+    format = 'file'
+  ),
+  
+  # Read in NLCD reclassification table.
+  tar_target(
+    p1_nlcd_reclassification_table,
+    read_csv(p1_nlcd_reclassification_table_csv, show_col_types = FALSE),
+  ),
 
   # Download and unzip metabolism estimates from Appling et al. 2018:
   # https://www.sciencebase.gov/catalog/item/59eb9c0ae4b0026a55ffe389

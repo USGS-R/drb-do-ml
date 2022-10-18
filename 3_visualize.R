@@ -3,6 +3,7 @@
 source("3_visualize/src/plot_daily_data.R")
 source("3_visualize/src/plot_inst_data.R")
 source("3_visualize/src/do_overview_plots.R")
+source("3_visualize/src/summarize_static_attributes.R")
 source("3_visualize/src/map_sites.R")
 
 p3_targets_list <- list(
@@ -50,6 +51,12 @@ p3_targets_list <- list(
     format = "file"
   ),
 
+  # Save a table containing summary statistics for the NHDPlusv2 static attributes
+  tar_target(
+    p3_static_attr_summary_csv,
+    summarize_static_attributes(p2_seg_attr_data, "3_visualize/out/nhdv2_static_attr_summary.csv"),
+    format = "file"
+  ),
   
   # Save png map of site locations
   tar_target(
