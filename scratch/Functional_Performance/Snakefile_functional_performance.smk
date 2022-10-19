@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, 'C:\\Users\\ggorski\\OneDrive - DOI\\USGS_ML\\DO\\drb-do-ml\\scratch\\Functional_Performance\\src')
+sys.path.insert(0, 'scratch/Functional_Performance/src')
 from do_it_functions import get_max_it_df
 
 
@@ -12,9 +12,9 @@ sites = 'all'
 rule calc_it_metrics_single_rep:
     input:
         #input data file
-        "../../../scratch/4_func_perf/in/results_tmmx_tmmn/med_obs_io.zarr",
+        "../scratch/4_func_perf/in/results_tmmx_tmmn/med_obs_io.zarr",
         #base file path to models
-        "../../../scratch/4_func_perf/in/results_tmmx_tmmn/models"
+        "../scratch/4_func_perf/in/results_tmmx_tmmn/models"
     output:
         "out/it_metrics_srad_all_sites_0.csv"
     run:
