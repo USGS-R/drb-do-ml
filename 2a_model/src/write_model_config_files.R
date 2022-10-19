@@ -25,7 +25,7 @@ write_config_file <- function(cfg_options, fileout, ...){
   # is not included in cfg_options.
   try(expr = {attr(cfg_options_all$out_dir, "quoted") <- TRUE}, silent = TRUE)
   try(expr = {attr(cfg_options_all$exp_name, "quoted") <- TRUE}, silent = TRUE)
-  try(expr = {attr(cfg_options_all$val_sites, "quoted") <- TRUE}, silent = TRUE)
+  try(expr = {attr(cfg_options_all$validation_sites, "quoted") <- TRUE}, silent = TRUE)
   try(expr = {attr(cfg_options_all$test_sites, "quoted") <- TRUE}, silent = TRUE)
   try(expr = {attr(cfg_options_all$x_vars, "quoted") <- TRUE}, silent = TRUE)
   try(expr = {attr(cfg_options_all$y_vars, "quoted") <- TRUE}, silent = TRUE)
