@@ -110,7 +110,7 @@ base_config_options <- list(
   finetune_learning_rate = 0.01,
   early_stopping = FALSE,
   # train/val/test split information is defined above:
-  val_sites = val_sites, 
+  validation_sites = val_sites, 
   test_sites = tst_sites,
   train_start_date = train_start_date, 
   train_end_date = train_end_date, 
@@ -122,7 +122,7 @@ base_config_options <- list(
 
 # Define global model parameters for the "baseline" deep learning model
 x_vars_global <- c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
-                   "CAT_BASIN_AREA","CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI")
+                   "CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI")
 
 # Model 0: Create a list that contains inputs for the "baseline" deep learning model
 model_config_options <- list(
