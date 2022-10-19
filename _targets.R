@@ -87,12 +87,17 @@ dummy_date <- "2022-06-15"
 val_sites <- c("01472104", "01473500", "01481500")
 tst_sites <- c("01475530", "01475548")
 
+# Define train/val/test dates
 train_start_date <- '1980-01-01'
 train_end_date <- '2014-10-01'
 val_start_date <- '2014-10-01'
 val_end_date <- '2015-10-01'
 test_start_date <- '2015-10-01'
 test_end_date <- '2022-10-01'
+
+# Define global model parameters for the "baseline" deep learning model
+x_vars_global <- c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
+                   "CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI")
 
 # Define model parameters and combine within a list that gets used to
 # write a base model config file for the snakemake modeling workflow.
@@ -117,44 +122,40 @@ base_config_options <- list(
   val_start_date = val_start_date, 
   val_end_date = val_end_date,
   test_start_date = test_start_date, 
-  test_end_date = test_end_date
+  test_end_date = test_end_date,
+  x_vars = x_vars_global
   )
 
-# Define global model parameters for the "baseline" deep learning model
-x_vars_global <- c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
-                   "CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI")
+# Configure individual models. If different x_vars are desired, add
+# `x_vars = [vector of attribute names]` to any of the config options
+# lists below, which will override `x_vars_global` in `base_config_options`.
 
-# Model 0: Create a list that contains inputs for the "baseline" deep learning model
+# Model 0: Create a list that contains inputs for the "baseline" deep learning model.
 model_config_options <- list(
-  x_vars = x_vars_global,
   y_vars = c("do_min","do_mean","do_max"),
   lambdas = c(1,1,1)
 )
 
 # Model 1: Create a list that contains inputs for the metab_multitask model
 metab_multitask_config_options <- list(
-  x_vars = x_vars_global,
   y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
   lambdas = c(1, 1, 1, 1, 1, 1, 1, 1)
 )
 
 # Model 1a: Create a list that contains inputs for the 1a_metab_multitask model
 metab_1a_multitask_config_options <- list(
-  x_vars = x_vars_global,
   y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
   lambdas = c(1, 1, 1, 1, 1, 0, 0, 0)
 )
 
 # Model 1b: Create a list that contains inputs for the 1b_metab_multitask model
 metab_1b_multitask_config_options <- list(
-  x_vars = x_vars_global,
   y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
   lambdas = c(1, 1, 1, 1, 0, 0, 0, 0)
 )
 
 # Model 2: Create a list that contains inputs for the metab_dense model
 multitask_dense_config_options <- list(
-  x_vars = x_vars_global,
   y_vars = c("do_min","do_mean","do_max","GPP","ER","K600","depth","temp.water"),
   lambdas = c(1, 1, 1, 1, 1, 1, 1, 1)
 )
