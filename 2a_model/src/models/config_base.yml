@@ -9,7 +9,7 @@ dropout: 0.2
 recurrent_dropout: 0.2
 finetune_learning_rate: 0.01
 early_stopping: False
-val_sites:
+validation_sites:
   - "01472104"
   - "01473500"
   - "01481500"
@@ -22,4 +22,15 @@ val_start_date: '2014-10-01'
 val_end_date: '2015-10-01'
 test_start_date: '2015-10-01'
 test_end_date: '2022-10-01'
+x_vars:
+  - "pr"
+  - "SLOPE"
+  - "tmmx"
+  - "tmmn"
+  - "srad"
+  - "CAT_BASIN_SLOPE"
+  - "CAT_ELEV_MEAN"
+  - "CAT_IMPV11"
+  - "CAT_CNPY11_BUFF100"
+  - "CAT_TWI"
  
