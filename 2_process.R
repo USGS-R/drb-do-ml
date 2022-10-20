@@ -73,9 +73,8 @@ p2_targets_list <- list(
   tar_target(
     p2_sites_w_segs,
     {
-      
-    # Flowlines with no catchments do not have any associated climate driver data, 
-    # so omit any flowlines where AREASQKM == 0 before matching sites to reaches.
+      # Flowlines with no catchments do not have any associated climate driver data, 
+      # so omit any flowlines where AREASQKM == 0 before matching sites to reaches.
       nhd_reaches_w_cats <- p1_nhd_reaches_sf %>%
         filter(AREASQKM > 0)
       sites_w_segs <- get_site_nhd_flowlines(nhd_lines = nhd_reaches_w_cats, 
@@ -188,10 +187,7 @@ p2_targets_list <- list(
  tar_target(
    p2_seg_attr_data,
    combine_nhdv2_attr(nhd_vaa = p2_nhdv2_vaa_attr, 
-                      cat_attr_list = p2_cat_attr_list,
-                      sites_w_segs = filter(p2_sites_w_segs,
-                                            COMID %in% p2_well_observed_reaches$COMID)
-                      )
+                      cat_attr_list = p2_cat_attr_list)
  ),
  
  # Subset the DRB meteorological data to only include the NHDPlusv2 catchments (COMID)
