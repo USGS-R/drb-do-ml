@@ -126,10 +126,8 @@ process_nhdv2_vaa <- function(nhd_lines, vaa_cols){
 #' Must contain column "COMID".
 #' @param cat_attr_list list object containing different catchment attribute
 #' data frames.
-#' @param sites_w_segs data frame containing observation locations with 
-#' their matched flowlines. Must contain column "COMID".
 #'
-combine_nhdv2_attr <- function(nhd_vaa, cat_attr_list, sites_w_segs){
+combine_nhdv2_attr <- function(nhd_vaa, cat_attr_list){
   
   # Combine list object containing catchment attributes into a single data frame
   cat_attr_df <- cat_attr_list %>%
@@ -142,12 +140,8 @@ combine_nhdv2_attr <- function(nhd_vaa, cat_attr_list, sites_w_segs){
   attr_data <- nhd_vaa %>%
     mutate(COMID = as.character(COMID)) %>%
     left_join(y = cat_attr_df, by = "COMID")
-  
-  # Subset attribute data to the flowline reaches with observations
-  attr_data_sub <- attr_data %>%
-    filter(COMID %in% unique(sites_w_segs$COMID))
     
-  return(attr_data_sub)
+  return(attr_data)
   
 }
 
