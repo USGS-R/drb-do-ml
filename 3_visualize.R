@@ -21,6 +21,7 @@ p3_targets_list <- list(
                     network_geometry = p1_nhd_reaches_sf,
                     save_dir = "3_visualize/out/nhdv2_attr_png",
                     plot_sites = TRUE, 
+                    label_sites = TRUE,
                     sites = p2_sites_w_segs %>%
                       filter(site_id %in% p2_well_observed_sites), 
                     sites_epsg = 4269),
