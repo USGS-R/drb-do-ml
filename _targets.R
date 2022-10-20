@@ -4,7 +4,8 @@ options(tidyverse.quiet = TRUE)
 tar_option_set(packages = c("tidyverse", "lubridate", "rmarkdown", "knitr",
                             "dataRetrieval", "nhdplusTools", "sbtools",
                             "leaflet", "sf", "USAboundaries", "cowplot",
-                            "ggspatial", "streamMetabolizer", "reticulate"))
+                            "ggspatial", "patchwork", "streamMetabolizer", 
+                            "reticulate"))
 
 source("1_fetch.R")
 source("2_process.R")

@@ -4,6 +4,7 @@ source("3_visualize/src/plot_daily_data.R")
 source("3_visualize/src/plot_inst_data.R")
 source("3_visualize/src/do_overview_plots.R")
 source("3_visualize/src/summarize_static_attributes.R")
+source("3_visualize/src/plot_nhdv2_attr.R")
 source("3_visualize/src/map_sites.R")
 
 p3_targets_list <- list(
@@ -13,6 +14,19 @@ p3_targets_list <- list(
                           path = "3_visualize/src/report-do-inventory.Rmd",
                           output_dir = "3_visualize/out"),
   
+  # Visualize segment/catchment attributes across the DRB and across sites.
+  tar_target(
+    p3_nhdv2_attr_png,
+    plot_nhdv2_attr(attr_data = p2_seg_attr_data,
+                    network_geometry = p1_nhd_reaches_sf,
+                    save_dir = "3_visualize/out/nhdv2_attr_png",
+                    plot_sites = TRUE, 
+                    sites = p2_sites_w_segs %>%
+                      filter(site_id %in% p2_well_observed_sites), 
+                    sites_epsg = 4269),
+    format = "file"
+  ),
+  
   # Generate summary plots (all daily and inst data)
   tar_target(
     p3_daily_summary_plot_png,
@@ -20,14 +34,12 @@ p3_targets_list <- list(
                     fig_cols = 5, fig_width = 8, fig_height = 7),
     format = "file"
   ),
-  
   tar_target(
     p3_inst_summary_plot_png,
     plot_daily_data(p1_inst_data, fileout = "3_visualize/out/inst_daily_means.png",
                     fig_cols = 4, fig_width = 6, fig_height = 7),
     format = "file"
   ),
-  
   tar_target(
     p3_doy_means_png,
     plot_doy_means(p2_daily_combined,fileout = "3_visualize/out/doy_means.png",
@@ -43,7 +55,6 @@ p3_targets_list <- list(
                     fig_cols = 1, fig_width = 4, fig_height = 10),
     format = "file"
   ),
-  
   tar_target(
     p3_inst_summary_plot_filtered_png,
     plot_daily_data(p1_inst_data, fileout = "3_visualize/out/filtered_inst_means.png",
@@ -52,9 +63,11 @@ p3_targets_list <- list(
   ),
 
   # Save a table containing summary statistics for the NHDPlusv2 static attributes
+  # across the well-observed reaches used for modeling. 
   tar_target(
     p3_static_attr_summary_csv,
-    summarize_static_attributes(p2_seg_attr_data, "3_visualize/out/nhdv2_static_attr_summary.csv"),
+    summarize_static_attributes(filter(p2_seg_attr_data, COMID %in% p2_well_observed_reaches$COMID), 
+                                "3_visualize/out/nhdv2_static_attr_summary.csv"),
     format = "file"
   ),
   
