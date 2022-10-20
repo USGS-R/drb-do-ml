@@ -18,6 +18,7 @@ dir.create("2_process/out/", showWarnings = FALSE)
 dir.create("2a_model/out/", showWarnings = FALSE)
 dir.create("2_process/log/", showWarnings = FALSE)
 dir.create("3_visualize/out/", showWarnings = FALSE)
+dir.create("3_visualize/out/nhdv2_attr_png/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
 
 # Define columns of interest from harmonized WQP data
