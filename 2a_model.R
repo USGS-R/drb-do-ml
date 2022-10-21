@@ -8,7 +8,7 @@ p2a_targets_list <- list(
   tar_target(
     p2a_met_light_data,
     p2_met_data_at_obs_sites %>%
-      mutate(date = as.Date(time, tz = 'Etc/GMT+5')) %>%
+      mutate(date = as.Date(time, tz = 'UTC')) %>%
       left_join(y = p2_daily_max_light %>%
                   select(COMID, date_localtime, frac_light) %>%
                   # format column names
