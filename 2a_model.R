@@ -3,7 +3,7 @@ source("2a_model/src/write_model_config_files.R")
 
 p2a_targets_list <- list(
 
-  ## PREPARE (RENAME, JOIN) INPUT AND OUTPUT FILES ##
+  ## 1) COMBINE AND FORMAT MODEL-READY INPUTS AND OUTPUTS ##
   # join met data with light input data
   tar_target(
     p2a_met_light_data,
@@ -19,26 +19,30 @@ p2a_targets_list <- list(
       relocate(date, .after = COMID)
   ),
   
-  # match site_ids to seg_ids
+  # join met and light data with site_ids (resulting data frame will have
+  # 16 unique COMID's which matches the number of well-observed reaches).
   tar_target(
     p2a_met_data_w_sites,
     match_site_ids_to_segs(p2a_met_light_data, p2_sites_w_segs)
   ),
 
-  # match seg attributes with site_ids
+  # join segment attributes with site_ids (resulting data frame will have one
+  # row for each unique COMID x site_id in the lower DRB; n = 10,111).
   tar_target(
     p2a_seg_attr_w_sites,
     match_site_ids_to_segs(p2_seg_attr_data, p2_sites_w_segs)
   ),
   
-  # join the metab data with the DO observations
+  # join the metabolism data with the DO observations (use full_join to include
+  # all rows in both the DO data and the metab data).
   tar_target(
     p2a_do_and_metab,
     p2_daily_with_seg_ids %>%
       full_join(p2_metab_filtered, by = c("site_id", "date"))
   ),
 
-  ## SPLIT SITES INTO (train) and (train and validation) ##
+  
+  ## 2) SPLIT SITES INTO (train) and (train and validation) ##
   # char vector of well-observed train sites
   tar_target(
     p2a_trn_sites,
@@ -87,7 +91,8 @@ p2a_targets_list <- list(
       sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
   ),
   
-  ## WRITE MODEL CONFIGURATION FILES ##
+  
+  ## 3) WRITE MODEL CONFIGURATION FILES ##
   # Write base config file using inputs and parameters defined in _targets.R
   tar_target(
     p2a_config_base_yml,
@@ -141,35 +146,40 @@ p2a_targets_list <- list(
     format = "file"
   ),
   
-  ## WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
-  # write met and seg attribute data for trn/val sites to zarr
-  # note - I have to subset inputs to only include the train/val sites before 
-  # passing to subset_and_write_zarr or else I get a memory error on the join
   
-  ## CHANGING X VARIABLES ##
-  #To change x variables for the model, they have to be added to the 
-  #model specific config.yml file which can be found in 
-  #2a_model/src/model/{model ID}/config.yml
-
-  # write trn and val input and output data to zarr
+  ## 4) WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
+  # Subset trn/val input and output data to well-observed sites and format
+  # for export. [Jeff]: note - I have to subset inputs to only include the
+  # train/val sites before passing to subset_and_write_zarr or else I get a
+  # memory error on the join. 
   tar_target(
     p2a_well_obs_data,
     {
+      # use inner_join to keep sites that are within the set of trn/val sites
+      # and are represented in both the met data and the seg attr data.
       inputs <- p2a_met_data_w_sites %>%
         filter(site_id %in% p2a_trn_val_sites) %>%
         inner_join(p2a_seg_attr_w_sites, by = c("site_id", "COMID"))
 
       inputs_and_outputs <- inputs %>%
-          left_join(p2a_do_and_metab, by=c("site_id", "date"))
+          left_join(p2a_do_and_metab, by = c("site_id", "COMID", "date"))
       
-      # note that if the name of well_obs_io.zarr is changed below, this change must
-      # also be made in 2a_model/src/Snakefile_base.smk (lines 32, 103, and 177) and
-      # in 2a_model/src/visualize_models.smk (line 6). 
-      write_df_to_zarr(inputs_and_outputs, c("site_id", "date"), "2a_model/out/well_obs_io.zarr")
-    },
-    format="file"
+      inputs_and_outputs
+    }
   ),
   
+  # Write trn and val input and output data to zarr. Note that if the name of 
+  # well_obs_io.zarr is changed below, this change must also be made in 
+  # 2a_model/src/Snakefile_base.smk (lines 32, 103, and 177) and in 
+  # 2a_model/src/visualize_models.smk (line 6). 
+  tar_target(
+    p2a_well_obs_data_zarr,
+    write_df_to_zarr(p2a_well_obs_data, c("site_id", "date"), "2a_model/out/well_obs_io.zarr"),
+    format = "file"
+  ),
+  
+  
+  ## 5) GATHER MODEL IDS AND KICK OFF SNAKEMAKE WORKFLOW TO MAKE MODEL PREDICTIONS ##
   # gather model ids - add to this list when you want to reproduce
   # outputs from a new model 
   tar_target(
