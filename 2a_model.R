@@ -209,7 +209,8 @@ p2a_targets_list <- list(
   tar_target(
     p2a_metrics_files,
     {
-    #we need these to make the prepped data file
+    # we need these to make the prepped data file, so force a dependency of this 
+    # target on p2a_well_obs_data.
     p2a_well_obs_data
 
     base_dir <- "2a_model/src/models"
