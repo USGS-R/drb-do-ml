@@ -1,4 +1,4 @@
-exp_name: "2_multitask_dense"
+exp_name: "1b_multitask_do_gpp"
 y_vars:
   - "do_min"
   - "do_mean"
@@ -13,8 +13,8 @@ lambdas:
   - 1
   - 1
   - 1
-  - 1
-  - 1
-  - 1
-  - 1
+  - 0
+  - 0
+  - 0
+  - 0
  
