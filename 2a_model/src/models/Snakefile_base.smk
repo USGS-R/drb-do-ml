@@ -107,8 +107,8 @@ rule make_predictions:
         weight_dir = input[1] + "/"
         params.model.load_weights(weight_dir)
         preds = predict_from_arbitrary_data(raw_data_file=input[2],
-                                            pred_start_date="1980-01-01",
-                                            pred_end_date="2019-01-01",
+                                            pred_start_date = config['train_start_date'],
+                                            pred_end_date = config['val_end_date'],
                                             train_io_data=input[0],
                                             model=params.model, 
                                             spatial_idx_name='site_id',
