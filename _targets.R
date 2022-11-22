@@ -96,8 +96,13 @@ test_start_date <- '2015-10-01'
 test_end_date <- '2022-10-01'
 
 # Define global model parameters for the "baseline" deep learning model
-x_vars_global <- c("pr","SLOPE","tmmx","tmmn","srad","CAT_BASIN_SLOPE","CAT_ELEV_MEAN",
-                   "CAT_IMPV11","CAT_CNPY11_BUFF100","CAT_TWI")
+x_vars_global <- c("tmmn","tmmx","pr","srad","SLOPE","TOTDASQKM","CAT_BASIN_SLOPE",
+                   "TOT_BASIN_SLOPE","CAT_ELEV_MEAN","CAT_RDX","CAT_BFI","CAT_EWT",
+                   "CAT_TWI","CAT_PPT7100_ANN","TOT_PPT7100_ANN","CAT_RUN7100",
+                   "CAT_CNPY11_BUFF100","CAT_IMPV11","TOT_IMPV11","CAT_NLCD11_wetland",
+                   "TOT_NLCD11_wetland","CAT_SANDAVE","CAT_PERMAVE","TOT_PERMAVE",
+                   "CAT_RFACT","CAT_WTDEP","TOT_WTDEP","CAT_NPDES_MAJ","CAT_NDAMS2010",
+                   "CAT_NORM_STORAGE2010")
 
 # Define model parameters and combine within a list that gets used to
 # write a base model config file for the snakemake modeling workflow.
