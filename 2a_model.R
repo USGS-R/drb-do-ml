@@ -191,12 +191,12 @@ p2a_targets_list <- list(
              config_path = stringr::str_remove(p2a_config_baseline_LSTM_yml, "2a_model/src/models/")),
         # the 1_ models use the same model and therefore the same Snakefile
         # as the 0_baseline_LSTM run
-        list(model_id = "1_metab_multitask",
-             snakefile_dir = "0_baseline_LSTM",
-             config_path = stringr::str_remove(p2a_config_metab_multitask_yml, "2a_model/src/models/")),
-        list(model_id = "1a_multitask_do_gpp_er",
-             snakefile_dir = "0_baseline_LSTM",
-             config_path = stringr::str_remove(p2a_config_1a_metab_multitask_yml, "2a_model/src/models/")),
+        #list(model_id = "1_metab_multitask",
+        #     snakefile_dir = "0_baseline_LSTM",
+        #     config_path = stringr::str_remove(p2a_config_metab_multitask_yml, "2a_model/src/models/")),
+        #list(model_id = "1a_multitask_do_gpp_er",
+        #     snakefile_dir = "0_baseline_LSTM",
+        #     config_path = stringr::str_remove(p2a_config_1a_metab_multitask_yml, "2a_model/src/models/")),
         list(model_id = "2_multitask_dense",
              snakefile_dir = "2_multitask_dense",
              config_path = stringr::str_remove(p2a_config_multitask_dense_yml, "2a_model/src/models/"))
