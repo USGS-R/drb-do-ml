@@ -191,12 +191,12 @@ p2a_targets_list <- list(
              config_path = stringr::str_remove(p2a_config_baseline_LSTM_yml, "2a_model/src/models/")),
          #the 1_ models use the same model and therefore the same Snakefile
          #as the 0_baseline_LSTM run
-        list(model_id = "1_metab_multitask",
-             snakefile_dir = "0_baseline_LSTM",
-             config_path = stringr::str_remove(p2a_config_metab_multitask_yml, "2a_model/src/models/")),
-        list(model_id = "1a_multitask_do_gpp_er",
-             snakefile_dir = "0_baseline_LSTM",
-             config_path = stringr::str_remove(p2a_config_1a_metab_multitask_yml, "2a_model/src/models/")),
+        #list(model_id = "1_metab_multitask",
+             #snakefile_dir = "0_baseline_LSTM",
+             #config_path = stringr::str_remove(p2a_config_metab_multitask_yml, "2a_model/src/models/")),
+        #list(model_id = "1a_multitask_do_gpp_er",
+             #snakefile_dir = "0_baseline_LSTM",
+             #config_path = stringr::str_remove(p2a_config_1a_metab_multitask_yml, "2a_model/src/models/")),
         list(model_id = "2_multitask_dense",
              snakefile_dir = "2_multitask_dense",
              config_path = stringr::str_remove(p2a_config_multitask_dense_yml, "2a_model/src/models/"))
@@ -219,16 +219,18 @@ p2a_targets_list <- list(
     # this path is relative to the Snakefile
     prepped_data_file <- file.path("../../../out/models",p2a_model_ids$model_id, "prepped.npz")
 
+    # make sure the directory is unlocked (this has been a hangup for me) 
+    system(stringr::str_glue("snakemake  -s {snakefile_path} --configfile {config_path} --unlock"))
     # First create the prepped data files if they are not already.
     # These are needed to make the predictions.
     system(stringr::str_glue("snakemake {prepped_data_file} -s {snakefile_path} --configfile {config_path} -j"))
 
     # Then touch all of the existing files. This makes the weights "up-to-date"
     # so snakemake doesn't train the models again
-    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch"))
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch --rerun-incomplete"))
 
     # then run the snakemake pipeline to produce the predictions and metric files
-    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete"))
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete "))
     
     # print out the metrics file name for the target
     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv")
