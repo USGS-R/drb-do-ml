@@ -1,11 +1,15 @@
 import os
+import xarray as xr
 import tensorflow as tf
 import numpy as np
 import pandas as pd
 import sys
 
-code_dir = "../river-dl"
-sys.path.append(code_dir)
+river_dl_dir = "../river-dl"
+sys.path.append(river_dl_dir)
+
+src_dir = "../.."
+sys.path.append(src_dir)
 
 from river_dl.preproc_utils import asRunConfig
 from river_dl.preproc_utils import prep_all_data
@@ -14,6 +18,7 @@ from river_dl.postproc_utils import plot_obs, plot_ts, prepped_array_to_df
 from river_dl.predict import predict_from_arbitrary_data
 from river_dl.train import train_model
 from river_dl import loss_functions as lf
+from do_it_functions import calc_it_metrics_site
 
 out_dir = os.path.join(config['out_dir'], config['exp_name'])
 loss_function = lf.multitask_rmse(config['lambdas'])
@@ -29,7 +34,7 @@ rule as_run_config:
 
 rule prep_io_data:
     input:
-        f"../../../out/well_obs_io.zarr",
+        "../../../out/well_obs_io.zarr",
     output:
         "{outdir}/prepped.npz"
     run:
@@ -100,7 +105,7 @@ rule make_predictions:
     input:
         "{outdir}/prepped.npz",
         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
-        f"../../../out/well_obs_io.zarr",
+        "../../../out/well_obs_io.zarr",
     output:
         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather",
     run:
@@ -174,7 +179,7 @@ def get_grp_arg(wildcards):
  
 rule combine_metrics:
      input:
-          f"../../../out/well_obs_io.zarr",
+          "../../../out/well_obs_io.zarr",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/trn_preds.feather",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_preds.feather",
           "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_times_preds.feather"
@@ -226,3 +231,50 @@ rule plot_prepped_data:
                   partition=wildcards.partition)
 
 
+rule calc_functional_performance_one:
+    input:
+        "../../../out/well_obs_io.zarr",
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather"
+    output:
+        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
+    run:
+        calc_it_metrics_site(input[0],
+                             input[1],
+                             wildcards.src,
+                             wildcards.snk,
+                             wildcards.site,
+                             log_transform=False,
+                             model=wildcards.model,
+                             replicate=wildcards.rep,
+                             outfile=output[0])
+
+
+def get_func_perf_sites():
+    input_file = "../../../out/well_obs_io.zarr"
+    inputs = xr.open_zarr(input_file, consolidated=False)
+    inputs_df = inputs.to_dataframe()
+    
+    sites = inputs_df.index.unique('site_id')
+    sites = sites.drop(['014721254', '014721259'])
+    return sites
+
+
+rule gather_func_performances:
+    input:
+        expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/func_perf/{site}-{src}-{snk}-{{model}}.csv",
+                outdir=out_dir,
+                nstates=config['hidden_size'],
+                epochs=config['epochs'],
+                rep=list(range(config['num_replicates'])),
+                site=get_func_perf_sites(),
+                src=['tmmx'],
+                snk=['do_min', 'do_mean', 'do_max'])
+    output:
+        "{outdir}/{model}_func_perf.csv"
+    run:
+        df_list = []
+        for in_file in input:
+            df = pd.read_csv(in_file, dtype={"site": str})
+            df_list.append(df)
+        df_comb = pd.concat(df_list)
+        df_comb.to_csv(output[0], index=False)

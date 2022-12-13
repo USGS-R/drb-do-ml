@@ -16,7 +16,8 @@ rule all:
                  epochs=config['epochs'],
                  rep=list(range(config['num_replicates'])),
                  site_id=['01480870'],
-                 year=[2012])
+                 year=[2012]),
+          f"{out_dir}/{config['exp_name']}_func_perf.csv"
         
 
 module base_workflow:

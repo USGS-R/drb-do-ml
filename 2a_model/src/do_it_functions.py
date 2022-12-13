@@ -55,7 +55,7 @@ def calc_it_metrics_site(inputs_zarr,
     inputs_df = inputs.to_dataframe()
     
     # TODO: it'd be nice to read this in dynamically at some point
-    inputs_site = inputs_df.loc[site][['CAT_BASIN_AREA', 'CAT_BASIN_SLOPE', 'CAT_CNPY11_BUFF100',
+    inputs_site = inputs_df.loc[site][['CAT_BASIN_SLOPE', 'CAT_CNPY11_BUFF100',
            'CAT_ELEV_MEAN', 'CAT_IMPV11', 'CAT_TWI', 'SLOPE', 'day.length', 'depth',
            'discharge', 'light_ratio',
            'model_confidence', 'pr', 'resolution', 'rmax', 'rmin', 'shortwave',
