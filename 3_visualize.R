@@ -77,6 +77,7 @@ p3_targets_list <- list(
     p3_site_map_png,
     map_sites(flowlines = p1_nhd_reaches_sf,
               matched_sites = p2a_site_splits,
+              states_shp = p1_state_boundaries_sf,
               out_file = "3_visualize/out/do_site_map.png")
   ),
   

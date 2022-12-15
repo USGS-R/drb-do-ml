@@ -9,6 +9,8 @@
 #' @param matched_sites sf object containing site locations and the flowline
 #' reach identifier ("COMID") that the site has been matched to. Must contain
 #' columns "COMID" and "geometry".
+#' @param states_shp sf object containing the U.S. state boundaries to
+#' include in the watershed plot.
 #' @param out_file character string indicating the name of the saved file, 
 #' including file path and extension.
 #' @param huc6_select vector of character string(s) indicating the HUC6 basins that
@@ -37,6 +39,7 @@
 #' 
 map_sites <- function(flowlines, 
                       matched_sites, 
+                      states_shp,
                       out_file,
                       huc6_select = "020402", 
                       basin_bbox = c(xmin = -76.39556, ymin = 39.5, xmax = -74.37121, ymax = 40.89106),
@@ -109,7 +112,7 @@ map_sites <- function(flowlines,
     ggspatial::annotation_scale(bar_cols = c("gray70","white"))
   
   # create inset map
-  inset_map <- map_drb_watershed(matched_sites)
+  inset_map <- map_drb_watershed(matched_sites, states_shp = states_shp)
   
   # grab legend 
   legend <- cowplot::get_legend(sites_map)
@@ -145,10 +148,6 @@ map_sites <- function(flowlines,
 #' @param huc8 vector of character string(s) indicating the HUC8 basins that
 #' make up the watershed of interest. By default, the HUC8 basins that make up
 #' the Delaware River Basin will be used.
-#' @param states vector of character string(s) indicating which states should
-#' be included in the inset map, using two-letter postal code abbreviations for 
-#' each state. By default, the states surrounding the Delaware River Basin will
-#' be downloaded, including "NY", "PA", "NJ", "DE", and "MD".
 #' @param epsg_out integer indicating the coordinate reference system that 
 #' should be used when creating the inset map. Defaults to EPSG 3857, pseudo-
 #' mercator: https://epsg.io/3857
@@ -157,16 +156,13 @@ map_sites <- function(flowlines,
 #' Returns an inset map as a ggplot object.
 #'
 map_drb_watershed <- function(sites,
+                              states_shp,
                               huc8 = c("02040101","02040102","02040103",
                                        "02040104","02040105","02040106",
                                        "02040201","02040202","02040203",
                                        "02040204","02040205","02040206",
                                        "02040207"),
-                              states = c("NY","PA","NJ","DE","MD"),
                               epsg_out = 3857){
-  
-  # Download shapefiles for states that encompass the watershed of interest
-  states_shp <- USAboundaries::us_states(resolution = "high", states = states)
   
   # Download HUC8 boundaries associated with watershed boundary
   boundary <- nhdplusTools::get_huc8(id = huc8) %>%
@@ -187,6 +183,21 @@ map_drb_watershed <- function(sites,
     theme_void()
   
   return(inset_map)
+  
+}
+
+
+#' @title Download state shapefiles
+#' 
+#' @param states vector of character string(s) indicating which states should
+#' be included in the inset map, using two-letter postal code abbreviations for 
+#' each state. By default, the states surrounding the Delaware River Basin will
+#' be downloaded, including "NY", "PA", "NJ", "DE", and "MD".
+#' 
+get_state_shp <- function(states = c("NY","PA","NJ","DE","MD")){
+  
+  # Download shapefiles for states that encompass the watershed of interest
+  states_shp <- USAboundaries::us_states(resolution = "high", states = states)
   
 }
 

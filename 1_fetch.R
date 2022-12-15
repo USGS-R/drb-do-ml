@@ -9,6 +9,21 @@ source("1_fetch/src/fetch_nhdv2_attributes_from_sb.R")
 
 p1_targets_list <- list(
   
+  # Track and read in the state boundaries sf object. This file was 
+  # created by running `states <- get_state_shp()` followed by 
+  # `saveRDS(states, "1_fetch/in/state_boundaries.rds)`. get_state_shp
+  # is from 3_visualize/src/map_sites.R. It depends on the USAboundaries
+  # package, which is currently archived on CRAN.
+  tar_target(
+    p1_state_boundaries_rds,
+    "1_fetch/in/state_boundaries.rds",
+    format = "file"
+  ),
+  tar_target(
+    p1_state_boundaries_sf,
+    readRDS(p1_state_boundaries_rds)
+  ),
+  
   # download WQP data product from science base for discrete samples
   tar_target(
     p1_wqp_data_file,
