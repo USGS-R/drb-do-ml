@@ -110,7 +110,7 @@ base_config_options <- list(
   out_dir = "../../../out/models",
   # random seed for training; If FALSE, no seed. Otherwise, specify the seed:
   seed = FALSE,
-  num_replicates = 1,
+  num_replicates = 10,
   trn_offset = 1,
   tst_val_offset = 1,
   epochs = 100,
