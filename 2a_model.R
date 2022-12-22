@@ -233,10 +233,65 @@ p2a_targets_list <- list(
     system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete "))
     
     # print out the metrics file name for the target
-    file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv")
+   c(
+     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv"),
+     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_reach_metrics.csv"),
+     file.path("2a_model/out/models", p2a_model_ids$model_id, paste0(p2a_model_ids$model_id, "_func_perf.csv"))
+    )
     },
     format="file",
     pattern = map(p2a_model_ids)
+  ),
+
+  # combining the experiment overall metrics files into one
+  tar_target(
+    p2a_overall_metrics_file,
+    {
+      overall_metric_files = grep("overall_metrics", p2a_metrics_files, value=TRUE)
+      out_file_name = "2a_model/out/models/combined_overall_metrics.csv"
+      lapply(overall_metric_files, function(x){
+        dat <- readr::read_csv(x, show_col_types = FALSE) %>%
+          mutate(model_id = str_replace_all(x, '2a_model/out/models/|/exp_overall_metrics.csv', ''))
+        }) %>%
+        bind_rows() %>%
+        write_csv(out_file_name)
+      out_file_name
+    },
+    format="file",
+  ),
+
+  # combining the experiment reach metrics files into one
+  tar_target(
+    p2a_reach_metrics_file,
+    {
+      overall_metric_files = grep("reach_metrics", p2a_metrics_files, value=TRUE)
+      out_file_name = "2a_model/out/models/combined_reach_metrics.csv"
+      lapply(overall_metric_files, function(x){
+        dat <- readr::read_csv(x, show_col_types = FALSE) %>%
+          mutate(model_id = str_replace_all(x, '2a_model/out/models/|/exp_reach_metrics.csv', ''))
+        }) %>%
+        bind_rows() %>%
+        write_csv(out_file_name)
+      out_file_name
+    },
+    format="file",
+  ),
+
+  # combining the functional performance files into one
+  tar_target(
+    p2a_FP_metrics_file,
+    {
+      overall_metric_files = grep("func_perf", p2a_metrics_files, value=TRUE)
+      overall_metric_files <- append(overall_metric_files,
+                                     "2a_model/out/models/0_baseline_LSTM/observed_func_perf.csv")
+      out_file_name = "2a_model/out/models/combined_FP_metrics.csv"
+      lapply(overall_metric_files, function(x){
+        dat <- readr::read_csv(x, show_col_types = FALSE)}) %>%
+        bind_rows() %>%
+        write_csv(out_file_name)
+      out_file_name
+    },
+    format="file",
   )
   
 )
