@@ -159,14 +159,13 @@ def calc_it_metrics_site(inputs_zarr,
     max_it['rmse'] = math.sqrt(mse)
     
     max_it['TEmax'] = TEmax
-    for i in range(9):
-        max_it[f'TE{i}'] = it_dict['TE'][i]
     max_it['TEmaxt'] = TEmaxt
     max_it['TEmaxcrit'] = TEmaxcrit
     
     max_it['MImax'] = MImax
-    for i in range(9):
-        max_it[f'MI{i}'] = it_dict['MI'][i]
+    for variable in ['TE', 'TEcrit', 'MI', 'MIcrit', 'corr']:
+        for i in range(9):
+            max_it[f'{variable}{i}'] = it_dict[variable][i]
     max_it['MImaxt'] = MImaxt
     max_it['MImaxcrit'] = MImaxcrit
     max_it['replicate'] = replicate
