@@ -208,14 +208,23 @@ def lag_data(M, shift):
     
     length_M = M.shape[0]
     cols_M = M.shape[1]
-
-    #this is for => H(Xt-T, Yt, Yt-T)
-    newlength_M = length_M - shift
-    M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
-    M_lagged[:,0] = M[:(length_M-shift),0]
-    M_lagged[:,1] = M[shift:(length_M)+1,1]
-    M_lagged[:,2] = M[:(length_M-shift),1]
     
+    if shift == 0:
+        #this is for => H(Xt-t, Yt, Yt-1) with shift = 0
+        newlength_M = length_M - 1
+        M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
+        M_lagged[:,0] = M[:(newlength_M),0]
+        M_lagged[:,1] = M[:(newlength_M),1]
+        M_lagged[:,2] = M[1:(length_M),1]
+
+    else:
+        #this is for => H(Xt-T, Yt, Yt-T)
+        newlength_M = length_M - shift
+        M_lagged = np.nan*np.ones([newlength_M, cols_M+1])
+        M_lagged[:,0] = M[:(length_M-shift),0]
+        M_lagged[:,1] = M[shift:(length_M)+1,1]
+        M_lagged[:,2] = M[:(length_M-shift),1]
+        
     return M_lagged
 
 def calcTE(M, shift, nbins):
