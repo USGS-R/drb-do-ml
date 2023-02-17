@@ -254,7 +254,7 @@ p2a_targets_list <- list(
     },
   ),
 
-  # combining the experiment predictive performance (PP) metrics files into one
+  # combining the individual predictive performance (PP) metrics files from four different model experiments into one data frame for each metric type (i.e., overall metrics, overall reach metrics, reach metrics by month, overall metrics by month).
   tar_target(
     p2a_PP_metrics_files,
     {
