@@ -236,6 +236,8 @@ p2a_targets_list <- list(
    c(
      file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_overall_metrics.csv"),
      file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_reach_metrics.csv"),
+     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_month_reach_metrics.csv"),
+     file.path("2a_model/out/models", p2a_model_ids$model_id, "exp_month_metrics.csv"),
      file.path("2a_model/out/models", p2a_model_ids$model_id, paste0(p2a_model_ids$model_id, "_func_perf.csv"))
     )
     },
@@ -243,39 +245,33 @@ p2a_targets_list <- list(
     pattern = map(p2a_model_ids)
   ),
 
-  # combining the experiment overall metrics files into one
+
+  # metric types so we can map over them
   tar_target(
-    p2a_overall_metrics_file,
+    p2a_metric_types,
     {
-      overall_metric_files = grep("overall_metrics", p2a_metrics_files, value=TRUE)
-      out_file_name = "2a_model/out/models/combined_overall_metrics.csv"
-      lapply(overall_metric_files, function(x){
-        dat <- readr::read_csv(x, show_col_types = FALSE) %>%
-          mutate(model_id = str_replace_all(x, '2a_model/out/models/|/exp_overall_metrics.csv', ''))
-        }) %>%
-        bind_rows() %>%
-        write_csv(out_file_name)
-      out_file_name
+     c("overall", "reach", "month_reach", "month")
     },
-    format="file",
   ),
 
-  # combining the experiment reach metrics files into one
+  # combining the individual predictive performance (PP) metrics files from four different model experiments into one data frame for each metric type (i.e., overall metrics, overall reach metrics, reach metrics by month, overall metrics by month).
   tar_target(
-    p2a_reach_metrics_file,
+    p2a_PP_metrics_files,
     {
-      overall_metric_files = grep("reach_metrics", p2a_metrics_files, value=TRUE)
-      out_file_name = "2a_model/out/models/combined_reach_metrics.csv"
-      lapply(overall_metric_files, function(x){
+      metric_files = grep(paste0("exp_", p2a_metric_types, "_metrics"), p2a_metrics_files, value=TRUE)
+      out_file_name = paste0("2a_model/out/models/combined_", p2a_metric_types, "_metrics.csv")
+      lapply(metric_files, function(x){
         dat <- readr::read_csv(x, show_col_types = FALSE) %>%
-          mutate(model_id = str_replace_all(x, '2a_model/out/models/|/exp_reach_metrics.csv', ''))
+          mutate(model_id = str_replace_all(x, paste0('2a_model/out/models/|/exp_', p2a_metric_types, '_metrics.csv'), ''))
         }) %>%
         bind_rows() %>%
         write_csv(out_file_name)
       out_file_name
     },
     format="file",
+    pattern = map(p2a_metric_types)
   ),
+                         
 
   # combining the functional performance files into one
   tar_target(
