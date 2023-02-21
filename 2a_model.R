@@ -279,7 +279,7 @@ p2a_targets_list <- list(
     {
       overall_metric_files = grep("func_perf", p2a_metrics_files, value=TRUE)
       overall_metric_files <- append(overall_metric_files,
-                                     "2a_model/out/models/0_baseline_LSTM/observed_func_perf.csv")
+                                     "2a_model/out/models/2_multitask_dense/observed_func_perf.csv")
       out_file_name = "2a_model/out/models/combined_FP_metrics.csv"
       lapply(overall_metric_files, function(x){
         dat <- readr::read_csv(x, show_col_types = FALSE)}) %>%

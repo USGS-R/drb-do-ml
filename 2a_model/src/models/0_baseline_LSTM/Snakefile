@@ -17,8 +17,7 @@ rule all:
                  rep=list(range(config['num_replicates'])),
                  site_id=['01480870'],
                  year=[2012]),
-          f"{out_dir}/{config['exp_name']}_func_perf.csv",
-          f"{out_dir}/observed_func_perf.csv"
+          f"{out_dir}/{config['exp_name']}_func_perf.csv"
 
         
 
