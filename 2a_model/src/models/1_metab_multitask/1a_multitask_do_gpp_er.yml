@@ -1,13 +1,13 @@
-exp_name: 1a_multitask_do_gpp_er
+exp_name: "1a_multitask_do_gpp_er"
 y_vars:
-  - do_min
-  - do_mean
-  - do_max
-  - GPP
-  - ER
-  - K600
-  - depth
-  - temp.water
+  - "do_min"
+  - "do_mean"
+  - "do_max"
+  - "GPP"
+  - "ER"
+  - "K600"
+  - "depth"
+  - "temp.water"
 lambdas:
   - 1
   - 1
