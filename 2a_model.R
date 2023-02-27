@@ -46,7 +46,7 @@ p2a_targets_list <- list(
   # char vector of well-observed train sites
   tar_target(
     p2a_trn_sites,
-    p2_well_observed_sites[!(p2_well_observed_sites %in% val_sites) & !(p2_well_observed_sites %in% tst_sites)]
+    p2_well_observed_sites[!(p2_well_observed_sites %in% val_sites)]
   ),
 
   # char vector of well-observed val and training sites
@@ -73,13 +73,12 @@ p2a_targets_list <- list(
   tar_target(
     p2a_site_splits,
     p2_sites_w_segs %>%
-      filter(site_id %in% c(p2a_trn_sites, val_sites, tst_sites)) %>%
+      filter(site_id %in% c(p2a_trn_sites, val_sites)) %>%
       mutate(site_type = case_when(
         site_id %in% p2a_trn_sites & 
           !site_id %in% p2a_trn_sites_w_val_data ~ "train",
         site_id %in% p2a_trn_sites_w_val_data ~ "train/val",
         site_id %in% val_sites ~ "validation",
-        site_id %in% tst_sites ~ "test",
         TRUE ~ NA_character_),
         # assign epsg codes based on "datum" column and convert
         # data frame to sf object
@@ -212,6 +211,7 @@ p2a_targets_list <- list(
     # we need these to make the prepped data file, so force a dependency of this 
     # target on p2a_well_obs_data.
     p2a_well_obs_data
+    p2a_well_obs_data_zarr
 
     base_dir <- "2a_model/src/models"
     snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
