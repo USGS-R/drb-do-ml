@@ -1,6 +1,6 @@
 files=(checkpoint .data-00000-of-00001 .index .snakemake_timestamp)
 
-models=(0_baseline_LSTM 2_multitask_dense)
+models=(0_baseline_LSTM 1a_multitask_do_gpp_er 1_metab_multitask 2_multitask_dense)
 
 for f in ${files[@]}; do
     for d in ${models[@]}; do
