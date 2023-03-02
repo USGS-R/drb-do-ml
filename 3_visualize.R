@@ -31,13 +31,13 @@ p3_targets_list <- list(
   # Generate summary plots (all daily and inst data)
   tar_target(
     p3_daily_summary_plot_png,
-    plot_daily_data(p1_daily_data, fileout = "3_visualize/out/daily_daily_means.png",
+    plot_daily_data(p2_daily_data_filtered, fileout = "3_visualize/out/daily_daily_means.png",
                     fig_cols = 5, fig_width = 8, fig_height = 7),
     format = "file"
   ),
   tar_target(
     p3_inst_summary_plot_png,
-    plot_daily_data(p1_inst_data, fileout = "3_visualize/out/inst_daily_means.png",
+    plot_daily_data(p2_inst_data_filtered, fileout = "3_visualize/out/inst_daily_means.png",
                     fig_cols = 4, fig_width = 6, fig_height = 7),
     format = "file"
   ),
@@ -51,15 +51,15 @@ p3_targets_list <- list(
   # Generate summary plots (well-observed data only)
   tar_target(
     p3_daily_summary_plot_filtered_png,
-    plot_daily_data(p1_daily_data, fileout = "3_visualize/out/filtered_daily_means.png",
-                    min_count = 300, start_date = "1980-01-01", end_date = "1994-01-01",
+    plot_daily_data(p2_daily_data_filtered, fileout = "3_visualize/out/filtered_daily_means.png",
+                    min_count = min_obs_days, start_date = "1980-01-01", end_date = "1994-01-01",
                     fig_cols = 1, fig_width = 4, fig_height = 10),
     format = "file"
   ),
   tar_target(
     p3_inst_summary_plot_filtered_png,
-    plot_daily_data(p1_inst_data, fileout = "3_visualize/out/filtered_inst_means.png",
-                    min_count = 300, fig_cols = 1, fig_width = 4, fig_height = 10),
+    plot_daily_data(p2_inst_data_filtered, fileout = "3_visualize/out/filtered_inst_means.png",
+                    min_count = min_obs_days, fig_cols = 1, fig_width = 4, fig_height = 10),
     format = "file"
   ),
 

@@ -68,8 +68,8 @@ p2_targets_list <- list(
     p2_site_list,
     create_site_list(wqp_data = p2_filtered_wqp_data_subset,
                      nwis_sites = p1_nwis_sites,
-                     nwis_daily_data = p1_daily_data,
-                     nwis_inst_data = p1_inst_data,
+                     nwis_daily_data = p2_daily_data_filtered,
+                     nwis_inst_data = p2_inst_data_filtered,
                      hucs = drb_huc8s,
                      crs_out="NAD83")
   ), 
@@ -77,7 +77,7 @@ p2_targets_list <- list(
   # Create and save log file containing data availability summary
   tar_target(
     p2_sitelist_summary_csv,
-    summarize_site_list(p2_site_list, p1_daily_data, p1_inst_data,
+    summarize_site_list(p2_site_list, p2_daily_data_filtered, p2_inst_data_filtered,
                         fileout = "2_process/log/sitelist_summary.csv"),
     format = "file"
   ),
