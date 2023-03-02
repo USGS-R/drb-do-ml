@@ -87,7 +87,7 @@ dummy_date <- "2023-03-02"
 val_sites <- c("01475530", "01475548")
 
 # Define train/val/test dates
-train_start_date <- '1980-01-01'
+train_start_date <- '1980-10-01'
 train_end_date <- '2015-10-01'
 val_start_date <- '2015-10-01'
 val_end_date <- '2021-10-01'
