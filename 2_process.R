@@ -34,11 +34,25 @@ p2_targets_list <- list(
     format = "file"
   ),
   
+  # Filter DO data to only include approved records
+  tar_target(
+    p2_inst_data_filtered,
+    filter(p1_inst_data, !grepl("P", Value_Inst_cd))
+  ),
+  tar_target(
+    p2_daily_data_filtered,
+    p1_daily_data %>%
+      mutate(Value = if_else(grepl("P", Value_cd), NA_real_, Value),
+             Value_Max = if_else(grepl("P", Value_Max_cd), NA_real_, Value_Max),
+             Value_Min = if_else(grepl("P", Value_Min_cd), NA_real_, Value_Min)) %>%
+      filter(!is.na(Value)|!is.na(Value_Max)|!is.na(Value_Min))
+  ),
+  
   # Aggregate instantaneous DO data to daily min/mean/maxs
   tar_target(
     p2_inst_data_daily,
-    aggregate_data_to_daily(inst_data = p1_inst_data,
-                            daily_data = p1_daily_data, 
+    aggregate_data_to_daily(inst_data = p2_inst_data_filtered,
+                            daily_data = p2_daily_data_filtered, 
                             min_daily_coverage = 0.5, 
                             output_tz = "America/New_York")
   ),
@@ -46,7 +60,7 @@ p2_targets_list <- list(
   # Combine 1) daily DO data and 2) instantaneous DO data that has been aggregated to daily 
   tar_target(
     p2_daily_combined,
-    bind_rows(p1_daily_data, p2_inst_data_daily)
+    bind_rows(p2_daily_data_filtered, p2_inst_data_daily)
   ),
   
   # Create a list of unique site locations containing DO data  
