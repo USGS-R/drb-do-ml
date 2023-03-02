@@ -9,24 +9,6 @@ source("1_fetch/src/fetch_nhdv2_attributes_from_sb.R")
 
 p1_targets_list <- list(
   
-  # download WQP data product from science base for discrete samples
-  tar_target(
-    p1_wqp_data_file,
-    download_sb_file(sb_id = "5e010424e4b0b207aa033d8c",
-                     file_name = "Water-Quality Data.zip",
-                     out_dir="1_fetch/out"),
-    format = "file"
-  ),
-
-  # load WQP data into R object
-  tar_target(
-    p1_wqp_data,
-    {
-      unzip(zipfile = p1_wqp_data_file, exdir = "1_fetch/out", overwrite = TRUE)
-      readRDS(paste("1_fetch/out","/Water-Quality Data/DRB.WQdata.rds", sep = ""))
-    }
-  ),
-  
   # Identify NWIS sites with DO data 
   tar_target(
     p1_nwis_sites,
