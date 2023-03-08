@@ -15,9 +15,8 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plot_utils
 
-validation_sites = ["01472104", "01473500", "01481500"]
-test_sites = ["01475530", "01475548"]
 
 
 def read_and_filter_df(metric_type, partition):
@@ -31,44 +30,48 @@ def read_and_filter_df(metric_type, partition):
 
 df_comb_reach = read_and_filter_df("reach", "val")
 
-# +
-g = sns.catplot(x='site_id', y='rmse', col='variable', data=df_comb_reach, hue='model_id', kind='bar', legend=False, ci='sd')
+######## Barplot by site ######################################################
+g = sns.catplot(x='site_id', y='rmse', col='variable', data=df_comb_reach,
+                hue='model_id', kind='bar', legend=False, ci='sd',
+                hue_order=plot_utils.model_order)
 g.set_xticklabels(rotation=90)
 for ax in g.axes.flatten():
     ax.grid()
     ax.set_axisbelow(True)
+    plot_utils.mark_val_sites(ax)
 
 plt.legend(bbox_to_anchor=(1.05, .55))
 plt.tight_layout()
 plt.savefig("../../out/pred_perf/val_results_by_site.png")
 plt.clf()
-# -
 
-g=sns.catplot(x='site_id', y='rmse', hue='model_id', col='variable', col_wrap=3, data=df_comb_reach, dodge=True, legend=False)
+######## Stripplot by site ####################################################
+g=sns.catplot(x='site_id', y='rmse', hue='model_id', col='variable',
+              col_wrap=3, data=df_comb_reach, dodge=True, legend=False,
+              hue_order=plot_utils.model_order)
 g.set_xticklabels(rotation=90)
-for ax in g.axes.flatten():
-    ax.grid()
-
+g.set_titles('{col_name}')
 for site_id, ax in g.axes_dict.items():
     ax.grid()
-    if site_id in validation_sites:
-        ax.text(1, 3.2, "**Validation Site**", ha='center')
+    plot_utils.mark_val_sites(ax)
+
 plt.legend(bbox_to_anchor=(1.05, .55))
 plt.tight_layout()
 plt.savefig('../../out/pred_perf/val_results_by_site_strip.png')
 plt.clf()
 
-# -
 
+######## Barplot overall ######################################################
 df_comb = read_and_filter_df('overall', 'val')
 
-# +
 fig, ax = plt.subplots(figsize=(6,4))
-ax = sns.barplot(x='variable', y='rmse', data=df_comb, hue='model_id', ax=ax)
-ax.bar_label(ax.containers[0], label_type="center", fmt='%.2f')
-ax.bar_label(ax.containers[1], label_type="center", fmt='%.2f')
+ax = sns.barplot(x='variable', y='rmse', data=df_comb, hue='model_id', ax=ax,
+                 hue_order=plot_utils.model_order)
+for c in ax.containers:
+    ax.bar_label(c, label_type="center", fmt='%.2f')
+
+ax.set_xlabel('')
 
 plt.savefig("../../out/pred_perf/val_results_overall.png")
-# -
 
 
