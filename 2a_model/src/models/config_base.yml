@@ -1,4 +1,4 @@
-out_dir: ../../../out/models
+out_dir: "../../../out/models"
 seed: False
 num_replicates: 10
 trn_offset: 1.0
@@ -10,47 +10,41 @@ recurrent_dropout: 0.2
 finetune_learning_rate: 0.01
 early_stopping: False
 validation_sites:
-  - '01472104'
-  - '01473500'
-  - 01481500
-test_sites:
-  - '01475530'
-  - 01475548
-train_start_date: '1980-01-01'
-train_end_date: '2014-10-01'
-val_start_date: '2014-10-01'
-val_end_date: '2015-10-01'
-test_start_date: '2015-10-01'
-test_end_date: '2022-10-01'
+  - "01475530"
+  - "01475548"
+train_start_date: '1980-10-01'
+train_end_date: '2015-10-01'
+val_start_date: '2015-10-01'
+val_end_date: '2021-10-01'
 x_vars:
-  - tmmn
-  - tmmx
-  - pr
-  - srad
-  - SLOPE
-  - TOTDASQKM
-  - CAT_BASIN_SLOPE
-  - TOT_BASIN_SLOPE
-  - CAT_ELEV_MEAN
-  - CAT_RDX
-  - CAT_BFI
-  - CAT_EWT
-  - CAT_TWI
-  - CAT_PPT7100_ANN
-  - TOT_PPT7100_ANN
-  - CAT_RUN7100
-  - CAT_CNPY11_BUFF100
-  - CAT_IMPV11
-  - TOT_IMPV11
-  - CAT_NLCD11_wetland
-  - TOT_NLCD11_wetland
-  - CAT_SANDAVE
-  - CAT_PERMAVE
-  - TOT_PERMAVE
-  - CAT_RFACT
-  - CAT_WTDEP
-  - TOT_WTDEP
-  - CAT_NPDES_MAJ
-  - CAT_NDAMS2010
-  - CAT_NORM_STORAGE2010
+  - "tmmn"
+  - "tmmx"
+  - "pr"
+  - "srad"
+  - "SLOPE"
+  - "TOTDASQKM"
+  - "CAT_BASIN_SLOPE"
+  - "TOT_BASIN_SLOPE"
+  - "CAT_ELEV_MEAN"
+  - "CAT_RDX"
+  - "CAT_BFI"
+  - "CAT_EWT"
+  - "CAT_TWI"
+  - "CAT_PPT7100_ANN"
+  - "TOT_PPT7100_ANN"
+  - "CAT_RUN7100"
+  - "CAT_CNPY11_BUFF100"
+  - "CAT_IMPV11"
+  - "TOT_IMPV11"
+  - "CAT_NLCD11_wetland"
+  - "TOT_NLCD11_wetland"
+  - "CAT_SANDAVE"
+  - "CAT_PERMAVE"
+  - "TOT_PERMAVE"
+  - "CAT_RFACT"
+  - "CAT_WTDEP"
+  - "TOT_WTDEP"
+  - "CAT_NPDES_MAJ"
+  - "CAT_NDAMS2010"
+  - "CAT_NORM_STORAGE2010"
  

@@ -48,15 +48,13 @@ rule prep_io_data:
                       train_end_date=config['train_end_date'],
                       val_start_date=config['val_start_date'],
                       val_end_date=config['val_end_date'],
-                      test_start_date=config['test_start_date'],
-                      test_end_date=config['test_end_date'],
                       val_sites=config['validation_sites'],
                       out_file=output[0],
                       normalize_y=False,
                       trn_offset = config['trn_offset'],
                       tst_val_offset = config['tst_val_offset'])
 
-        # check to make sure there is no validation or testing data
+        # check to make sure there is no validation data
         # in the training data set
         data = np.load(output[0], allow_pickle=True)
         df_trn = prepped_array_to_df(data['y_obs_trn'],
@@ -64,10 +62,8 @@ rule prep_io_data:
                                      data['ids_trn'],
                                      col_names=data['y_obs_vars'])
         df_trn_val_sites = df_trn[df_trn.seg_id_nat.isin(config['validation_sites'])]
-        df_trn_tst_sites = df_trn[df_trn.seg_id_nat.isin(config['test_sites'])]
 
         assert df_trn_val_sites['do_mean'].notna().sum() == 0
-        assert df_trn_tst_sites['do_mean'].notna().sum() == 0
 
 
 
@@ -124,8 +120,7 @@ rule make_predictions:
 def filter_predictions(all_preds_file, partition, out_file):
         df_preds = pd.read_feather(all_preds_file)
         all_sites = df_preds.site_id.unique()
-        trn_sites = all_sites[(~np.isin(all_sites, config["validation_sites"])) &
-                              (~np.isin(all_sites, config["test_sites"]))]
+        trn_sites = all_sites[~np.isin(all_sites, config["validation_sites"])]
 
         df_preds_trn_sites = df_preds[df_preds.site_id.isin(trn_sites)] 
 
@@ -138,7 +133,7 @@ def filter_predictions(all_preds_file, partition, out_file):
         elif partition == "val":
             # get all of the data in the validation sites and in the validation period
             # this assumes that the test period follows the validation period which follows the train period
-            df_preds_filt_val = df_preds_val_sites[df_preds_val_sites.date < config['test_start_date']]
+            df_preds_filt_val = df_preds_val_sites
             df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < config['val_end_date']) &
                                                    (df_preds_trn_sites.date >= config['val_start_date'])]
             df_preds_filt = pd.concat([df_preds_filt_val , df_preds_filt_trn], axis=0)
