@@ -32,7 +32,8 @@ p1_targets_list <- list(
     p1_nwis_sites,
     {
       dummy <- dummy_date
-      get_nwis_sites(drb_huc8s, pcode_select, site_tp_select, stat_cd_select)
+      get_nwis_sites(drb_huc8s, pcode_select, site_tp_select, stat_cd_select) %>%
+        filter(huc_cd %in% lower_drb_huc8 | site_no %in% additional_nwis_sites)
     }
   ),
   

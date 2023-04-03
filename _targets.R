@@ -52,8 +52,14 @@ omit_wqp_events <- c("Spill","Volcanic action")
 pcode_select <- c("00300") 
 
 # Define minor HUCs (hydrologic unit codes) that make up the DRB
-# Lower Delaware: 020402 accounting code 
-drb_huc8s <- c("02040201","02040202","02040203","02040204","02040205","02040206","02040207")
+# Lower Delaware: 020402 accounting code. HUC8 02040106 was added to capture
+# DO sites upstream of Trenton on the Lehigh River
+lower_drb_huc8 <- c("02040201","02040202","02040203","02040204","02040205",
+                    "02040206", "02040207")
+drb_huc8s <- c(lower_drb_huc8, "02040106")
+
+# Add desired sites not included in HUC8 watersheds listed above
+additional_nwis_sites <- "01454700"
 
 # Define USGS site types for which to download NWIS data 
 # (https://maps.waterdata.usgs.gov/mapper/help/sitetype.html)
@@ -78,7 +84,7 @@ latest_date <- "2021-10-01"
 min_obs_days <- 100
 
 # Change dummy date to force re-build of NWIS DO sites and data download
-dummy_date <- "2023-03-02"
+dummy_date <- "2023-04-03"
 
 
 #2) Configure model inputs/variables 
