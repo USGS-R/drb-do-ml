@@ -20,14 +20,14 @@ p2a_targets_list <- list(
   ),
   
   # join met and light data with site_ids (resulting data frame will have
-  # 16 unique COMID's which matches the number of well-observed reaches).
+  # 17 unique COMID's which matches the number of well-observed reaches).
   tar_target(
     p2a_met_data_w_sites,
     match_site_ids_to_segs(p2a_met_light_data, p2_sites_w_segs)
   ),
 
   # join segment attributes with site_ids (resulting data frame will have one
-  # row for each unique COMID x site_id in the lower DRB; n = 10,111).
+  # row for each unique COMID x site_id in the lower DRB; n = 11,505).
   tar_target(
     p2a_seg_attr_w_sites,
     match_site_ids_to_segs(p2_seg_attr_data, p2_sites_w_segs)
