@@ -22,7 +22,7 @@ fetch_nhdv2_attributes_from_sb <- function(vars_item, save_dir, comids,
   
   # 1) Select items associated with ScienceBase ID to download
   item_names <- sbtools::item_list_files(sb_id = unique(vars_item$sb_id)) %>%
-    filter(!grepl(".xml", fname)) %>%
+    filter(!grepl(".xml", fname), !grepl(".parquet", fname)) %>%
     pull(fname)
   
   # 2) Download data from ScienceBase
