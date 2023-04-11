@@ -1,0 +1,45 @@
+[
+  {
+    "name": "drb-do-ml",
+    "organization": "U.S. Geological Survey",
+    "description": "Code repo for machine learning models that predict dissolved oxygen in the Delaware River Basin",
+    "version": "main",
+    "status": "Development",
+    "permissions": {
+      "usageType": "openSource",
+      "licenses": [
+        {
+          "name": "Public Domain, CC0-1.0",
+          "URL": "https://github.com/USGS-R/drb-do-ml/raw/main/LICENSE.md"
+        }
+      ]
+    },
+    "homepageURL": "https://github.com/USGS-R/drb-do-ml/",
+    "downloadURL": "https://github.com/USGS-R/drb-do-ml/archive/refs/heads/main.zip",
+    "disclaimerURL": "https://github.com/USGS-R/drb-do-ml/raw/main/DISCLAIMER.md",
+    "repositoryURL": "https://github.com/USGS-R/drb-do-ml.git",
+    "vcs": "git",
+    "laborHours": 500,
+    "tags": [
+      "R",
+      "USGS",
+      "dissolved oxygen",
+      "water",
+      "LSTM",
+      "river-dl",
+      "river",
+      "usg-artificial-intelligence"
+    ],
+    "languages": [
+      "R",
+      "Python"
+    ],
+    "contact": {
+      "name": "Lauren Koenig",
+      "email": "lkoenigsnyder@usgs.gov"
+    },
+    "date": {
+      "metadataLastUpdated": "2023-04-11"
+    }
+  }
+]
