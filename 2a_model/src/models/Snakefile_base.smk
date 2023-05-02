@@ -32,12 +32,31 @@ rule as_run_config:
         asRunConfig(config,output[0])
 
 
+def get_train_val(holdout, config):
+    if holdout == "temporal":
+        trn_end = config['train_end_date_temporal_holdout']
+        val_start = config['val_start_date_temporal_holdout'] 
+        val_end = config['val_end_date_temporal_holdout'] 
+
+        val_sites = config['validation_sites_urban']
+    else:
+        trn_end = config['train_end_date_spatial_holdout']
+        val_start = config['val_start_date_spatial_holdout'] 
+        val_end = config['val_end_date_spatial_holdout'] 
+        if holdout == "1_urban":
+            val_sites = [config['validation_sites_urban'][0]]
+        else:
+            val_sites = [holdout]
+    return trn_end, val_start , val_end, val_sites
+
+
 rule prep_io_data:
     input:
         "../../../out/well_obs_io.zarr",
     output:
-        "{outdir}/prepped.npz"
+        "{outdir}/holdout_{holdout}/prepped.npz"
     run:
+        trn_end, val_start, val_end, val_sites = get_train_val(wildcards.holdout, config) 
         prep_all_data(x_data_file=input[0],
                       y_data_file=input[0],
                       x_vars=config['x_vars'],
@@ -45,10 +64,10 @@ rule prep_io_data:
                       spatial_idx_name='site_id',
                       time_idx_name='date',
                       train_start_date=config['train_start_date'],
-                      train_end_date=config['train_end_date'],
-                      val_start_date=config['val_start_date'],
-                      val_end_date=config['val_end_date'],
-                      val_sites=config['validation_sites'],
+                      train_end_date=trn_end,
+                      val_start_date=val_start,
+                      val_end_date=val_end,
+                      val_sites=val_sites,
                       out_file=output[0],
                       normalize_y=False,
                       trn_offset = config['trn_offset'],
@@ -70,12 +89,11 @@ rule prep_io_data:
 # Finetune/train the model on observations
 rule train:
     input:
-        "{outdir}/prepped.npz"
+        "{outdir}/holdout_{holdout}/prepped.npz"
     output:
-        directory("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/"),
-        #directory("{outdir}/best_val_weights/"),
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_log.csv",
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_time.txt",
+        directory("{outdir}/holdout_{holdout}/rep_{rep}/train_weights/"),
+        "{outdir}/holdout_{holdout}/rep_{rep}/train_log.csv",
+        "{outdir}/holdout_{holdout}/rep_{rep}/train_time.txt",
     run:
         optimizer = tf.optimizers.Adam(learning_rate=config['finetune_learning_rate']) 
         params.model.compile(optimizer=optimizer, loss=loss_function)
@@ -84,14 +102,13 @@ rule train:
         train_model(params.model,
                     x_trn = data['x_trn'],
                     y_trn = data['y_obs_trn'],
-                    epochs = int(wildcards.epochs),
+                    epochs = config['epochs'],
                     batch_size = nsegs,
                     x_val = data['x_val'],
                     y_val = data['y_obs_val'],
                     # I need to add a trailing slash here. Otherwise the wgts
                     # get saved in the "outdir"
                     weight_dir = output[0] + "/",
-                    #best_val_weight_dir = output[1] + "/",
                     log_file = output[1],
                     time_file = output[2],
                     early_stop_patience=config['early_stopping'])
@@ -99,11 +116,11 @@ rule train:
 
 rule make_predictions:
     input:
-        "{outdir}/prepped.npz",
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
+        "{outdir}/holdout_{holdout}/prepped.npz",
+        "{outdir}/holdout_{holdout}/rep_{rep}/train_weights/",
         "../../../out/well_obs_io.zarr",
     output:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather",
+        "{outdir}/holdout_{holdout}/rep_{rep}/preds.feather",
     run:
         weight_dir = input[1] + "/"
         params.model.load_weights(weight_dir)
@@ -154,9 +171,9 @@ def filter_predictions(all_preds_file, partition, out_file):
 
 rule make_filtered_predictions:
     input:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather"
+        "{outdir}/holdout_{holdout}/rep_{rep}/preds.feather"
     output:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{partition}_preds.feather"
+        "{outdir}/holdout_{holdout}/rep_{rep}/{partition}_preds.feather"
     run:
         filter_predictions(input[0], wildcards.partition, output[0])
 
@@ -175,11 +192,11 @@ def get_grp_arg(wildcards):
 rule combine_metrics:
      input:
           "../../../out/well_obs_io.zarr",
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/trn_preds.feather",
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_preds.feather",
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_times_preds.feather"
+          "{outdir}/holdout_{holdout}/rep_{rep}/trn_preds.feather",
+          "{outdir}/holdout_{holdout}/rep_{rep}/val_preds.feather",
+          "{outdir}/holdout_{holdout}/rep_{rep}/val_times_preds.feather"
      output:
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{metric_type}_metrics.csv"
+          "{outdir}/holdout_{holdout}/rep_{rep}/{metric_type}_metrics.csv"
      params:
          grp_arg = get_grp_arg
      run:
@@ -190,19 +207,21 @@ rule combine_metrics:
                           spatial_idx_name='site_id',
                           time_idx_name='date',
                           group=params.grp_arg,
-                          id_dict={"nstates": wildcards.nstates,
-                                   "rep_id": wildcards.rep,
-                                   "nepochs": wildcards.epochs},
+                          id_dict={"holdout": wildcards.holdout,
+                                   "rep_id": wildcards.rep},
                           outfile=output[0])
  
  
+def get_holdouts(config):
+    return config['validation_sites_nonurban'] + ['1_urban', 'temporal']
+
+
 rule exp_metrics:
      input:
-        expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{{metric_type}}_metrics.csv",
+        expand("{outdir}/holdout_{holdout}/rep_{rep}/{{metric_type}}_metrics.csv",
                 outdir=out_dir,
+                holdout=get_holdouts(config),
                 rep=list(range(config['num_replicates'])),
-                nstates=config['hidden_size'],
-                epochs=config['epochs'],
         )
      output:
           "{outdir}/exp_{metric_type}_metrics.csv"
@@ -216,7 +235,7 @@ rule plot_prepped_data:
      input:
          "{outdir}/prepped.npz",
      output:
-         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{variable}_part_{partition}.png",
+         "{outdir}/holdout_{holdout}/rep_{rep}/{variable}_part_{partition}.png",
      run:
          plot_obs(input[0],
                   wildcards.variable,
@@ -229,9 +248,9 @@ rule plot_prepped_data:
 rule calc_functional_performance_one:
     input:
         "../../../out/well_obs_io.zarr",
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather"
+        "{outdir}/holdout_{holdout}/rep_{rep}/preds.feather"
     output:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
+        "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
     run:
         calc_it_metrics_site(input[0],
                              input[1],
@@ -256,12 +275,11 @@ def get_func_perf_sites():
 
 rule gather_func_performances:
     input:
-        expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/func_perf/{site}-{src}-{snk}-{{model}}.csv",
+        expand("{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{{model}}.csv",
                 outdir=out_dir,
-                nstates=config['hidden_size'],
-                epochs=config['epochs'],
                 rep=list(range(config['num_replicates'])),
                 site=get_func_perf_sites(),
+                holdout=get_holdouts(config),
                 src=['tmmx'],
                 snk=['do_min', 'do_mean', 'do_max'])
     output:

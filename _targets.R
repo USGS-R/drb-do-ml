@@ -84,13 +84,6 @@ dummy_date <- "2023-03-02"
 #2) Configure model inputs/variables 
 
 # Define test and validation sites
-val_sites <- c("01475530", "01475548")
-
-# Define train/val/test dates
-train_start_date <- '1980-10-01'
-train_end_date <- '2015-10-01'
-val_start_date <- '2015-10-01'
-val_end_date <- '2021-10-01'
 
 # Define global model parameters for the "baseline" deep learning model
 x_vars_global <- c("tmmn","tmmx","pr","srad","SLOPE","TOTDASQKM","CAT_BASIN_SLOPE",
@@ -117,11 +110,15 @@ base_config_options <- list(
   finetune_learning_rate = 0.01,
   early_stopping = FALSE,
   # train/val/test split information is defined above:
-  validation_sites = val_sites, 
-  train_start_date = train_start_date, 
-  train_end_date = train_end_date, 
-  val_start_date = val_start_date, 
-  val_end_date = val_end_date,
+  validation_sites_urban = c("01475530", "01475548"),
+  validation_sites_nonurban = c('01472104', '014721254', '014721259', '01473500', '01480617', '01480870', '01481000', '01481500'),
+  train_start_date = '2007-10-01', 
+  train_end_date_temporal_holdout = '2015-10-01', 
+  train_end_date_spatial_holdout = '2021-10-01', 
+  val_start_date_temporal_holdout = '2015-10-01', 
+  val_start_date_spatial_holdout = '2015-10-01', 
+  val_end_date_temporal_holdout = '2023-10-01', 
+  val_end_date_spatial_holdout = '2025-10-01', 
   x_vars = x_vars_global
   )
 
