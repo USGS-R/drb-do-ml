@@ -42,56 +42,7 @@ p2a_targets_list <- list(
   ),
 
   
-  ## 2) SPLIT SITES INTO (train) and (train and validation) ##
-  # char vector of well-observed train sites
-  tar_target(
-    p2a_trn_sites,
-    p2_well_observed_sites[!(p2_well_observed_sites %in% val_sites)]
-  ),
-
-  # char vector of well-observed val and training sites
-  tar_target(
-    p2a_trn_val_sites,
-    p2_well_observed_sites[(p2_well_observed_sites %in% p2a_trn_sites) | (p2_well_observed_sites %in% val_sites)]
-  ),
-
-  # get sites that we use for training, but also have data in the val time period
-  tar_target(
-    p2a_trn_sites_w_val_data,
-    p2_daily_with_seg_ids  %>%
-      filter(site_id %in% p2a_trn_val_sites,
-             !site_id %in% val_sites,
-             date >= val_start_date,
-             date < val_end_date) %>%
-      group_by(site_id) %>%
-      summarise(val_count = sum(!is.na(do_mean))) %>%
-      filter(val_count > 0) %>%
-      pull(site_id)
-  ),
-  
-  # Summarize site splits/groups based on the above 3 targets
-  tar_target(
-    p2a_site_splits,
-    p2_sites_w_segs %>%
-      filter(site_id %in% c(p2a_trn_sites, val_sites)) %>%
-      mutate(site_type = case_when(
-        site_id %in% p2a_trn_sites & 
-          !site_id %in% p2a_trn_sites_w_val_data ~ "train",
-        site_id %in% p2a_trn_sites_w_val_data ~ "train/val",
-        site_id %in% val_sites ~ "validation",
-        TRUE ~ NA_character_),
-        # assign epsg codes based on "datum" column and convert
-        # data frame to sf object
-        epsg = case_when(datum == "NAD83" ~ 4269,
-                         datum == "WGS84" ~ 4326,
-                         datum == "NAD27" ~ 4267,
-                         datum == "UNKWN" ~ 4326,
-                         datum == "OTHER" ~ 4326)) %>%
-      sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
-  ),
-  
-  
-  ## 3) WRITE MODEL CONFIGURATION FILES ##
+  ## 2) WRITE MODEL CONFIGURATION FILES ##
   # Write base config file using inputs and parameters defined in _targets.R
   tar_target(
     p2a_config_base_yml,
@@ -146,7 +97,7 @@ p2a_targets_list <- list(
   ),
   
   
-  ## 4) WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
+  ## 3) WRITE OUT PARTITION INPUT AND OUTPUT DATA ##
   # Subset trn/val input and output data to well-observed sites and format
   # for export. [Jeff]: note - I have to subset inputs to only include the
   # train/val sites before passing to subset_and_write_zarr or else I get a
@@ -157,7 +108,7 @@ p2a_targets_list <- list(
       # use inner_join to keep sites that are within the set of trn/val sites
       # and are represented in both the met data and the seg attr data.
       inputs <- p2a_met_data_w_sites %>%
-        filter(site_id %in% p2a_trn_val_sites) %>%
+        filter(site_id %in% p2_well_observed_sites) %>%
         inner_join(p2a_seg_attr_w_sites, by = c("site_id", "COMID"))
 
       inputs_and_outputs <- inputs %>%
@@ -215,6 +166,7 @@ p2a_targets_list <- list(
 
     base_dir <- "2a_model/src/models"
     snakefile_path <- file.path(base_dir, p2a_model_ids$snakefile_dir, "Snakefile")
+    prepped_snakefile_path <- file.path(base_dir, "Snakefile_prepped.smk")
     config_path <- file.path(base_dir, p2a_model_ids$config_path)
     # this path is relative to the Snakefile
     prepped_data_file <- file.path("../../../out/models",p2a_model_ids$model_id, "prepped.npz")
@@ -223,14 +175,14 @@ p2a_targets_list <- list(
     system(stringr::str_glue("snakemake  -s {snakefile_path} --configfile {config_path} --unlock"))
     # First create the prepped data files if they are not already.
     # These are needed to make the predictions.
-    system(stringr::str_glue("snakemake {prepped_data_file} -s {snakefile_path} --configfile {config_path} -j"))
+    system(stringr::str_glue("snakemake  -s {prepped_snakefile_path} --configfile {config_path} -j"))
 
     # Then touch all of the existing files. This makes the weights "up-to-date"
     # so snakemake doesn't train the models again
     system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --touch --rerun-incomplete"))
 
     # then run the snakemake pipeline to produce the predictions and metric files
-    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete --rerun-trigger mtime"))
+    system(stringr::str_glue("snakemake -s {snakefile_path} --configfile {config_path} -j --rerun-incomplete --rerun-trigger mtime -T 5 -k"))
     
     # print out the metrics file name for the target
    c(

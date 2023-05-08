@@ -1,6 +1,6 @@
 out_dir: "../../../out/models"
 seed: False
-num_replicates: 10
+num_replicates: 5
 trn_offset: 1.0
 tst_val_offset: 1.0
 epochs: 100
@@ -9,13 +9,25 @@ dropout: 0.2
 recurrent_dropout: 0.2
 finetune_learning_rate: 0.01
 early_stopping: False
-validation_sites:
-  - "01475530"
-  - "01475548"
-train_start_date: '1980-10-01'
-train_end_date: '2015-10-01'
-val_start_date: '2015-10-01'
-val_end_date: '2021-10-01'
+validation_sites_urban:
+  - '01475530'
+  - 01475548
+validation_sites_nonurban:
+  - '01472104'
+  - '014721254'
+  - 014721259
+  - '01473500'
+  - 01480617
+  - 01480870
+  - 01481000
+  - 01481500
+train_start_date: '2007-10-01'
+train_end_date_temporal_holdout: '2015-10-01'
+train_end_date_spatial_holdout: '2021-10-01'
+val_start_date_temporal_holdout: '2015-10-01'
+val_start_date_spatial_holdout: ~
+val_end_date_temporal_holdout: '2021-10-01'
+val_end_date_spatial_holdout: ~
 x_vars:
   - "tmmn"
   - "tmmx"

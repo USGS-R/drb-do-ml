@@ -83,8 +83,6 @@ dummy_date <- "2023-03-02"
 
 #2) Configure model inputs/variables 
 
-# Define test and validation sites
-
 # Define global model parameters for the "baseline" deep learning model
 x_vars_global <- c("tmmn","tmmx","pr","srad","SLOPE","TOTDASQKM","CAT_BASIN_SLOPE",
                    "TOT_BASIN_SLOPE","CAT_ELEV_MEAN","CAT_RDX","CAT_BFI","CAT_EWT",
@@ -100,7 +98,7 @@ base_config_options <- list(
   out_dir = "../../../out/models",
   # random seed for training; If FALSE, no seed. Otherwise, specify the seed:
   seed = FALSE,
-  num_replicates = 10,
+  num_replicates = 5,
   trn_offset = 1,
   tst_val_offset = 1,
   epochs = 100,
@@ -116,9 +114,9 @@ base_config_options <- list(
   train_end_date_temporal_holdout = '2015-10-01', 
   train_end_date_spatial_holdout = '2021-10-01', 
   val_start_date_temporal_holdout = '2015-10-01', 
-  val_start_date_spatial_holdout = '2015-10-01', 
-  val_end_date_temporal_holdout = '2023-10-01', 
-  val_end_date_spatial_holdout = '2025-10-01', 
+  val_start_date_spatial_holdout = NULL, 
+  val_end_date_temporal_holdout = '2021-10-01', 
+  val_end_date_spatial_holdout = NULL, 
   x_vars = x_vars_global
   )
 

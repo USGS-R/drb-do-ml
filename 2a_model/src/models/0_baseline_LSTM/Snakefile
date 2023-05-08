@@ -27,4 +27,4 @@ use rule train from base_workflow as base_train with:
         model = lambda wildcards: LSTMModel(config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars'])) 
 
 use rule make_predictions from base_workflow as base_make_predictions with:
-    params: model = lambda wildcards: config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars']))
+    params: model = lambda wildcards: LSTMModel(config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars']))
