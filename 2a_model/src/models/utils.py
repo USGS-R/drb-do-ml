@@ -17,8 +17,8 @@ def get_train_val(holdout, config):
         if holdout == "1_urban":
             val_sites = [config['validation_sites_urban'][0]]
         else:
-            val_sites = [holdout]
-    return trn_end, val_start , val_end, val_sites
+            val_sites = [holdout] + config['validation_sites_urban']
+    return trn_end, val_start, val_end, val_sites
 
 
 
