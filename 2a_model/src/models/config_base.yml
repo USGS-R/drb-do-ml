@@ -1,6 +1,6 @@
 out_dir: "../../../out/models"
 seed: False
-num_replicates: 5
+num_replicates: 10
 trn_offset: 1.0
 tst_val_offset: 1.0
 epochs: 100
