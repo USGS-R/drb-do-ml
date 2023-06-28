@@ -18,6 +18,27 @@ p2a_targets_list <- list(
       select(-time) %>%
       relocate(date, .after = COMID)
   ),
+
+  
+  # Summarize site splits/groups based on the above 3 targets
+  tar_target(
+    p2a_site_splits,
+    p2_sites_w_segs %>%
+        filter(site_id %in% c(validation_sites_nonurban, validation_sites_urban)) %>%
+        mutate(site_type = case_when(
+                site_id %in% validation_sites_urban  ~ "dissimilar urban",
+                site_id %in% validation_sites_nonurban & site_id != '014721259' ~ "train",
+                site_id == '014721259' ~ "dissimilar headwater",
+                TRUE ~ NA_character_),
+                # assign epsg codes based on "datum" column and convert
+                # data frame to sf object
+                epsg = case_when(datum == "NAD83" ~ 4269,
+                    datum == "WGS84" ~ 4326,
+                    datum == "NAD27" ~ 4267,
+                    datum == "UNKWN" ~ 4326,
+                    datum == "OTHER" ~ 4326)) %>%
+        sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
+    ),
   
   # join met and light data with site_ids (resulting data frame will have
   # 16 unique COMID's which matches the number of well-observed reaches).
