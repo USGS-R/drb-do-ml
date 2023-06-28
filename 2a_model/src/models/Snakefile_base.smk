@@ -177,7 +177,6 @@ rule exp_metrics:
         all_df.to_csv(output[0], index=False)
         
  
- 
 rule calc_functional_performance_one:
     input:
         "../../../out/well_obs_io.zarr",
@@ -185,15 +184,30 @@ rule calc_functional_performance_one:
     output:
         "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
     run:
-        calc_it_metrics_site(input[0],
-                             input[1],
-                             wildcards.src,
-                             wildcards.snk,
-                             wildcards.site,
-                             log_transform=False,
-                             model=wildcards.model,
-                             replicate=wildcards.rep,
-                             outfile=output[0])
+        max_it = calc_it_metrics_site(input[0],
+                                      input[1],
+                                      wildcards.src,
+                                      wildcards.snk,
+                                      wildcards.site,
+                                      log_transform=False,
+                                      model=wildcards.model,
+                                      replicate=wildcards.rep,
+                                      outfile=output[0])
+
+
+wildcard_constraints:
+    site="\d+"
+                                      
+
+rule add_holdout_to_func_performance:
+    input:
+        "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
+    output:
+        "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/with_ho_{site}-{src}-{snk}-{model}.csv"
+    run:
+        df = pd.read_csv(input[0], dtype={"site": str})
+        df['holdout'] = wildcards.holdout
+        df.to_csv(output[0], index=False)
 
 
 def get_func_perf_sites():
@@ -208,7 +222,7 @@ def get_func_perf_sites():
 
 rule gather_func_performances:
     input:
-        expand("{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{{model}}.csv",
+        expand("{outdir}/holdout_{holdout}/rep_{rep}/func_perf/with_ho_{site}-{src}-{snk}-{{model}}.csv",
                 outdir=out_dir,
                 rep=list(range(config['num_replicates'])),
                 site=get_func_perf_sites(),
