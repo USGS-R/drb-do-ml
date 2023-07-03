@@ -1,0 +1,76 @@
+from model import LSTMModel
+import numpy as np
+import xarray as xr
+
+workdir: "2a_model/src/models/0_baseline_LSTM"
+configfile: "../config_base.yml"
+
+out_dir = os.path.join(config['out_dir'], config['exp_name'])
+
+
+rule all:
+    input:
+        f"{out_dir}/exp_overall_metrics.csv"
+
+
+rule modify_zarr:
+    input:
+        "../../../out/well_obs_io.zarr",
+    output:
+        directory("{outdir}/meaned_inputs.zarr")
+    run:
+        ds = xr.open_zarr(input[0])
+        headwater_site = '014721259'
+        val_sites = config['validation_sites_urban'] + [headwater_site]
+        trn_sites = config['validation_sites_nonurban']
+        trn_sites.remove(headwater_site)
+
+        non_static_variables =  ["tmmn", "tmmx", "pr", "srad"]
+        all_input_vars = config['x_vars'] 
+
+        means = ds.sel(site_id=trn_sites).mean()
+        static_variables = [v for v in all_input_vars if v not in non_static_variables]
+
+        assert len(static_variables) == 26
+
+        for va in static_variables:
+            ds[va] = xr.where(ds.site_id.isin(val_sites), means[va], ds[va])
+
+        for v in list(ds.coords.keys()):
+            if ds.coords[v].dtype == object:
+                ds[v].encoding.clear()
+
+        for v in list(ds.variables.keys()):
+            if ds[v].dtype == object:
+                ds[v].encoding.clear()
+
+        ds.to_zarr(output[0])
+
+
+module base_workflow:
+    snakefile: "../Snakefile_base.smk"
+    config: config
+
+
+use rule * from base_workflow as base_*
+
+
+use rule train from base_workflow as base_train with:
+    params:
+        model = lambda wildcards: LSTMModel(config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars'])) 
+
+
+use rule make_predictions from base_workflow as base_make_predictions with:
+    input:
+        f"{config['out_dir']}/0_baseline_LSTM/holdout_014721259/prepped.npz",
+        f"{config['out_dir']}/0_baseline_LSTM/holdout_014721259/rep_{{rep}}/train_weights",
+        "{outdir}/meaned_inputs.zarr"
+    params: model = lambda wildcards: LSTMModel(config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'], num_tasks=len(config['y_vars']))
+
+use rule exp_metrics from base_workflow as base_exp_metrics with:
+    input:
+        expand("{outdir}/holdout_{holdout}/rep_{rep}/{{metric_type}}_metrics.csv",
+                outdir=out_dir,
+                holdout='014721259',
+                rep=list(range(config['num_replicates'])),
+        )

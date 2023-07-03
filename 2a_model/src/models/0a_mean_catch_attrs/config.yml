@@ -1,0 +1,10 @@
+exp_name: "0a_mean_catch_attrs"
+y_vars:
+  - "do_min"
+  - "do_mean"
+  - "do_max"
+lambdas:
+  - 1
+  - 1
+  - 1
+ 
