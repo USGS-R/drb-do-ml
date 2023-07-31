@@ -49,3 +49,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# AR time series data files
+ar_model/data
