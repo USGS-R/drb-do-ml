@@ -186,13 +186,14 @@ def calcMI_crit(M, nbins, alpha, ncores, numiter = 500):
     ncores: number of cores
     numiter: number of iterations, default = 500
     '''
-    assert ncores < os.cpu_count()
+    return 0
+    # assert ncores < os.cpu_count()
     
-    MIss = Parallel(n_jobs=ncores)(delayed(calcMI_shuffled)(M, nbins) for ii in range(numiter))
-    MIss = np.sort(MIss)
-    #print(MIss)
-    MIcrit = MIss[math.ceil((1-alpha)*numiter)] 
-    return(MIcrit)
+    # MIss = Parallel(n_jobs=ncores)(delayed(calcMI_shuffled)(M, nbins) for ii in range(numiter))
+    # MIss = np.sort(MIss)
+    # print(MIss)
+    # MIcrit = MIss[math.ceil((1-alpha)*numiter)] 
+    # return(MIcrit)
 
 def lag_data(M, shift):
     '''lags data by shift for transfer entropy calculation
@@ -296,13 +297,14 @@ def calcTE_crit(M, shift, nbins, alpha, ncores, numiter = 500):
     alpha: significance threshold
     ncores: number of cores
     numiter: number of iterations, default = 500'''
+    return 0
     
-    assert ncores < os.cpu_count()
+    # assert ncores < os.cpu_count()
     
-    TEss = Parallel(n_jobs=ncores)(delayed(calcTE_shuffled)(M, shift, nbins) for ii in range(numiter))
-    TEss = np.sort(TEss)
-    TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
-    return(TEcrit)
+    # TEss = Parallel(n_jobs=ncores)(delayed(calcTE_shuffled)(M, shift, nbins) for ii in range(numiter))
+    # TEss = np.sort(TEss)
+    # TEcrit = TEss[math.ceil((1-alpha)*numiter)] 
+    # return(TEcrit)
 
 def calc_it_metrics(M, Mswap, n_lags, nbins, alpha, ncores, calc_swap = True):
     '''wrapper function for calculating mutual information and transfer entropy 

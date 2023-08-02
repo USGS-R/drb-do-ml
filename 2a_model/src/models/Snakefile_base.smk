@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 import pandas as pd
 import sys
+from utils import get_train_val, get_holdouts
 
 river_dl_dir = "../river-dl"
 sys.path.append(river_dl_dir)
@@ -32,50 +33,14 @@ rule as_run_config:
         asRunConfig(config,output[0])
 
 
-rule prep_io_data:
-    input:
-        "../../../out/well_obs_io.zarr",
-    output:
-        "{outdir}/prepped.npz"
-    run:
-        prep_all_data(x_data_file=input[0],
-                      y_data_file=input[0],
-                      x_vars=config['x_vars'],
-                      y_vars_finetune=config['y_vars'],
-                      spatial_idx_name='site_id',
-                      time_idx_name='date',
-                      train_start_date=config['train_start_date'],
-                      train_end_date=config['train_end_date'],
-                      val_start_date=config['val_start_date'],
-                      val_end_date=config['val_end_date'],
-                      val_sites=config['validation_sites'],
-                      out_file=output[0],
-                      normalize_y=False,
-                      trn_offset = config['trn_offset'],
-                      tst_val_offset = config['tst_val_offset'])
-
-        # check to make sure there is no validation data
-        # in the training data set
-        data = np.load(output[0], allow_pickle=True)
-        df_trn = prepped_array_to_df(data['y_obs_trn'],
-                                     data['times_trn'],
-                                     data['ids_trn'],
-                                     col_names=data['y_obs_vars'])
-        df_trn_val_sites = df_trn[df_trn.seg_id_nat.isin(config['validation_sites'])]
-
-        assert df_trn_val_sites['do_mean'].notna().sum() == 0
-
-
-
 # Finetune/train the model on observations
 rule train:
     input:
-        "{outdir}/prepped.npz"
+        "{outdir}/holdout_{holdout}/prepped.npz"
     output:
-        directory("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/"),
-        #directory("{outdir}/best_val_weights/"),
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_log.csv",
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_time.txt",
+        directory("{outdir}/holdout_{holdout}/rep_{rep}/train_weights/"),
+        "{outdir}/holdout_{holdout}/rep_{rep}/train_log.csv",
+        "{outdir}/holdout_{holdout}/rep_{rep}/train_time.txt",
     run:
         optimizer = tf.optimizers.Adam(learning_rate=config['finetune_learning_rate']) 
         params.model.compile(optimizer=optimizer, loss=loss_function)
@@ -84,14 +49,13 @@ rule train:
         train_model(params.model,
                     x_trn = data['x_trn'],
                     y_trn = data['y_obs_trn'],
-                    epochs = int(wildcards.epochs),
+                    epochs = config['epochs'],
                     batch_size = nsegs,
-                    x_val = data['x_val'],
-                    y_val = data['y_obs_val'],
+                    #x_val = data['x_val'],
+                    #y_val = data['y_obs_val'],
                     # I need to add a trailing slash here. Otherwise the wgts
                     # get saved in the "outdir"
                     weight_dir = output[0] + "/",
-                    #best_val_weight_dir = output[1] + "/",
                     log_file = output[1],
                     time_file = output[2],
                     early_stop_patience=config['early_stopping'])
@@ -99,17 +63,18 @@ rule train:
 
 rule make_predictions:
     input:
-        "{outdir}/prepped.npz",
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/train_weights/",
+        "{outdir}/holdout_{holdout}/prepped.npz",
+        "{outdir}/holdout_{holdout}/rep_{rep}/train_weights/",
         "../../../out/well_obs_io.zarr",
     output:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather",
+        "{outdir}/holdout_{holdout}/rep_{rep}/preds.feather",
     run:
+        trn_end, val_start, val_end, val_sites = get_train_val(wildcards.holdout, config)
         weight_dir = input[1] + "/"
         params.model.load_weights(weight_dir)
         preds = predict_from_arbitrary_data(raw_data_file=input[2],
                                             pred_start_date = config['train_start_date'],
-                                            pred_end_date = config['val_end_date'],
+                                            pred_end_date = config['val_end_date_temporal_holdout'],
                                             train_io_data=input[0],
                                             model=params.model, 
                                             spatial_idx_name='site_id',
@@ -117,33 +82,38 @@ rule make_predictions:
         preds.reset_index(drop=True).to_feather(output[0])
 
 
-def filter_predictions(all_preds_file, partition, out_file):
+def filter_predictions(all_preds_file, partition, holdout, config, out_file):
+        trn_end, val_start, val_end, val_sites = get_train_val(holdout, config)
+
         df_preds = pd.read_feather(all_preds_file)
         all_sites = df_preds.site_id.unique()
-        trn_sites = all_sites[~np.isin(all_sites, config["validation_sites"])]
+        trn_sites = all_sites[~np.isin(all_sites, val_sites)]
 
         df_preds_trn_sites = df_preds[df_preds.site_id.isin(trn_sites)] 
 
-        df_preds_val_sites = df_preds[df_preds.site_id.isin(config['validation_sites'])] 
+        df_preds_val_sites = df_preds[df_preds.site_id.isin(val_sites)] 
 
 
         if partition == "trn":
             df_preds_filt = df_preds_trn_sites[(df_preds_trn_sites.date >= config['train_start_date']) &
-                                               (df_preds_trn_sites.date < config['train_end_date'])]
+                                               (df_preds_trn_sites.date < trn_end)]
         elif partition == "val":
             # get all of the data in the validation sites and in the validation period
             # this assumes that the test period follows the validation period which follows the train period
             df_preds_filt_val = df_preds_val_sites
-            df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < config['val_end_date']) &
-                                                   (df_preds_trn_sites.date >= config['val_start_date'])]
-            df_preds_filt = pd.concat([df_preds_filt_val , df_preds_filt_trn], axis=0)
+            if val_end and val_start:
+                df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < val_end) &
+                                                       (df_preds_trn_sites.date >= val_start)]
+                df_preds_filt = pd.concat([df_preds_filt_val , df_preds_filt_trn], axis=0)
+            else:
+                df_preds_filt = df_preds_filt_val
 
         elif partition == "val_times":
             # get the data in just the validation times at train and val sites
-            df_preds_filt_val = df_preds_val_sites[(df_preds_val_sites.date < config['val_end_date']) &
-                                                   (df_preds_val_sites.date >= config['val_start_date'])]
-            df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < config['val_end_date']) &
-                                                   (df_preds_trn_sites.date >= config['val_start_date'])]
+            df_preds_filt_val = df_preds_val_sites[(df_preds_val_sites.date < val_end) &
+                                                   (df_preds_val_sites.date >= val_start)]
+            df_preds_filt_trn = df_preds_trn_sites[(df_preds_trn_sites.date < val_end) &
+                                                   (df_preds_trn_sites.date >= val_start)]
             df_preds_filt = pd.concat([df_preds_filt_val , df_preds_filt_trn], axis=0)
 
 
@@ -154,11 +124,11 @@ def filter_predictions(all_preds_file, partition, out_file):
 
 rule make_filtered_predictions:
     input:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather"
+        "{outdir}/holdout_{holdout}/rep_{rep}/preds.feather",
     output:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{partition}_preds.feather"
+        "{outdir}/holdout_{holdout}/rep_{rep}/{partition}_preds.feather"
     run:
-        filter_predictions(input[0], wildcards.partition, output[0])
+        filter_predictions(input[0], wildcards.partition, wildcards.holdout, config, output[0])
 
  
 def get_grp_arg(wildcards):
@@ -175,34 +145,30 @@ def get_grp_arg(wildcards):
 rule combine_metrics:
      input:
           "../../../out/well_obs_io.zarr",
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/trn_preds.feather",
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_preds.feather",
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/val_times_preds.feather"
+          "{outdir}/holdout_{holdout}/rep_{rep}/trn_preds.feather",
+          "{outdir}/holdout_{holdout}/rep_{rep}/val_preds.feather",
      output:
-          "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{metric_type}_metrics.csv"
+          "{outdir}/holdout_{holdout}/rep_{rep}/{metric_type}_metrics.csv"
      params:
          grp_arg = get_grp_arg
      run:
          combined_metrics(obs_file=input[0],
                           pred_data = {"train": input[1],
-                                       "val": input[2],
-                                       "val_times": input[3]},
+                                       "val": input[2]},
                           spatial_idx_name='site_id',
                           time_idx_name='date',
                           group=params.grp_arg,
-                          id_dict={"nstates": wildcards.nstates,
-                                   "rep_id": wildcards.rep,
-                                   "nepochs": wildcards.epochs},
+                          id_dict={"holdout": wildcards.holdout,
+                                   "rep_id": wildcards.rep},
                           outfile=output[0])
  
  
 rule exp_metrics:
      input:
-        expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{{metric_type}}_metrics.csv",
+        expand("{outdir}/holdout_{holdout}/rep_{rep}/{{metric_type}}_metrics.csv",
                 outdir=out_dir,
+                holdout=get_holdouts(config),
                 rep=list(range(config['num_replicates'])),
-                nstates=config['hidden_size'],
-                epochs=config['epochs'],
         )
      output:
           "{outdir}/exp_{metric_type}_metrics.csv"
@@ -211,37 +177,37 @@ rule exp_metrics:
         all_df.to_csv(output[0], index=False)
         
  
- 
-rule plot_prepped_data:
-     input:
-         "{outdir}/prepped.npz",
-     output:
-         "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/{variable}_part_{partition}.png",
-     run:
-         plot_obs(input[0],
-                  wildcards.variable,
-                  output[0],
-                  spatial_idx_name="site_id",
-                  time_idx_name="date",
-                  partition=wildcards.partition)
-
-
 rule calc_functional_performance_one:
     input:
         "../../../out/well_obs_io.zarr",
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/preds.feather"
+        "{outdir}/holdout_{holdout}/rep_{rep}/preds.feather"
     output:
-        "{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
+        "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
     run:
-        calc_it_metrics_site(input[0],
-                             input[1],
-                             wildcards.src,
-                             wildcards.snk,
-                             wildcards.site,
-                             log_transform=False,
-                             model=wildcards.model,
-                             replicate=wildcards.rep,
-                             outfile=output[0])
+        max_it = calc_it_metrics_site(input[0],
+                                      input[1],
+                                      wildcards.src,
+                                      wildcards.snk,
+                                      wildcards.site,
+                                      log_transform=False,
+                                      model=wildcards.model,
+                                      replicate=wildcards.rep,
+                                      outfile=output[0])
+
+
+wildcard_constraints:
+    site="\d+"
+                                      
+
+rule add_holdout_to_func_performance:
+    input:
+        "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/{site}-{src}-{snk}-{model}.csv"
+    output:
+        "{outdir}/holdout_{holdout}/rep_{rep}/func_perf/with_ho_{site}-{src}-{snk}-{model}.csv"
+    run:
+        df = pd.read_csv(input[0], dtype={"site": str})
+        df['holdout'] = wildcards.holdout
+        df.to_csv(output[0], index=False)
 
 
 def get_func_perf_sites():
@@ -256,12 +222,11 @@ def get_func_perf_sites():
 
 rule gather_func_performances:
     input:
-        expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/func_perf/{site}-{src}-{snk}-{{model}}.csv",
+        expand("{outdir}/holdout_{holdout}/rep_{rep}/func_perf/with_ho_{site}-{src}-{snk}-{{model}}.csv",
                 outdir=out_dir,
-                nstates=config['hidden_size'],
-                epochs=config['epochs'],
                 rep=list(range(config['num_replicates'])),
                 site=get_func_perf_sites(),
+                holdout=get_holdouts(config),
                 src=['tmmx'],
                 snk=['do_min', 'do_mean', 'do_max'])
     output:

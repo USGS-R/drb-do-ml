@@ -130,7 +130,7 @@ def calc_it_metrics_site(inputs_zarr,
     M_xy_bound = np.delete(M_x_bound, np.where((M_x_bound[:,1] < y_bounds[0]*1.1) | (M_x_bound[:,1] > y_bounds[1]*1.1)), axis = 0)
 
     #calc it metrics and store in the dictionary it_dict
-    it_dict = it_functions.calc_it_metrics(M_xy_bound, Mswap, n_lags, nbins, calc_swap = False, alpha = 0.05, ncores = 7)
+    it_dict = it_functions.calc_it_metrics(M_xy_bound, Mswap, n_lags, nbins, calc_swap = False, alpha = 0.05, ncores = 1)
     
     
     print('Storing it metrics '+model+' '+site)

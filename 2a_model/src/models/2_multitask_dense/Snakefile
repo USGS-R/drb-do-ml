@@ -1,6 +1,6 @@
 from model import LSTMModel2Dense
 
-workdir: "2a_model/src/models/0_baseline_LSTM"
+workdir: "2a_model/src/models/2_multitask_dense"
 configfile: "../config_base.yml"
 
 out_dir = os.path.join(config['out_dir'], config['exp_name'])
@@ -10,13 +10,6 @@ rule all:
           expand("{outdir}/exp_{metric_type}_metrics.csv",
                   outdir=out_dir,
                   metric_type=['overall', 'reach', 'month', 'month_reach']),
-          expand("{outdir}/nstates_{nstates}/nep_{epochs}/rep_{rep}/plots/ts_{site_id}_{year}.png",
-                 outdir=out_dir,
-                 nstates=config['hidden_size'],
-                 epochs=config['epochs'],
-                 rep=list(range(config['num_replicates'])),
-                 site_id=['01480870'],
-                 year=[2012]),
           f"{out_dir}/{config['exp_name']}_func_perf.csv",
           f"{out_dir}/observed_func_perf.csv"
         
@@ -31,7 +24,7 @@ use rule * from base_workflow as base_*
 
 use rule train from base_workflow as base_train with:
     params:
-        model = lambda wildcards: LSTMModel2Dense(int(wildcards.nstates), recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout']) 
+        model = lambda wildcards: LSTMModel2Dense(config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout']) 
 
 use rule make_predictions from base_workflow as base_make_predictions with:
-    params: model = lambda wildcards: LSTMModel2Dense(int(wildcards.nstates), recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'])
+    params: model = lambda wildcards: LSTMModel2Dense(config['hidden_size'], recurrent_dropout=config['recurrent_dropout'], dropout=config['dropout'])
