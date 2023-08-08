@@ -25,12 +25,8 @@ import seaborn.objects as so
 
 
 # +
-run_id = 215
+outdir = f"../../out"
 
-outdir = f"../../out/pred_perf/{run_id}"
-
-if not os.path.exists(outdir):
-    os.makedirs(outdir)
 # -
 
 df_comb_reach = read_and_filter_df("reach", "val")
@@ -46,7 +42,7 @@ df_reach_filt = filter_out_urban_spatial(df_comb_reach)
 
 
 def plot_by_site_or_holdout(data, x, kind, outfile,
-                            col_order=['do_min', 'do_max'],
+                            col_order=['do_min', 'do_mean', 'do_max'],
                             order=None):
     plt.rcParams.update({'font.size': 14})
     g = sns.catplot(
@@ -71,53 +67,18 @@ def plot_by_site_or_holdout(data, x, kind, outfile,
         ax.set_axisbelow(True)
 
     g.axes.flatten()[0].set_ylabel("RMSE (mg O2/l)")
-    sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.8, 0.1))
+    sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.9, 0.1))
     # plt.tight_layout()
     plt.savefig(os.path.join(outdir, outfile), bbox_inches='tight', dpi=300)
     return g
-    # plt.show()
-    # plt.clf()
 
 
-# +
-# g.set_xlabels?
-# -
-
-######## Barplot by site (temporal)############################################
-df_comb_reach_temporal = df_comb_reach[df_comb_reach["holdout_id"] == "temporal"]
-plot_by_site_or_holdout(
-    df_comb_reach_temporal, "site_id", "bar", "val_results_by_site.jpg"
-)
-
-df_temp_spatial = df_comb_reach[
-    df_comb_reach["site_id"].isin(df_comb_reach_temporal.site_id.unique())
-]
-
-sns.catplot(
-    x="holdout_id",
-    y="rmse",
-    row="site_id",
-    col="variable",
-    hue="model_id",
-    data=df_temp_spatial,
-    kind="bar",
-    col_order=["do_min", "do_max"],
-)
-plt.savefig(os.path.join(outdir, "temporal_vs_spatial_holdouts.jpg"), dpi=300)
 
 ######## stripplot by site (temporal)###########################################
 df_comb_reach_temporal = df_comb_reach[df_comb_reach["holdout_id"] == "temporal"]
 plot_by_site_or_holdout(
     df_comb_reach_temporal, "site_id", "strip", "val_results_by_site_strip.jpg"
 )
-
-
-######## stripplot by site (spatial)############################################
-df_comb_reach_spatial = df_comb_reach[df_comb_reach["holdout_id"] == "spatial similar"]
-plot_by_site_or_holdout(
-    df_comb_reach_spatial, "site_id", "strip", "val_results_by_site_strip_spatial.jpg"
-)
-
 
 ######## Barplot by holdout ######################################################
 g = plot_by_site_or_holdout(
@@ -126,16 +87,8 @@ g = plot_by_site_or_holdout(
     "bar",
     "val_results_by_holdout.jpg",
     order=["temporal", 'spatial similar', 'spatial dissimilar'],
-    col_order=['do_min', 'do_max']
 )
-for ax in g.axes.flatten():
-    ax.set_ylabel('')
 
-
-######## Stripplot by holdout ####################################################
-plot_by_site_or_holdout(
-    df_reach_filt, "holdout_id", "strip", "val_results_by_holdout_strip.jpg"
-)
 
 # -
 
@@ -163,7 +116,6 @@ g = sns.relplot(
     # dodge=True,
     # order=month_order,
     hue_order=model_labels,
-    col_order=['do_min', 'do_max']
 )
 
 for ax in g.axes.flatten():
