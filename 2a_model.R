@@ -1,3 +1,4 @@
+source("2a_model/src/format_site_splits.R")
 source("2a_model/src/model_ready_data_utils.R")
 source("2a_model/src/write_model_config_files.R")
 
@@ -23,22 +24,37 @@ p2a_targets_list <- list(
   # Summarize site splits/groups based on the above 3 targets
   tar_target(
     p2a_site_splits,
-    p2_sites_w_segs %>%
+    {
+      site_splits <- p2_sites_w_segs %>%
         filter(site_id %in% c(validation_sites_nonurban, validation_sites_urban)) %>%
-        mutate(site_type = case_when(
-                site_id %in% validation_sites_urban  ~ "dissimilar urban",
-                site_id %in% validation_sites_nonurban & site_id != '014721259' ~ "train",
-                site_id == '014721259' ~ "dissimilar headwater",
-                TRUE ~ NA_character_),
-                # assign epsg codes based on "datum" column and convert
-                # data frame to sf object
-                epsg = case_when(datum == "NAD83" ~ 4269,
-                    datum == "WGS84" ~ 4326,
-                    datum == "NAD27" ~ 4267,
-                    datum == "UNKWN" ~ 4326,
-                    datum == "OTHER" ~ 4326)) %>%
+        mutate(site_type = case_when(site_id %in% validation_sites_urban  ~ "dissimilar urban",
+                                     site_id %in% validation_sites_nonurban & site_id != "014721259" ~ "train",
+                                     site_id == "014721259" ~ "dissimilar headwater",
+                                     TRUE ~ NA_character_),
+               river_basin = case_when(grepl("schuylkill", site_name, ignore.case = TRUE) ~ "Schuylkill",
+                                       grepl("brandywine", site_name, ignore.case = TRUE) ~ "Brandywine",
+                                       grepl("Cobbs", site_name, ignore.case = TRUE) ~ "Cobbs",
+                                       TRUE ~ ""),
+               # assign epsg codes based on "datum" column and convert
+               # data frame to sf object
+               epsg = case_when(datum == "NAD83" ~ 4269,
+                                datum == "WGS84" ~ 4326,
+                                datum == "NAD27" ~ 4267,
+                                datum == "UNKWN" ~ 4326,
+                                datum == "OTHER" ~ 4326)) %>%
         sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
-    ),
+      
+      append_river_km(site_splits, p1_nhd_reaches_sf) %>%
+        mutate(river_basin_abbr = case_when(river_basin == "Schuylkill" ~ "SR",
+                                            river_basin == "Brandywine" ~ "BC",
+                                            river_basin == "Cobbs" ~ "CC",
+                                            site_id %in% c("014721254") ~ "FC",
+                                            site_id %in% c("014721259") ~ "BAP")) %>%
+        mutate(site_name_abbr = if_else(!is.na(river_dist_km), 
+                                        paste0(river_basin_abbr, "_", river_dist_km),
+                                        river_basin_abbr))
+    }
+  ),
   
   # join met and light data with site_ids (resulting data frame will have
   # 16 unique COMID's which matches the number of well-observed reaches).

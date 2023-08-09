@@ -71,23 +71,25 @@ p3_targets_list <- list(
                                 "3_visualize/out/nhdv2_static_attr_summary.csv"),
     format = "file"
   ),
-    # Save png map of site locations
-    tar_target(
-    p3_site_map_png,
-    map_sites(flowlines = p1_nhd_reaches_sf,
-              matched_sites = p2a_site_splits,
-              out_file = "3_visualize/out/do_site_map.png")
-  ),
-      # Save json map of site locations
+  
+  # Save png map of site locations
   tar_target(
-    p3_well_observed_site_data_json,
-        {
-              filename = "3_visualize/out/well_observed_trn_val_test.geojson"
-              sf::st_write(p2a_site_splits, filename, append = FALSE, delete_dsn = TRUE,
-                                              driver = "GeoJSON", quiet = TRUE)
-              filename
-            },
-                format = "file"
+  p3_site_map_png,
+  map_sites(flowlines = p1_nhd_reaches_sf,
+            matched_sites = p2a_site_splits,
+            out_file = "3_visualize/out/do_site_map.png")
+  ),
+  
+  # Save json map of site locations
+  tar_target(
+  p3_well_observed_site_data_json,
+  {
+    filename = "3_visualize/out/well_observed_trn_val_test.geojson"
+    sf::st_write(p2a_site_splits, filename, append = FALSE, delete_dsn = TRUE,
+                 driver = "GeoJSON", quiet = TRUE)
+    filename
+    },
+  format = "file"
   )
 
 )
