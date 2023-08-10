@@ -80,20 +80,20 @@ map_sites <- function(flowlines,
   # Manually format map labels (monitoring sites and Philadelphia, PA)
   matched_sites_fmt <- matched_sites %>%
     mutate(hJust = case_when(site_name_abbr == "FC" ~ 1.4,
-                             site_name_abbr == "BAP" ~ -0.2,
-                             site_name_abbr %in% c("SR_72", "SR_40.2") ~ -0.15,
-                             site_name_abbr %in% c("CC_12.3", "CC_4.1") ~ 1.2,
-                             site_name_abbr %in% c("BC_7.6", "BC_23.6") ~ -0.15,
+                             site_name_abbr == "BAP" ~ 0.4,
+                             site_name_abbr %in% c("SR_72", "SR_40") ~ -0.15,
+                             site_name_abbr %in% c("CC_12", "CC_4") ~ 1.2,
+                             site_name_abbr %in% c("BC_8", "BC_24") ~ -0.15,
                              site_name_abbr == "BC_40" ~ 0.30,
-                             site_name_abbr == "BC_53.2" ~ 1.15,
+                             site_name_abbr == "BC_53" ~ 1.15,
                              TRUE ~ 0),
            vJust = case_when(site_name_abbr == "FC" ~ 1,
                              site_name_abbr == "BAP" ~ -0.3,
-                             site_name_abbr == "CC_12.3" ~ 0.35,
-                             site_name_abbr == "CC_4.1" ~ 0.5,
+                             site_name_abbr == "CC_12" ~ 0.35,
+                             site_name_abbr == "CC_4" ~ 0.5,
                              site_name_abbr == "BC_40" ~ -0.5,
-                             site_name_abbr == "BC_53.2" ~ 0.25,
-                             site_name_abbr %in% c("BC_7.6", "BC_23.6") ~ 0.3,
+                             site_name_abbr == "BC_53" ~ 0.25,
+                             site_name_abbr %in% c("BC_8", "BC_24") ~ 0.3,
                              TRUE ~ 0))
 
   phl_pt <- tibble(name = "Philadelphia", lon = -75.1803056, lat = 39.95663889,
@@ -108,7 +108,6 @@ map_sites <- function(flowlines,
                                  extraction.dir = tempdir(),
                                  force.redo = TRUE)
   r1 <- raster::projectRaster(impv_2019, crs = epsg_out)
-  
   r2 <- raster::crop(r1, basin_boundary)
   r3 <- raster::mask(r2, basin_boundary)
   impv_spdf <- as(r3, "SpatialPixelsDataFrame")

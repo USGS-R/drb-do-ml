@@ -45,7 +45,8 @@ p2a_targets_list <- list(
         sf::st_as_sf(., coords = c("lon","lat"), crs = unique(.$epsg))
       
       append_river_km(site_splits, p1_nhd_reaches_sf) %>%
-        mutate(river_basin_abbr = case_when(river_basin == "Schuylkill" ~ "SR",
+        mutate(river_dist_km = round(river_dist_km, 0),
+               river_basin_abbr = case_when(river_basin == "Schuylkill" ~ "SR",
                                             river_basin == "Brandywine" ~ "BC",
                                             river_basin == "Cobbs" ~ "CC",
                                             site_id %in% c("014721254") ~ "FC",
