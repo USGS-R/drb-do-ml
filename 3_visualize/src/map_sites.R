@@ -79,22 +79,24 @@ map_sites <- function(flowlines,
   
   # Manually format map labels (monitoring sites and Philadelphia, PA)
   matched_sites_fmt <- matched_sites %>%
-    mutate(hJust = case_when(site_name_abbr == "FC" ~ 1.4,
-                             site_name_abbr == "BAP" ~ 0.4,
+    mutate(hJust = case_when(site_name_abbr == "FC" ~ 0.65,
+                             site_name_abbr == "BAP" ~ 0.2,
                              site_name_abbr %in% c("SR_72", "SR_40") ~ -0.15,
                              site_name_abbr %in% c("CC_12", "CC_4") ~ 1.2,
                              site_name_abbr %in% c("BC_8", "BC_24") ~ -0.15,
                              site_name_abbr == "BC_40" ~ 0.30,
                              site_name_abbr == "BC_53" ~ 1.15,
                              TRUE ~ 0),
-           vJust = case_when(site_name_abbr == "FC" ~ 1,
-                             site_name_abbr == "BAP" ~ -0.3,
+           vJust = case_when(site_name_abbr == "FC" ~ 2,
+                             site_name_abbr == "BAP" ~ -0.7,
                              site_name_abbr == "CC_12" ~ 0.35,
                              site_name_abbr == "CC_4" ~ 0.5,
                              site_name_abbr == "BC_40" ~ -0.5,
                              site_name_abbr == "BC_53" ~ 0.25,
                              site_name_abbr %in% c("BC_8", "BC_24") ~ 0.3,
-                             TRUE ~ 0))
+                             TRUE ~ 0),
+           X = sf::st_coordinates(.)[,1],
+           Y = sf::st_coordinates(.)[,2])
 
   phl_pt <- tibble(name = "Philadelphia", lon = -75.1803056, lat = 39.95663889,
                    hJust = -0.05, vJust = 0.3)
@@ -129,6 +131,12 @@ map_sites <- function(flowlines,
                  size = 3.5,
                  label.size  = NA,
                  alpha = 0.4) +
+    geom_segment(data = filter(matched_sites_fmt, site_name_abbr == "BAP"),
+                 aes(x = X + 0.04, xend = X + 0.01, y = Y + 0.04, yend = Y + 0.01),
+                 color = "black", arrow = arrow(length = unit(1.5, "mm"))) +
+    geom_segment(data = filter(matched_sites_fmt, site_name_abbr == "FC"),
+                 aes(x = X - 0.015, xend = X - 0.01, y = Y - 0.05, yend = Y - 0.01),
+                 color = "black", arrow = arrow(length = unit(1.5, "mm"))) +
     geom_sf(data = phl_pt_sf, color = "black", size = 3, shape = 1) +
     geom_sf_label(data = phl_pt_sf, 
                  aes(label = name, hjust = hJust, vjust = vJust), 
