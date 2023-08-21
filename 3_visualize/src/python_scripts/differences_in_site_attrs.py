@@ -14,7 +14,6 @@
 # ---
 
 # %%
-from plotting_scripts import plot_ts
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
@@ -25,11 +24,9 @@ import seaborn as sns
 obs_file = "../../../2a_model/out/well_obs_io.zarr"
 
 # %%
-rep = 4
-variable = "do_min"
 urban_sites = ['01475530', '01475548']
 headwater_site = ['014721259']
-train_sites = ['01472104', '014721254', '014721259', '01473500', '01480617', '01480870', '01481000', '01481500']
+train_sites = ['01472104', '014721254', '01473500', '01480617', '01480870', '01481000', '01481500']
 
 # %%
 input_variables = ["SLOPE","TOTDASQKM","CAT_BASIN_SLOPE",

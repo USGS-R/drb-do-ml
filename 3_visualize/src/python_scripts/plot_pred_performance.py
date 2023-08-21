@@ -41,57 +41,83 @@ df_comb_reach = make_holdout_id_col(df_comb_reach)
 df_reach_filt = filter_out_urban_spatial(df_comb_reach)
 
 
-def plot_by_site_or_holdout(data, x, kind, outfile,
-                            col_order=['do_min', 'do_mean', 'do_max'],
-                            order=None):
-    plt.rcParams.update({'font.size': 14})
-    g = sns.catplot(
-        x=x,
-        y="rmse",
-        col="variable",
-        data=data,
-        hue="model_id",
-        kind=kind,
-        errorbar="sd",
-        col_order=col_order,
-        dodge=True,
-        hue_order=model_labels,
-        order=order,
-    )
-    g.set_xticklabels(rotation=45)
-    g.set_titles('{col_name}')
-    # g.set_ylabels(
-
+def format_plot(g):
     for i, ax in enumerate(g.axes.flatten()):
         ax.grid()
         ax.set_axisbelow(True)
 
-    g.axes.flatten()[0].set_ylabel("RMSE (mg O2/l)")
-    sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.9, 0.1))
-    # plt.tight_layout()
-    plt.savefig(os.path.join(outdir, outfile), bbox_inches='tight', dpi=300)
-    return g
+    g.set_titles('{col_name}')
 
+    g.axes.flatten()[0].set_ylabel("RMSE (mg O$_\mathrm{{2}} \mathrm{L^{-1}}$)")
+
+    for ax in g.axes.flatten():
+        title = ax.get_title()
+        if 'do_min' in title:
+            new_title = 'DO$_\mathrm{min}$'
+        elif 'do_max' in title:
+            new_title = 'DO$_\mathrm{max}$'
+        elif 'do_mean' in title:
+            new_title = 'DO$_\mathrm{mean}$'
+        ax.set_title(new_title)
+
+    sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.80, 0.1))
+    g._legend.set_title("Model Version")
+    return g
 
 
 ######## stripplot by site (temporal)###########################################
 df_comb_reach_temporal = df_comb_reach[df_comb_reach["holdout_id"] == "temporal"]
-plot_by_site_or_holdout(
-    df_comb_reach_temporal, "site_id", "strip", "val_results_by_site_strip.jpg"
+plt.rcParams.update({'font.size': 18})
+g = sns.catplot(
+    x="site_id",
+    y="rmse",
+    col="variable",
+    data=df_comb_reach_temporal,
+    hue="model_id",
+    kind="strip",
+    dodge=True,
+    errorbar="sd",
+    col_order=["do_min", "do_mean", "do_max"],
+    hue_order=model_labels,
 )
+g = format_plot(g)
 
-######## Barplot by holdout ######################################################
-g = plot_by_site_or_holdout(
-    df_reach_filt,
-    "holdout_id",
-    "bar",
-    "val_results_by_holdout.jpg",
-    order=["temporal", 'spatial similar', 'spatial dissimilar'],
+g.set_xlabels("Site")
+g.set_xticklabels(rotation=45)
+
+plt.savefig(os.path.join(outdir, "val_results_by_site_strip.png"), bbox_inches='tight', dpi=300)
+
+######## Barplot by holdout ####################################################
+g = sns.catplot(
+    x="holdout_id",
+    y="rmse",
+    col="variable",
+    data=df_reach_filt,
+    hue="model_id",
+    kind="bar",
+    errorbar="sd",
+    col_order=["do_min", "do_mean", "do_max"],
+    hue_order=model_labels,
+    order=["temporal", "spatial similar", "spatial dissimilar"],
 )
+g = format_plot(g)
 
+# Format x-tick labels so that they are title case and "Spatial" and "Similar"
+# are on different lines
+for ax in g.axes.flatten():
+    labels = ax.get_xticklabels()
+    new_labels = []
+    for l in labels:
+        label_text = l.get_text()
+        new_labels.append(label_text.replace(" ", "\n").title())
+    ax.set_xticklabels(new_labels)
+
+g.set_xlabels("Holdout Experiment")
+plt.savefig(os.path.join(outdir, "val_results_by_holdout.png"), bbox_inches='tight', dpi=300)
 
 # -
 
+######## prep for lineplot by month  ###########################################
 month_order = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 df_comb_month = read_and_filter_df("month_reach", "val")
@@ -103,7 +129,7 @@ df_comb_month = df_comb_month[df_comb_month['holdout_id'] == 'temporal']
 
 
 # +
-######## Lineplot by month #########################################
+######## Lineplot by month #####################################################
 g = sns.relplot(
     x="date",
     y="rmse",
@@ -112,21 +138,17 @@ g = sns.relplot(
     hue="model_id",
     kind="line",
     legend=True,
-    # ci="sd",
-    # dodge=True,
-    # order=month_order,
     hue_order=model_labels,
 )
 
 for ax in g.axes.flatten():
-    ax.grid()
-    ax.set_axisbelow(True)
     ax.set_xticks(list(range(1,13)))
 
-sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.83, 0.1))
+sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.8, 0.1))
+g = format_plot(g)
     
-g.set_xlabels("month")
+g.set_xlabels("Month")
 # plt.tight_layout()
-plt.savefig(os.path.join(outdir, "val_results_by_month_line.jpg"), dpi=300)
+plt.savefig(os.path.join(outdir, "val_results_by_month_line.png"), bbox_inches='tight', dpi=300)
 # -
 
