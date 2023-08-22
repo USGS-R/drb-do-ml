@@ -118,9 +118,16 @@ map_sites <- function(flowlines,
   
   # Create site map
   sites_map <- ggplot() + 
-    geom_sf(data = basin_boundary, fill = 'gray80', color = NA, alpha = 0.6) +
-    geom_tile(data = impv_df, aes(x = x, y = y, fill = value), alpha = 0.7) +
-    scale_fill_gradient(low = "gray", high = "brown", guide = "none") + 
+    geom_sf(data = basin_boundary, fill = 'gray80', color = NA, alpha = 0.4) +
+    geom_tile(data = impv_df, aes(x = x, y = y, fill = value)) +
+    #scale_fill_gradient(low = "gray", high = "brown", guide = "none") + 
+    scale_fill_gradient(low = "#EBEAEA", high = "#B75555", na.value = "#EBEAEA",
+                        name = "Impervious cover (%)",
+                        limits = c(0,100), breaks = c(0, 100)) +
+    guides(fill = guide_colourbar(ticks = FALSE, direction = "horizontal",
+                                  title.position = "top", title.hjust = 0.5,
+                                  barheight = 0.55, barwidth = 7.5,
+                                  available_aes = "fill")) + 
     # adjust line width so that flow direction is more intuitive
     geom_sf(data = flowlines_in_basin, aes(size = STREAMORDE/5), color = "steelblue4") +
     # scale_size_identity needed to provide line width as an aesthetic
@@ -149,7 +156,9 @@ map_sites <- function(flowlines,
     theme_bw() +
     theme(panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
-          axis.title = element_blank()) +
+          axis.title = element_blank(),
+          legend.title = element_text(size = 10),
+          legend.text = element_text(size = 8.5)) +
     ggspatial::annotation_north_arrow(
       location = "br", which_north = "true",
       pad_x = unit(1, 'cm'), pad_y = unit(0.5, 'cm'),
@@ -179,7 +188,7 @@ map_sites <- function(flowlines,
     do_sites_map <- cowplot::ggdraw() + 
       cowplot::draw_plot(sites_map2) + 
       cowplot::draw_plot(inset_map, x = 0.66, y = 0.63, width = 0.35, height = 0.35) + 
-      cowplot::draw_plot(legend, x = -0.3, y = -0.2)
+      cowplot::draw_plot(legend, x = -0.295, y = -0.35)
   }
 
   ggsave(out_file, 
