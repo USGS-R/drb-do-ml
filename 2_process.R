@@ -1,9 +1,6 @@
-source("2_process/src/filter_wqp_data.R")
-source("2_process/src/subset_wqp_sites.R")
 source("2_process/src/munge_inst_timeseries.R")
 source("2_process/src/create_site_list.R")
 source("2_process/src/summarize_site_list.R")
-source("2_process/src/save_target_ind_files.R")
 source("2_process/src/match_sites_reaches.R")
 source("2_process/src/calc_daily_light.R")
 source("2_process/src/metab_utils.R")
@@ -14,26 +11,7 @@ source("1_fetch/src/write_data.R")
 library(sf)
 
 p2_targets_list <- list(
-  
-  # Filter harmonized WQP data for DO data
-  tar_target(
-    p2_filtered_wqp_data,
-    filter_wqp_data(p1_wqp_data, params_select, units_select, wqp_vars_select, omit_wqp_events)
-  ),
-  
-  # Subset harmonized WQP data to lower DRB
-  tar_target(
-    p2_filtered_wqp_data_subset,
-    subset_wqp_sites(p2_filtered_wqp_data, drb_huc8s)
-  ),
-  
-  # Create and save indicator file for WQP data
-  tar_target(
-    p2_wqp_ind_csv,
-    command = save_target_ind_files("2_process/log/wqp_data_ind.csv","p2_wqp_data_subset"),
-    format = "file"
-  ),
-  
+
   # Filter DO data to only include approved records
   tar_target(
     p2_inst_data_filtered,
@@ -66,12 +44,12 @@ p2_targets_list <- list(
   # Create a list of unique site locations containing DO data  
   tar_target(
     p2_site_list,
-    create_site_list(wqp_data = p2_filtered_wqp_data_subset,
+    create_site_list(wqp_data = NULL,
                      nwis_sites = p1_nwis_sites,
                      nwis_daily_data = p2_daily_data_filtered,
                      nwis_inst_data = p2_inst_data_filtered,
                      hucs = drb_huc8s,
-                     crs_out="NAD83")
+                     crs_out = "NAD83")
   ), 
 
   # Create and save log file containing data availability summary

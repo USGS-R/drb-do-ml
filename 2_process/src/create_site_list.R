@@ -1,109 +1,166 @@
-create_site_list <- function(wqp_data,nwis_sites,nwis_daily_data,nwis_inst_data,hucs,crs_out="NAD83"){
-  #' 
-  #' @description Function to create one site list that contains unique site locations for modeling
-  #'
-  #' @param wqp_data data frame containing filtered data from the DRB harmonized water quality dataset for discrete samples.
-  #' wqp_data must contain the following columns: c("LatitudeMeasure","LongitudeMeasure","ActivityStartDate","MonitoringLocationIdentifier",
-  #' "MonitoringLocationName","OrganizationIdentifier")
-  #' @param nwis_sites data frame containing all NWIS continuous sites identified
-  #' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
-  #' @param nwis_inst_data data frame containing instantaneous data for all NWIS instantaneous sites
-  #' @param crs_out character string indicating desired crs. Defaults to "NAD83", other options include "WGS84".
-  #'
-  #' @value A data frame containing the id, name, data coverage, spatial coordinates, and data source for each unique data-site location.
-
-  # Check for the following columns in the discrete WQP data
-  req_cols <- c("LatitudeMeasure","LongitudeMeasure","ActivityStartDate","MonitoringLocationIdentifier","MonitoringLocationName",
-                "OrganizationIdentifier")
-  flag_cols <- req_cols[which(req_cols %in% names(wqp_data)=="FALSE")]
-  if(length(flag_cols)>0) stop("WQP data is missing one or more required columns: LatitudeMeasure,LongitudeMeasure,ActivityStartDate,
-                               MonitoringLocationIdentifier,MonitoringLocationName,OrganizationIdentifier")
+#' @title Create site list
+#' 
+#' @description 
+#' Creates one site list with the unique site locations for modeling
+#'
+#' @param wqp_data data frame containing filtered data from the DRB harmonized 
+#' water quality dataset for discrete samples. `wqp_data` must contain the 
+#' following columns: c("LatitudeMeasure", "LongitudeMeasure", "ActivityStartDate",
+#' "MonitoringLocationIdentifier", "MonitoringLocationName", "OrganizationIdentifier")
+#' @param nwis_sites data frame containing all NWIS continuous sites identified
+#' @param nwis_daily_data data frame containing daily data for all NWIS daily sites
+#' @param nwis_inst_data data frame containing instantaneous data for all NWIS 
+#' instantaneous sites
+#' @param crs_out character string indicating desired crs. Defaults to "NAD83", 
+#' other options include "WGS84".
+#'
+#' @value 
+#' Returns a data frame containing the id, name, data coverage, spatial 
+#' coordinates, and data source for each unique data-site location.
+#' 
+create_site_list <- function(wqp_data,
+                             nwis_sites,
+                             nwis_daily_data,
+                             nwis_inst_data,
+                             hucs,
+                             crs_out = "NAD83"){
   
-  # For the discrete WQP data, fetch missing CRS information from WQP:
-  wqp_retrieved_sites <- dataRetrieval::whatWQPsites(huc = hucs)
+  # NWIS sites: summarize number of observation-days and harmonize column names
+  nwis_sites_all <- nwis_sites %>%
+    group_by(site_no) %>% 
+    slice(1)
   
-  # For the discrete WQP data, filter unique site identifier, summarize number of observation-days, and harmonize column names  
-  wqp_unique_sites <- wqp_data %>%
-    group_by(MonitoringLocationIdentifier) %>%
-    mutate(count_obs = n(),
-           count_days = length(unique(ActivityStartDate))) %>%
-    slice(1) %>%
-    # append missing CRS information:
-    left_join(.,wqp_retrieved_sites[,c("MonitoringLocationIdentifier","HorizontalCoordinateReferenceSystemDatumName")],
-              by="MonitoringLocationIdentifier") %>%
-    mutate(site_id = if(grepl("USGS",MonitoringLocationIdentifier)) substr(MonitoringLocationIdentifier, 6,100) else MonitoringLocationIdentifier) %>%
-    ungroup() %>%
-    select(site_id,MonitoringLocationName,count_days,LongitudeMeasure,LatitudeMeasure,
-           HorizontalCoordinateReferenceSystemDatumName,OrganizationIdentifier) %>%
-    rename("site_name" = "MonitoringLocationName","lon"="LongitudeMeasure","lat"="LatitudeMeasure",
-           "datum" = "HorizontalCoordinateReferenceSystemDatumName",
-           "org_id" = "OrganizationIdentifier","count_days_discrete" = "count_days") %>%
-    mutate(data_src = "Harmonized_WQP_data") 
-  
-  # For NWIS sites, summarize number of observation-days and harmonize column names
   nwis_inst_sites <- nwis_inst_data %>%
     mutate(Date = lubridate::date(dateTime)) %>%
     group_by(site_no) %>% 
-    summarize(count_obsdays=length(unique(Date))) %>%
-    left_join(.,
-              nwis_sites %>% group_by(site_no) %>% slice(1),
-              by="site_no") %>%
-    select(site_no,station_nm,count_obsdays,dec_long_va,dec_lat_va,dec_coord_datum_cd,agency_cd) %>%
-    rename("site_id" = "site_no","site_name" = "station_nm","lon"="dec_long_va","lat"="dec_lat_va",
-           "datum"="dec_coord_datum_cd","org_id"="agency_cd","count_days_nwis" = "count_obsdays") %>%
+    summarize(count_obsdays = length(unique(Date))) %>%
+    left_join(y = nwis_sites_all,
+              by = "site_no") %>%
+    select(site_no, station_nm, count_obsdays, dec_long_va, dec_lat_va,
+           dec_coord_datum_cd, agency_cd) %>%
+    rename("site_id" = "site_no",
+           "site_name" = "station_nm",
+           "lon" = "dec_long_va",
+           "lat" = "dec_lat_va",
+           "datum" = "dec_coord_datum_cd",
+           "org_id" = "agency_cd",
+           "count_days_nwis" = "count_obsdays") %>%
     mutate(data_src = "NWIS_instantaneous")
   
   nwis_daily_sites <- nwis_daily_data %>%
     group_by(site_no) %>%
     summarize(count_obsdays = length(unique(Date))) %>%
-    left_join(.,
-              nwis_sites %>% group_by(site_no) %>% slice(1),
-              by="site_no") %>%
-    select(site_no,station_nm,count_obsdays,dec_long_va,dec_lat_va,dec_coord_datum_cd,agency_cd) %>%
-    rename("site_id" = "site_no","site_name" = "station_nm","lon"="dec_long_va","lat"="dec_lat_va",
-           "datum"="dec_coord_datum_cd","org_id"="agency_cd","count_days_nwis" = "count_obsdays") %>%
+    left_join(y = nwis_sites_all,
+              by = "site_no") %>%
+    select(site_no, station_nm, count_obsdays, dec_long_va, dec_lat_va, 
+           dec_coord_datum_cd, agency_cd) %>%
+    rename("site_id" = "site_no",
+           "site_name" = "station_nm",
+           "lon" = "dec_long_va",
+           "lat" = "dec_lat_va",
+           "datum" = "dec_coord_datum_cd",
+           "org_id" = "agency_cd",
+           "count_days_nwis" = "count_obsdays") %>%
     mutate(data_src = "NWIS_daily")
   
-  # For NWIS sites, select nwis service containing more observation-days
-  nwis_sites_combined <- bind_rows(nwis_inst_sites,nwis_daily_sites) %>%
+  # NWIS sites: select nwis service containing more observation-days
+  nwis_sites_combined <- bind_rows(nwis_inst_sites, nwis_daily_sites) %>%
     group_by(site_id) %>%
     arrange(desc(count_days_nwis)) %>%
     slice(1)
   
-  # Combine WQP and NWIS data frames into a single site list
-  unique_sites <- bind_rows(nwis_sites_combined,wqp_unique_sites) %>%
-    select(site_id,site_name,count_days_nwis,count_days_discrete,lon,lat,datum,org_id,data_src) %>% 
+  # WQP sites
+  if(!is.null(wqp_data)){
+    # Check for the following columns in the discrete WQP data
+    req_cols <- c("LatitudeMeasure","LongitudeMeasure","ActivityStartDate",
+                  "MonitoringLocationIdentifier","MonitoringLocationName",
+                  "OrganizationIdentifier")
+    flag_cols <- req_cols[which(!req_cols %in% names(wqp_data))]
+    if(length(flag_cols) > 0){
+      stop("WQP data is missing one or more required columns")
+    } 
+    
+    # For the discrete WQP data, fetch missing CRS information from WQP:
+    wqp_retrieved_sites <- dataRetrieval::whatWQPsites(huc = hucs)
+    
+    # For the discrete WQP data, filter unique site identifier, summarize the 
+    # number of observation-days, and harmonize column names  
+    wqp_unique_sites <- wqp_data %>%
+      group_by(MonitoringLocationIdentifier) %>%
+      mutate(count_obs = n(),
+             count_days = length(unique(ActivityStartDate))) %>%
+      slice(1) %>%
+      # append missing CRS information:
+      left_join(y = wqp_retrieved_sites[,c("MonitoringLocationIdentifier",
+                                         "HorizontalCoordinateReferenceSystemDatumName")],
+                by = "MonitoringLocationIdentifier") %>%
+      mutate(site_id = if_else(grepl("USGS", MonitoringLocationIdentifier),
+                               substr(MonitoringLocationIdentifier, 6, 100), 
+                               MonitoringLocationIdentifier)) %>%
+      ungroup() %>%
+      select(site_id, MonitoringLocationName, count_days, LongitudeMeasure,
+             LatitudeMeasure, HorizontalCoordinateReferenceSystemDatumName,
+             OrganizationIdentifier) %>%
+      rename("site_name" = "MonitoringLocationName",
+             "lon" = "LongitudeMeasure","lat"="LatitudeMeasure",
+             "datum" = "HorizontalCoordinateReferenceSystemDatumName",
+             "org_id" = "OrganizationIdentifier",
+             "count_days_discrete" = "count_days") %>%
+      mutate(data_src = "Harmonized_WQP_data") 
+  }
+  
+  # Combine WQP and NWIS data frames into a single list of sites
+  if(is.null(wqp_data)){
+    unique_sites <- nwis_sites_combined %>%
+      mutate(count_days_discrete = NA_real_)
+  } else {
+    unique_sites <- bind_rows(nwis_sites_combined, wqp_unique_sites) 
+  }
+  
+  unique_sites_fmt <- unique_sites %>%
+    select(site_id, site_name, count_days_nwis, count_days_discrete, 
+           lon, lat, datum, org_id, data_src) %>% 
     group_by(site_id) %>% 
-    mutate(count_days_discrete_combined = sum(count_days_discrete,na.rm=TRUE),
-           count_days_total_combined = sum(count_days_discrete,count_days_nwis,na.rm=TRUE),
+    mutate(count_days_discrete_combined = sum(count_days_discrete, na.rm = TRUE),
+           count_days_total_combined = sum(count_days_discrete, count_days_nwis, na.rm=TRUE),
            data_src_combined = paste(data_src, collapse = "/")) %>%
     slice(1) %>%
-    select(site_id,site_name,count_days_nwis,count_days_discrete_combined,count_days_total_combined,lon,lat,datum,org_id,data_src_combined) %>%
+    select(site_id, site_name, count_days_nwis, count_days_discrete_combined,
+           count_days_total_combined, lon, lat, datum, org_id, data_src_combined) %>%
     rename("count_days_discrete" = "count_days_discrete_combined",
            "count_days_total" = "count_days_total_combined")
   
-  # Clean up different coordinate reference systems within unique_sites data frame
-  unique_sites_out <- unique_sites %>%
+  # Clean up different coordinate reference systems 
+  unique_sites_out <- unique_sites_fmt %>%
     split(.,.$datum) %>% 
-    lapply(.,transform_site_locations,crs_out=crs_out) %>%
+    lapply(.,transform_site_locations,crs_out = crs_out) %>%
     do.call(rbind,.)
-  
   
   return(unique_sites_out)
 }
 
 
-transform_site_locations <- function(site_list_df,crs_out){
-  #' 
-  #' @description Function to transform site locations to a consistent coordinate reference system
-  #'
-  #' @param site_list_df data frame containing site locations with a consistent crs
-  #' @param crs_out character string indicating desired crs to transform spatial coordinates. Options include "NAD83" or "WGS84"
-  #' 
-  #' @examples 
-  #' transform_site_locations(site_list,4326)
+#' @title Transform site CRS
+#' 
+#' @description 
+#' Transforms site locations to a consistent coordinate reference system
+#'
+#' @param site_list_df data frame containing site locations with a consistent crs
+#' @param crs_out character string indicating desired crs to transform spatial
+#' coordinates. Options include "NAD83" or "WGS84"
+#' 
+#' @examples 
+#' transform_site_locations(site_list,4326)
+#' 
+transform_site_locations <- function(site_list_df, crs_out){
+
+  # Check that crs_out matches what we expect
+  if(!crs_out %in% c("WGS84", "NAD83")){
+    stop("crs_out must be either 'WGS84' or 'NAD83'")
+  }
   
-  # I'm getting some odd errors with sf::st_coordinates() if site_list_df is of class "grouped_df"
+  # I'm getting some odd errors with sf::st_coordinates() if site_list_df 
+  # is of class "grouped_df"
   x <- ungroup(site_list_df)
   
   # define input and output epsg codes

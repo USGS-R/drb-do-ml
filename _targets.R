@@ -21,31 +21,8 @@ dir.create("3_visualize/out/", showWarnings = FALSE)
 dir.create("3_visualize/out/nhdv2_attr_png/", showWarnings = FALSE)
 dir.create("3_visualize/log/", showWarnings = FALSE)
 
-# 1) Configure data pipeline inputs/variables
 
-# Define columns of interest from harmonized WQP data
-wqp_vars_select <- c("MonitoringLocationIdentifier", "MonitoringLocationName",
-                     "LongitudeMeasure","LatitudeMeasure","MonitoringLocationTypeName",
-                     "OrganizationIdentifier","ActivityStartDate","ActivityStartTime.Time",
-                     "ActivityEndDate","CharacteristicName","param_group","param",
-                     "USGSPCode","ActivityMediaName","ResultSampleFractionText",
-                     "HydrologicCondition","HydrologicEvent","resultVal2","resultUnits2",
-                     "ResultDetectionConditionText","ResultTemperatureBasisText",
-                     "PrecisionValue","ResultStatusIdentifier","final")
-
-# Define WQP CharacteristicNames of interest
-# others: "Dissolved oxygen saturation, field, max", "Dissolved oxygen saturation, field, min", 
-# "Dissolved oxygen, field, max", and "Dissolved oxygen, field, min")
-CharNames_select = c("Dissolved oxygen (DO)","Dissolved oxygen saturation")
-params_select = c("Dissolved oxygen","Dissolved oxygen saturation",
-                  "Dissolved oxygen saturation, field", "Dissolved oxygen, field",
-                  "Dissolved oxygen, field, mean")
-
-# Define DO units of interest in WQP data
-units_select = c("mg/l")
-
-# Define hydrologic event types in harmonized WQP data to exclude
-omit_wqp_events <- c("Spill","Volcanic action")
+# 1) CONFIGURE DATA PIPELINE INPUTS/VARIABLES
 
 # Define USGS parameter codes of interest
 # 00300 = "dissolved oxygen, in milligrams per liter"
@@ -81,7 +58,7 @@ min_obs_days <- 100
 dummy_date <- "2023-03-02"
 
 
-#2) Configure model inputs/variables 
+#2) CONFIGURE MODEL INPUTS/VARIABLES 
 
 validation_sites_urban <- c("01475530", "01475548")
 validation_sites_nonurban <- c('01472104', '014721254', '014721259', '01473500', '01480617', '01480870', '01481000', '01481500')
