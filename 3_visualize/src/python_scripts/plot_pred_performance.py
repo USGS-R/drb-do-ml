@@ -1,17 +1,3 @@
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,py:light
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.14.4
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
 
 import pandas as pd
 import re
@@ -19,26 +5,12 @@ import os
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plot_utils
-from plot_utils import read_and_filter_df, make_holdout_id_col, filter_out_urban_spatial, replacements, model_labels
+from plot_utils import read_and_filter_df, make_holdout_id_col, filter_out_urban_spatial, replacements, model_labels, df_site_filt
 import numpy as np
 import seaborn.objects as so
 
 
-# +
 outdir = f"../../out"
-
-# -
-
-df_comb_reach = read_and_filter_df("reach", "val")
-df_comb_reach = df_comb_reach.replace(replacements)
-
-test_sites_urban = ["01475530", "01475548"]
-
-# -
-
-df_comb_reach = make_holdout_id_col(df_comb_reach)
-
-df_reach_filt = filter_out_urban_spatial(df_comb_reach)
 
 
 def format_plot(g):
@@ -66,13 +38,13 @@ def format_plot(g):
 
 
 ######## stripplot by site (temporal)###########################################
-df_comb_reach_temporal = df_comb_reach[df_comb_reach["holdout_id"] == "temporal"]
+df_comb_site_temporal = df_site_filt[df_site_filt["holdout_id"] == "temporal"]
 plt.rcParams.update({'font.size': 18})
 g = sns.catplot(
     x="site_id",
     y="rmse",
     col="variable",
-    data=df_comb_reach_temporal,
+    data=df_comb_site_temporal,
     hue="model_id",
     kind="strip",
     dodge=True,
@@ -92,7 +64,7 @@ g = sns.catplot(
     x="holdout_id",
     y="rmse",
     col="variable",
-    data=df_reach_filt,
+    data=df_site_filt,
     hue="model_id",
     kind="bar",
     errorbar="sd",
@@ -115,12 +87,11 @@ for ax in g.axes.flatten():
 g.set_xlabels("Holdout Experiment")
 plt.savefig(os.path.join(outdir, "val_results_by_holdout.png"), bbox_inches='tight', dpi=300)
 
-# -
 
 ######## prep for lineplot by month  ###########################################
 month_order = [10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-df_comb_month = read_and_filter_df("month_reach", "val")
+df_comb_month = read_and_filter_df("site_month", "val")
 
 df_comb_month = make_holdout_id_col(df_comb_month)
 df_comb_month = df_comb_month.replace(replacements)
@@ -128,7 +99,6 @@ df_comb_month = df_comb_month.replace(replacements)
 df_comb_month = df_comb_month[df_comb_month['holdout_id'] == 'temporal']
 
 
-# +
 ######## Lineplot by month #####################################################
 g = sns.relplot(
     x="date",
@@ -148,7 +118,5 @@ sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.8, 0.1))
 g = format_plot(g)
     
 g.set_xlabels("Month")
-# plt.tight_layout()
 plt.savefig(os.path.join(outdir, "val_results_by_month_line.png"), bbox_inches='tight', dpi=300)
-# -
 
