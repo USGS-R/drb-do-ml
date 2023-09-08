@@ -25,8 +25,6 @@
 #' @param lon_breaks numeric sequence indicating the breaks to use when plotting
 #' longitude. By default, includes lon_breaks that are focused on the lower 
 #' Delaware River Basin.
-#' @param site_type_colors vector of character strings indicating the colors to use
-#' when plotting train, validation, and test sites.
 #' @param fig_width_inches numeric value indicating the width of the saved figure
 #' in inches
 #' @param fig_height_inches numeric value indicating the height of the saved figure
@@ -40,11 +38,9 @@ map_sites <- function(flowlines,
                       out_file,
                       huc6_select = "020402", 
                       basin_bbox = c(xmin = -76.39556, ymin = 39.5, xmax = -74.37121, ymax = 40.89106),
-                      epsg_out = 3857, 
+                      epsg_out = 4269, 
                       lat_breaks = seq(from = 39.6, to = 41, by = 0.4),
                       lon_breaks = seq(from = -74.5, to = -76.5, by = -0.5),
-                      site_type_colors = c("#E69F00","#56B4E9","#0072B2","#009E73"),
-                      site_type_names = c("train","validation","train/val","test"),
                       fig_width_inches = 7.8, fig_height_inches = 6.5){
   
   # Create bbox/spatial extent of sites used in the model
@@ -52,7 +48,8 @@ map_sites <- function(flowlines,
     sf::st_as_sfc() %>%
     sf::st_set_crs(4326) %>%
     sf::st_as_sf() %>%
-    sf::st_transform(crs = epsg_out)
+    sf::st_transform(crs = epsg_out) %>%
+    suppressMessages()
   
   # Download HUC12 boundaries and dissolve them to get HUC6 boundaries
   # corresponding with the watershed of interest
@@ -63,7 +60,8 @@ map_sites <- function(flowlines,
     sf::st_as_sf() %>%
     sf::st_transform(crs = epsg_out) %>%
     # crop the watershed to the matched_sites bounding box
-    sf::st_crop(subset_bbox) 
+    sf::st_crop(subset_bbox) %>%
+    suppressMessages()
 
   # Subset the flowlines that should be mapped within the basin boundary
   flowlines_in_basin <- flowlines %>%
@@ -75,28 +73,92 @@ map_sites <- function(flowlines,
     sf::st_crop(subset_bbox) %>% 
     # ignore warnings about attribute variables assumed spatially constant
     suppressWarnings() %>%
+    suppressMessages() %>%
     # make sure that all flowlines have a positive stream order
     filter(STREAMORDE > 0) 
-    
+  
+  # Manually format map labels (monitoring sites and Philadelphia, PA)
+  matched_sites_fmt <- matched_sites %>%
+    mutate(hJust = case_when(site_name_abbr == "FC" ~ 0.65,
+                             site_name_abbr == "BAP" ~ 0.2,
+                             site_name_abbr %in% c("SR_72", "SR_40") ~ -0.15,
+                             site_name_abbr %in% c("CC_12", "CC_4") ~ 1.2,
+                             site_name_abbr %in% c("BC_8", "BC_24") ~ -0.15,
+                             site_name_abbr == "BC_40" ~ 0.30,
+                             site_name_abbr == "BC_53" ~ 1.15,
+                             TRUE ~ 0),
+           vJust = case_when(site_name_abbr == "FC" ~ 2,
+                             site_name_abbr == "BAP" ~ -0.7,
+                             site_name_abbr == "CC_12" ~ 0.35,
+                             site_name_abbr == "CC_4" ~ 0.5,
+                             site_name_abbr == "BC_40" ~ -0.5,
+                             site_name_abbr == "BC_53" ~ 0.25,
+                             site_name_abbr %in% c("BC_8", "BC_24") ~ 0.3,
+                             TRUE ~ 0),
+           X = sf::st_coordinates(.)[,1],
+           Y = sf::st_coordinates(.)[,2])
+
+  phl_pt <- tibble(name = "Philadelphia", lon = -75.1803056, lat = 39.95663889,
+                   hJust = -0.05, vJust = 0.3)
+  phl_pt_sf <- sf::st_as_sf(phl_pt, coords = c("lon", "lat"), crs = 4326, remove = FALSE)
+  
+  # Download and format 2019 impervious cover data to use as a base map
+  impv_2019 <- FedData::get_nlcd(template = subset_bbox,
+                                 label = "ldrb",
+                                 year = 2019,
+                                 dataset = 'impervious',
+                                 extraction.dir = tempdir(),
+                                 force.redo = TRUE)
+  r1 <- raster::projectRaster(impv_2019, crs = epsg_out)
+  r2 <- raster::crop(r1, basin_boundary)
+  r3 <- raster::mask(r2, basin_boundary)
+  impv_spdf <- as(r3, "SpatialPixelsDataFrame")
+  impv_df <- as.data.frame(impv_spdf)
+  colnames(impv_df) <- c("value", "x", "y")
+  
   # Create site map
   sites_map <- ggplot() + 
-    geom_sf(data = basin_boundary, fill = 'gray80', color = NA, alpha = .6) +
+    geom_sf(data = basin_boundary, fill = 'gray80', color = NA, alpha = 0.4) +
+    geom_tile(data = impv_df, aes(x = x, y = y, fill = value)) +
+    #scale_fill_gradient(low = "gray", high = "brown", guide = "none") + 
+    scale_fill_gradient(low = "#EBEAEA", high = "#B75555", na.value = "#EBEAEA",
+                        name = "Impervious cover (%)",
+                        limits = c(0,100), breaks = c(0, 100)) +
+    guides(fill = guide_colourbar(ticks = FALSE, direction = "horizontal",
+                                  title.position = "top", title.hjust = 0.5,
+                                  barheight = 0.55, barwidth = 7.5,
+                                  available_aes = "fill")) + 
     # adjust line width so that flow direction is more intuitive
-    geom_sf(data = flowlines_in_basin, aes(size = STREAMORDE/5), color = "slategray4") +
+    geom_sf(data = flowlines_in_basin, aes(size = STREAMORDE/5), color = "steelblue4") +
     # scale_size_identity needed to provide line width as an aesthetic
     scale_size_identity() +
-    geom_sf(data = matched_sites, aes(color = site_type), size = 3.5) +
-    scale_fill_identity() +
+    geom_sf(data = matched_sites_fmt, color = "black", size = 3) +
+    geom_sf_label(data = matched_sites_fmt, 
+                 aes(label = site_name_abbr, hjust = hJust, vjust = vJust), 
+                 size = 3.5,
+                 label.size  = NA,
+                 alpha = 0.4) +
+    geom_segment(data = filter(matched_sites_fmt, site_name_abbr == "BAP"),
+                 aes(x = X + 0.04, xend = X + 0.01, y = Y + 0.04, yend = Y + 0.01),
+                 color = "black", arrow = arrow(length = unit(1.5, "mm"))) +
+    geom_segment(data = filter(matched_sites_fmt, site_name_abbr == "FC"),
+                 aes(x = X - 0.015, xend = X - 0.01, y = Y - 0.05, yend = Y - 0.01),
+                 color = "black", arrow = arrow(length = unit(1.5, "mm"))) +
+    geom_sf(data = phl_pt_sf, color = "black", size = 3, shape = 1) +
+    geom_sf_label(data = phl_pt_sf, 
+                 aes(label = name, hjust = hJust, vjust = vJust), 
+                 size = 5,
+                 label.size = NA,
+                 alpha = 0.1) + 
     coord_sf() +
     scale_y_continuous(breaks = lat_breaks) +
     scale_x_continuous(breaks = lon_breaks) + 
-    scale_color_manual(breaks = site_type_names, 
-                       values = site_type_colors,
-                       name = "Site type")+
     theme_bw() +
     theme(panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),
-          axis.title = element_blank()) +
+          axis.title = element_blank(),
+          legend.title = element_text(size = 10),
+          legend.text = element_text(size = 8.5)) +
     ggspatial::annotation_north_arrow(
       location = "br", which_north = "true",
       pad_x = unit(1, 'cm'), pad_y = unit(0.5, 'cm'),
@@ -118,10 +180,16 @@ map_sites <- function(flowlines,
   sites_map2 <- sites_map + theme(legend.position = 'none')
   
   # create and save combined map
-  do_sites_map <- cowplot::ggdraw() + 
-    cowplot::draw_plot(sites_map2) + 
-    cowplot::draw_plot(inset_map, x = 0.66, y = 0.63, width = 0.35, height = 0.35) + 
-    cowplot::draw_plot(legend, x = -0.3, y = -0.2)
+  if(is.null(legend)){
+    do_sites_map <- cowplot::ggdraw() + 
+      cowplot::draw_plot(sites_map2) + 
+      cowplot::draw_plot(inset_map, x = 0.66, y = 0.63, width = 0.35, height = 0.35)
+  } else {
+    do_sites_map <- cowplot::ggdraw() + 
+      cowplot::draw_plot(sites_map2) + 
+      cowplot::draw_plot(inset_map, x = 0.66, y = 0.63, width = 0.35, height = 0.35) + 
+      cowplot::draw_plot(legend, x = -0.295, y = -0.35)
+  }
 
   ggsave(out_file, 
          plot = do_sites_map,
@@ -130,7 +198,6 @@ map_sites <- function(flowlines,
   
   # return save directory
   return(out_file)
-
 }
 
 
