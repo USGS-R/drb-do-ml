@@ -32,7 +32,7 @@ def format_plot(g):
             new_title = 'DO$_\mathrm{mean}$'
         ax.set_title(new_title)
 
-    sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.80, 0.1))
+    sns.move_legend(g, loc='lower left', bbox_to_anchor=(0.75, 0.1))
     g._legend.set_title("Model Version")
     return g
 
