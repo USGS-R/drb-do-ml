@@ -32,8 +32,8 @@ sites_xwalk = {
 
 model_labels = [
     "v0 - Baseline",
-    "v1 - Metab Multitask",
-    "v2 - Metab Dependent",
+    "v1 - Process-Informed Multitask",
+    "v2 - Process-Dependent Multitask",
 ]
 
 replacements = {
